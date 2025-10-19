@@ -88,11 +88,14 @@ export default function RouteSection({ onRouteSelect, selectedRoute }) {
     }
 
     setLoading(true);
+    // Pad route code with leading zeros to make it 4 digits
+    const paddedCode = routeCodeInput.trim() ? routeCodeInput.trim().padStart(4, '0') : null;
+    
     const { data, error } = await supabase
       .from('routes')
       .insert([{
         name: routeNameInput.trim(),
-        code: routeCodeInput.trim() ? parseInt(routeCodeInput.trim()) : null
+        code: paddedCode
       }])
       .select()
       .single();
@@ -136,11 +139,14 @@ export default function RouteSection({ onRouteSelect, selectedRoute }) {
     }
 
     setLoading(true);
+    // Pad route code with leading zeros to make it 4 digits
+    const paddedCode = modalRouteCode.trim() ? modalRouteCode.trim().padStart(4, '0') : null;
+    
     const { error } = await supabase
       .from('routes')
       .update({
         name: modalRouteName.trim(),
-        code: modalRouteCode.trim() ? parseInt(modalRouteCode.trim()) : null
+        code: paddedCode
       })
       .eq('id', selectedRoute.id);
 
@@ -153,7 +159,7 @@ export default function RouteSection({ onRouteSelect, selectedRoute }) {
       onRouteSelect({
         ...selectedRoute,
         name: modalRouteName.trim(),
-        code: modalRouteCode.trim() ? parseInt(modalRouteCode.trim()) : null
+        code: paddedCode
       });
       setShowModal(false);
     }

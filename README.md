@@ -13,10 +13,11 @@ A comprehensive web application for managing bus schedules, routes, operators, a
 - ✅ Auto-population of Conductor from Driver counts
 - ✅ Save schedules to Supabase database
 
-### Phase 2 (Coming Soon)
-- 🔄 Report Preview with proper formatting
-- 🔄 A4-formatted PDF Report Generation
-- 🔄 Print functionality
+### Phase 2 (Completed)
+- ✅ Report Preview with proper formatting
+- ✅ A4-formatted PDF Report Generation
+- ✅ Print functionality
+- ✅ Report generation by depot and date
 
 ## Setup Instructions
 
@@ -193,10 +194,28 @@ bus-schedule-manager/
 - Check browser console for errors
 - Verify Supabase connection is working
 
-## Next Steps (Phase 2)
+## Report Generation
 
-- Implement report preview functionality
-- Add PDF generation with proper formatting
-- Add print functionality
+### How to Generate Reports
+
+1. Click on "Generate Report" in the navigation menu
+2. Select a Depot from the dropdown
+3. Select a Date
+4. Click "Generate Report"
+5. The report preview will appear below
+6. Use "Print Preview" to open the PDF in a new tab for printing
+7. Use "Download PDF" to save the report to your computer
+
+### Report Features
+
+- **Automatic Grouping**: Entries are grouped by bus type category (BEST buses, Wet Lease operators)
+- **Totals Calculation**: Automatic calculation of totals for each group, BEST total, and grand total
+- **A4 Format**: Reports are formatted for A4 paper size in landscape orientation
+- **Professional Layout**: Matches the standard bus schedule report format with proper headers and sections
+
+## Next Steps (Phase 3)
+
 - Add schedule listing and editing
 - Add search and filter capabilities
+- Add data export/import functionality
+- Add user authentication and permissions

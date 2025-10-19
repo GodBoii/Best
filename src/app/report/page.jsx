@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
 import ReportPreview from '../../components/ReportPreview';
 import '../../styles/globals.css';
@@ -61,15 +62,46 @@ export default function ReportPage() {
         .select(`
           *,
           routes (name, code),
-          bus_types (name, short_name, category),
-          operators (name, short_code)
+          bus_types (id, name, short_name, category, display_order),
+          operators (id, name, short_code)
         `)
-        .eq('schedule_id', schedule.id);
+        .eq('schedule_id', schedule.id)
+        .order('created_at', { ascending: true });
 
       if (entriesError) throw entriesError;
 
       // Get depot name
       const depot = depots.find(d => d.id === selectedDepot);
+
+      console.log('=== FETCHED ENTRIES ===');
+      console.log('Total entries:', entries?.length);
+      console.log('Sample entry structure:', entries?.[0]);
+      
+      const withOperators = entries?.filter(e => e.operator_id);
+      const withoutOperators = entries?.filter(e => !e.operator_id);
+      
+      console.log('\n=== ENTRIES WITH OPERATORS (WET_LEASE) ===');
+      console.log('Count:', withOperators?.length);
+      withOperators?.forEach(e => {
+        console.log({
+          route: e.routes?.name,
+          busType: e.bus_types?.name,
+          busTypeCategory: e.bus_types?.category,
+          operatorId: e.operator_id,
+          operatorData: e.operators
+        });
+      });
+      
+      console.log('\n=== ENTRIES WITHOUT OPERATORS (BEST) ===');
+      console.log('Count:', withoutOperators?.length);
+      withoutOperators?.forEach(e => {
+        console.log({
+          route: e.routes?.name,
+          busType: e.bus_types?.name,
+          busTypeCategory: e.bus_types?.category,
+          operatorId: e.operator_id
+        });
+      });
 
       setReportData({
         depot: depot.name,
@@ -90,6 +122,15 @@ export default function ReportPage() {
       <header className="app-header">
         <h1>Bus Schedule Report Generator</h1>
       </header>
+
+      <nav className="app-nav">
+        <Link href="/">
+          <button>Schedule Entry</button>
+        </Link>
+        <Link href="/report">
+          <button className="active">Generate Report</button>
+        </Link>
+      </nav>
 
       <main className="app-main">
         <div className="report-generator-container">
