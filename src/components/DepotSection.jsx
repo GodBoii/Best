@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import storageManager from '../lib/storage/storageManager';
 import ModifyModal from './ModifyModal';
 
 export default function DepotSection({ onDepotSelect, selectedDepot }) {
@@ -42,7 +42,7 @@ export default function DepotSection({ onDepotSelect, selectedDepot }) {
   }, []);
 
   const fetchDepots = async () => {
-    const { data, error } = await supabase
+    const { data, error } = await storageManager
       .from('depots')
       .select('*')
       .order('name');
@@ -81,7 +81,7 @@ export default function DepotSection({ onDepotSelect, selectedDepot }) {
     }
 
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await storageManager
       .from('depots')
       .insert([{ name: depotInput.trim() }])
       .select()
@@ -122,7 +122,7 @@ export default function DepotSection({ onDepotSelect, selectedDepot }) {
     }
 
     setLoading(true);
-    const { error } = await supabase
+    const { error } = await storageManager
       .from('depots')
       .update({ name: modalDepotName.trim() })
       .eq('id', selectedDepot.id);
@@ -144,7 +144,7 @@ export default function DepotSection({ onDepotSelect, selectedDepot }) {
     if (!confirm(`Are you sure you want to delete "${selectedDepot.name}"?`)) return;
 
     setLoading(true);
-    const { error } = await supabase
+    const { error } = await storageManager
       .from('depots')
       .delete()
       .eq('id', selectedDepot.id);

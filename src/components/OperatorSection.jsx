@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import storageManager from '../lib/storage/storageManager';
 import ModifyModal from './ModifyModal';
 
 export default function OperatorSection({ onOperatorSelect, selectedOperator }) {
@@ -45,7 +45,7 @@ export default function OperatorSection({ onOperatorSelect, selectedOperator }) 
   }, []);
 
   const fetchOperators = async () => {
-    const { data, error } = await supabase
+    const { data, error } = await storageManager
       .from('operators')
       .select('*')
       .order('name');
@@ -94,7 +94,7 @@ export default function OperatorSection({ onOperatorSelect, selectedOperator }) 
     }
 
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await storageManager
       .from('operators')
       .insert([{
         name: operatorNameInput.trim(),
@@ -149,7 +149,7 @@ export default function OperatorSection({ onOperatorSelect, selectedOperator }) 
     }
 
     setLoading(true);
-    const { error } = await supabase
+    const { error } = await storageManager
       .from('operators')
       .update({
         name: modalOperatorName.trim(),
@@ -179,7 +179,7 @@ export default function OperatorSection({ onOperatorSelect, selectedOperator }) 
     if (!confirm(`Are you sure you want to delete "${selectedOperator.name}"?`)) return;
 
     setLoading(true);
-    const { error } = await supabase
+    const { error } = await storageManager
       .from('operators')
       .delete()
       .eq('id', selectedOperator.id);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import storageManager from '../lib/storage/storageManager';
 import DepotSection from './DepotSection';
 import OperatorSection from './OperatorSection';
 import ScheduleTypeSection from './ScheduleTypeSection';
@@ -81,7 +81,7 @@ export default function SimpleForm() {
       };
 
       // First, check if a schedule exists for this depot and date
-      const { data: existingSchedule, error: scheduleCheckError } = await supabase
+      const { data: existingSchedule, error: scheduleCheckError } = await storageManager
         .from('schedules')
         .select('id')
         .eq('depot_id', selectedDepot.id)
@@ -100,7 +100,7 @@ export default function SimpleForm() {
         scheduleId = existingSchedule.id;
       } else {
         // Create new schedule
-        const { data: newSchedule, error: scheduleCreateError } = await supabase
+        const { data: newSchedule, error: scheduleCreateError } = await storageManager
           .from('schedules')
           .insert([{
             depot_id: selectedDepot.id,
@@ -114,7 +114,7 @@ export default function SimpleForm() {
       }
 
       // Now insert the schedule entry
-      const { error: entryError } = await supabase
+      const { error: entryError } = await storageManager
         .from('schedule_entries')
         .insert([{
           schedule_id: scheduleId,
@@ -170,12 +170,6 @@ export default function SimpleForm() {
           selectedOperator={selectedOperator}
         />
 
-        {/* Schedule Type Section */}
-        <ScheduleTypeSection 
-          onScheduleTypeSelect={setSelectedScheduleType}
-          selectedScheduleType={selectedScheduleType}
-        />
-
         {/* Bus Type Section */}
         <BusTypeSection 
           onBusTypeSelect={setSelectedBusType}
@@ -186,6 +180,12 @@ export default function SimpleForm() {
         <RouteSection 
           onRouteSelect={setSelectedRoute}
           selectedRoute={selectedRoute}
+        />
+
+        {/* Schedule Type Section */}
+        <ScheduleTypeSection 
+          onScheduleTypeSelect={setSelectedScheduleType}
+          selectedScheduleType={selectedScheduleType}
         />
 
         {/* Submit Button */}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import storageManager from '../lib/storage/storageManager';
 import ModifyModal from './ModifyModal';
 
 export default function RouteSection({ onRouteSelect, selectedRoute }) {
@@ -45,7 +45,7 @@ export default function RouteSection({ onRouteSelect, selectedRoute }) {
   }, []);
 
   const fetchRoutes = async () => {
-    const { data, error } = await supabase
+    const { data, error } = await storageManager
       .from('routes')
       .select('*')
       .order('name');
@@ -91,7 +91,7 @@ export default function RouteSection({ onRouteSelect, selectedRoute }) {
     // Pad route code with leading zeros to make it 4 digits
     const paddedCode = routeCodeInput.trim() ? routeCodeInput.trim().padStart(4, '0') : null;
     
-    const { data, error } = await supabase
+    const { data, error } = await storageManager
       .from('routes')
       .insert([{
         name: routeNameInput.trim(),
@@ -142,7 +142,7 @@ export default function RouteSection({ onRouteSelect, selectedRoute }) {
     // Pad route code with leading zeros to make it 4 digits
     const paddedCode = modalRouteCode.trim() ? modalRouteCode.trim().padStart(4, '0') : null;
     
-    const { error } = await supabase
+    const { error } = await storageManager
       .from('routes')
       .update({
         name: modalRouteName.trim(),
@@ -172,7 +172,7 @@ export default function RouteSection({ onRouteSelect, selectedRoute }) {
     if (!confirm(`Are you sure you want to delete "${selectedRoute.name}"?`)) return;
 
     setLoading(true);
-    const { error } = await supabase
+    const { error } = await storageManager
       .from('routes')
       .delete()
       .eq('id', selectedRoute.id);

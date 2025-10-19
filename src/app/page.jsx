@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import SimpleForm from '../components/SimpleForm';
+import StorageToggle from '../components/StorageToggle';
 import '../styles/globals.css';
 
 export default function Home() {
@@ -9,6 +10,7 @@ export default function Home() {
     <div className="app-container">
       <header className="app-header">
         <h1>Bus Schedule Management System</h1>
+        <StorageToggle />
       </header>
 
       <nav className="app-nav">

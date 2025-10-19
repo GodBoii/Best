@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import storageManager from '../lib/storage/storageManager';
 import ModifyModal from './ModifyModal';
 
 export default function BusTypeSection({ onBusTypeSelect, selectedBusType }) {
@@ -45,7 +45,7 @@ export default function BusTypeSection({ onBusTypeSelect, selectedBusType }) {
     }, []);
 
     const fetchBusTypes = async () => {
-        const { data, error } = await supabase
+        const { data, error } = await storageManager
             .from('bus_types')
             .select('*')
             .order('name');
@@ -88,7 +88,7 @@ export default function BusTypeSection({ onBusTypeSelect, selectedBusType }) {
         }
 
         setLoading(true);
-        const { data, error } = await supabase
+        const { data, error } = await storageManager
             .from('bus_types')
             .insert([{
                 name: busTypeNameInput.trim(),
@@ -137,7 +137,7 @@ export default function BusTypeSection({ onBusTypeSelect, selectedBusType }) {
         }
 
         setLoading(true);
-        const { error } = await supabase
+        const { error } = await storageManager
             .from('bus_types')
             .update({
                 name: modalBusTypeName.trim(),
@@ -167,7 +167,7 @@ export default function BusTypeSection({ onBusTypeSelect, selectedBusType }) {
         if (!confirm(`Are you sure you want to delete "${selectedBusType.name}"?`)) return;
 
         setLoading(true);
-        const { error } = await supabase
+        const { error } = await storageManager
             .from('bus_types')
             .delete()
             .eq('id', selectedBusType.id);
