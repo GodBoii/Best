@@ -137,6 +137,9 @@ export default function ReportPage() {
         <Link href="/report">
           <button className="active">Depot Report</button>
         </Link>
+        <Link href="/summary">
+          <button>Summary Report</button>
+        </Link>
       </nav>
 
       <main className="app-main">

@@ -1,11 +1,12 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import SimpleForm from '../components/SimpleForm';
-import StorageToggle from '../components/StorageToggle';
-import '../styles/globals.css';
+import SummaryReport from '../../components/SummaryReport';
+import StorageToggle from '../../components/StorageToggle';
+import '../../styles/globals.css';
 
-export default function Home() {
+export default function SummaryPage() {
   return (
     <div className="app-container">
       <header className="app-header">
@@ -15,18 +16,18 @@ export default function Home() {
 
       <nav className="app-nav">
         <Link href="/">
-          <button className="active">Schedule Entry</button>
+          <button>Schedule Entry</button>
         </Link>
         <Link href="/report">
           <button>Depot Report</button>
         </Link>
         <Link href="/summary">
-          <button>Summary Report</button>
+          <button className="active">Summary Report</button>
         </Link>
       </nav>
 
       <main className="app-main">
-        <SimpleForm />
+        <SummaryReport />
       </main>
 
       <footer className="app-footer">
