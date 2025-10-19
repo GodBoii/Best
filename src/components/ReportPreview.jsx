@@ -194,6 +194,11 @@ export default function ReportPreview({ reportData }) {
       <div className="report-preview-content">
         <div className="report-header-info">
           <h3>{reportData.depot} Depot w.e.f.:- {new Date(reportData.date).toLocaleDateString('en-GB')}</h3>
+          {reportData.actualDataDate && reportData.actualDataDate !== reportData.date && (
+            <p className="data-date-notice">
+              Note: Using data from {new Date(reportData.actualDataDate).toLocaleDateString('en-GB')} (most recent available)
+            </p>
+          )}
         </div>
 
         <div className="report-table-wrapper">

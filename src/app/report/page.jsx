@@ -39,23 +39,27 @@ export default function ReportPage() {
 
     setLoading(true);
     try {
-      // Fetch schedule for the selected depot and date
-      const { data: schedule, error: scheduleError } = await storageManager
+      // Fetch the most recent schedule for the selected depot on or before the selected date
+      // This implements "latest-as-of" logic: if no exact match, use the most recent data
+      const { data: schedules, error: scheduleError } = await storageManager
         .from('schedules')
-        .select('id')
+        .select('id, schedule_date')
         .eq('depot_id', selectedDepot)
-        .eq('schedule_date', reportDate)
-        .single();
+        .lte('schedule_date', reportDate)  // Less than or equal to selected date
+        .order('schedule_date', { ascending: false })  // Most recent first
+        .limit(1);
 
       if (scheduleError) {
-        if (scheduleError.code === 'PGRST116') {
-          alert('No schedule found for the selected depot and date');
-        } else {
-          throw scheduleError;
-        }
+        throw scheduleError;
+      }
+
+      if (!schedules || schedules.length === 0) {
+        alert('No schedule data found for the selected depot on or before the selected date');
         setLoading(false);
         return;
       }
+
+      const schedule = schedules[0];
 
       // Fetch all schedule entries with related data
       const { data: entries, error: entriesError } = await storageManager
@@ -107,6 +111,7 @@ export default function ReportPage() {
       setReportData({
         depot: depot.name,
         date: reportDate,
+        actualDataDate: schedule.schedule_date,  // The actual date of the data being used
         entries: entries || []
       });
 

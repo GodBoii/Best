@@ -122,7 +122,11 @@ class IndexedDBAdapter {
     const self = this;
     
     const selectObj = {
-      eq: (field, value) => self._selectWithFilter(storeName, field, value),
+      eq: (field, value) => self._selectWithFilter(storeName, field, value, 'eq'),
+      lte: (field, value) => self._selectWithFilter(storeName, field, value, 'lte'),
+      gte: (field, value) => self._selectWithFilter(storeName, field, value, 'gte'),
+      lt: (field, value) => self._selectWithFilter(storeName, field, value, 'lt'),
+      gt: (field, value) => self._selectWithFilter(storeName, field, value, 'gt'),
       order: (field, options = {}) => self._selectWithOrder(storeName, field, options),
       single: async () => {
         await self.initPromise;
@@ -159,14 +163,20 @@ class IndexedDBAdapter {
     });
   }
 
-  _selectWithFilter(storeName, field, value) {
+  _selectWithFilter(storeName, field, value, operator = 'eq') {
     const self = this;
 
     const chainable = {
       eq: (field2, value2) => self._selectWithMultipleFilters(storeName, { [field]: value, [field2]: value2 }),
+      lte: (field2, value2) => self._selectWithCompoundFilters(storeName, [
+        { field, value, operator },
+        { field: field2, value: value2, operator: 'lte' }
+      ]),
+      order: (orderField, options) => self._selectWithFilterAndOrder(storeName, field, value, operator, orderField, options),
+      limit: (count) => self._selectWithFilterAndLimit(storeName, field, value, operator, count),
       single: () => {
         return self.initPromise.then(async () => {
-          const result = await self._selectWithFilterExecute(storeName, field, value);
+          const result = await self._selectWithFilterExecute(storeName, field, value, operator);
           if (result.data && result.data.length > 0) {
             return { data: result.data[0], error: null };
           }
@@ -175,7 +185,7 @@ class IndexedDBAdapter {
       },
       then: (resolve, reject) => {
         return self.initPromise
-          .then(() => self._selectWithFilterExecute(storeName, field, value))
+          .then(() => self._selectWithFilterExecute(storeName, field, value, operator))
           .then(resolve, reject);
       }
     };
@@ -183,7 +193,7 @@ class IndexedDBAdapter {
     return chainable;
   }
 
-  async _selectWithFilterExecute(storeName, field, value) {
+  async _selectWithFilterExecute(storeName, field, value, operator = 'eq') {
     await this.initPromise;
 
     return new Promise((resolve) => {
@@ -192,13 +202,187 @@ class IndexedDBAdapter {
       const request = store.getAll();
 
       request.onsuccess = () => {
-        const filtered = request.result.filter(item => item[field] === value);
+        let filtered;
+        switch (operator) {
+          case 'lte':
+            filtered = request.result.filter(item => item[field] <= value);
+            break;
+          case 'gte':
+            filtered = request.result.filter(item => item[field] >= value);
+            break;
+          case 'lt':
+            filtered = request.result.filter(item => item[field] < value);
+            break;
+          case 'gt':
+            filtered = request.result.filter(item => item[field] > value);
+            break;
+          case 'eq':
+          default:
+            filtered = request.result.filter(item => item[field] === value);
+            break;
+        }
         resolve({ data: filtered, error: null });
       };
       request.onerror = () => {
         resolve({ data: null, error: request.error });
       };
     });
+  }
+
+  _selectWithCompoundFilters(storeName, filterArray) {
+    const self = this;
+
+    return {
+      order: (orderField, options) => self._selectWithCompoundFiltersAndOrder(storeName, filterArray, orderField, options),
+      limit: (count) => self._selectWithCompoundFiltersAndLimit(storeName, filterArray, count),
+      single: () => {
+        return self.initPromise.then(async () => {
+          const result = await self._selectWithCompoundFiltersExecute(storeName, filterArray);
+          if (result.data && result.data.length > 0) {
+            return { data: result.data[0], error: null };
+          }
+          return { data: null, error: { code: 'PGRST116', message: 'No rows found' } };
+        });
+      },
+      then: (resolve, reject) => {
+        return self.initPromise
+          .then(() => self._selectWithCompoundFiltersExecute(storeName, filterArray))
+          .then(resolve, reject);
+      }
+    };
+  }
+
+  async _selectWithCompoundFiltersExecute(storeName, filterArray) {
+    await this.initPromise;
+
+    return new Promise((resolve) => {
+      const transaction = this.db.transaction([storeName], 'readonly');
+      const store = transaction.objectStore(storeName);
+      const request = store.getAll();
+
+      request.onsuccess = () => {
+        const filtered = request.result.filter(item => {
+          return filterArray.every(filter => {
+            const { field, value, operator } = filter;
+            switch (operator) {
+              case 'lte':
+                return item[field] <= value;
+              case 'gte':
+                return item[field] >= value;
+              case 'lt':
+                return item[field] < value;
+              case 'gt':
+                return item[field] > value;
+              case 'eq':
+              default:
+                return item[field] === value;
+            }
+          });
+        });
+        resolve({ data: filtered, error: null });
+      };
+      request.onerror = () => {
+        resolve({ data: null, error: request.error });
+      };
+    });
+  }
+
+  _selectWithCompoundFiltersAndOrder(storeName, filterArray, orderField, orderOptions) {
+    const self = this;
+
+    return {
+      limit: (count) => self.initPromise.then(() => self._selectWithCompoundFiltersOrderAndLimit(storeName, filterArray, orderField, orderOptions, count)),
+      then: (resolve, reject) => {
+        return self.initPromise
+          .then(() => self._selectWithCompoundFiltersOrderExecute(storeName, filterArray, orderField, orderOptions))
+          .then(resolve, reject);
+      }
+    };
+  }
+
+  async _selectWithCompoundFiltersOrderExecute(storeName, filterArray, orderField, orderOptions) {
+    const result = await this._selectWithCompoundFiltersExecute(storeName, filterArray);
+    
+    if (result.data) {
+      result.data.sort((a, b) => {
+        if (orderOptions.ascending === false) {
+          return b[orderField] > a[orderField] ? 1 : -1;
+        }
+        return a[orderField] > b[orderField] ? 1 : -1;
+      });
+    }
+    
+    return result;
+  }
+
+  async _selectWithCompoundFiltersOrderAndLimit(storeName, filterArray, orderField, orderOptions, limit) {
+    const result = await this._selectWithCompoundFiltersOrderExecute(storeName, filterArray, orderField, orderOptions);
+    
+    if (result.data && result.data.length > limit) {
+      result.data = result.data.slice(0, limit);
+    }
+    
+    return result;
+  }
+
+  _selectWithFilterAndOrder(storeName, field, value, operator, orderField, orderOptions) {
+    const self = this;
+
+    return {
+      limit: (count) => self.initPromise.then(() => self._selectWithFilterOrderAndLimit(storeName, field, value, operator, orderField, orderOptions, count)),
+      then: (resolve, reject) => {
+        return self.initPromise
+          .then(() => self._selectWithFilterOrderExecute(storeName, field, value, operator, orderField, orderOptions))
+          .then(resolve, reject);
+      }
+    };
+  }
+
+  async _selectWithFilterOrderExecute(storeName, field, value, operator, orderField, orderOptions) {
+    const result = await this._selectWithFilterExecute(storeName, field, value, operator);
+    
+    if (result.data) {
+      result.data.sort((a, b) => {
+        if (orderOptions.ascending === false) {
+          return b[orderField] > a[orderField] ? 1 : -1;
+        }
+        return a[orderField] > b[orderField] ? 1 : -1;
+      });
+    }
+    
+    return result;
+  }
+
+  async _selectWithFilterOrderAndLimit(storeName, field, value, operator, orderField, orderOptions, limit) {
+    const result = await this._selectWithFilterOrderExecute(storeName, field, value, operator, orderField, orderOptions);
+    
+    if (result.data && result.data.length > limit) {
+      result.data = result.data.slice(0, limit);
+    }
+    
+    return result;
+  }
+
+  _selectWithFilterAndLimit(storeName, field, value, operator, limit) {
+    const self = this;
+
+    return {
+      then: (resolve, reject) => {
+        return self.initPromise
+          .then(() => self._selectWithFilterLimitExecute(storeName, field, value, operator, limit))
+          .then(resolve, reject);
+      }
+    };
+  }
+
+  async _selectWithFilterLimitExecute(storeName, field, value, operator, limit) {
+    const result = await this._selectWithFilterExecute(storeName, field, value, operator);
+    
+    if (result.data && result.data.length > limit) {
+      result.data = result.data.slice(0, limit);
+    }
+    
+    return result;
   }
 
   _selectWithMultipleFilters(storeName, filters) {
