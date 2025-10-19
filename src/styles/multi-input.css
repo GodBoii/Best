@@ -1,0 +1,337 @@
+/* ============================================
+   MULTI-INPUT MODE STYLES
+   Styles for multi-input form components
+   ============================================ */
+
+/* Mode Toggle Container */
+.mode-toggle-container {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--white);
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.mode-toggle-btn {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid var(--border);
+  background: var(--white);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-toggle-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.mode-toggle-btn.active {
+  background: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+}
+
+/* Form Description */
+.form-description {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 24px;
+  padding: 12px 16px;
+  background: var(--bg-light);
+  border-left: 4px solid var(--primary);
+  border-radius: 4px;
+}
+
+/* Multi-Input Container */
+.multi-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.multi-input-add-area {
+  background: var(--white);
+  padding: 20px;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+}
+
+/* Selected Items Display */
+.multi-input-selected-items {
+  background: var(--bg-light);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.selected-items-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+
+.items-count {
+  font-weight: 600;
+  color: var(--primary);
+  font-size: 14px;
+}
+
+/* Multi-Input Item */
+.multi-input-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--white);
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+
+.multi-input-item:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.multi-input-item:last-child {
+  margin-bottom: 0;
+}
+
+.item-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.item-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  background: var(--primary);
+  color: var(--white);
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Remove Button */
+.btn-remove-item {
+  padding: 6px 12px;
+  background: var(--danger);
+  color: var(--white);
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-remove-item:hover {
+  background: #c0392b;
+  transform: scale(1.05);
+}
+
+/* Add Button for Multi-Input */
+.btn-add-multi {
+  padding: 10px 20px;
+  background: var(--success);
+  color: var(--white);
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.btn-add-multi:hover:not(:disabled) {
+  background: #27ae60;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+}
+
+.btn-add-multi:disabled {
+  background: var(--border);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Schedule Type Display in Multi-Input */
+.schedule-type-display {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.schedule-type-main {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.schedule-type-details {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Route/Operator/BusType Item Display */
+.route-item-display,
+.operator-item-display,
+.bustype-item-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.route-item-name,
+.operator-item-name,
+.bustype-item-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.route-item-code,
+.operator-item-code,
+.bustype-item-code {
+  color: var(--text-secondary);
+  font-size: 12px;
+  background: var(--bg-light);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.route-item-actions,
+.operator-item-actions,
+.bustype-item-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.btn-modify-small,
+.btn-delete-small {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-modify-small {
+  background: var(--warning);
+  color: var(--white);
+}
+
+.btn-modify-small:hover {
+  background: #e67e22;
+  transform: scale(1.05);
+}
+
+.btn-delete-small {
+  background: var(--danger);
+  color: var(--white);
+}
+
+.btn-delete-small:hover {
+  background: #c0392b;
+  transform: scale(1.05);
+}
+
+/* Entry Counter */
+.entry-counter {
+  background: linear-gradient(135deg, var(--primary) 0%, #2980b9 100%);
+  color: var(--white);
+  padding: 20px;
+  border-radius: 8px;
+  margin: 24px 0;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.counter-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.counter-label {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.counter-value {
+  font-size: 32px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px 20px;
+  border-radius: 8px;
+}
+
+.counter-breakdown {
+  font-size: 13px;
+  opacity: 0.9;
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* Schedule Add Button Container */
+.schedule-add-button-container {
+  margin-top: 16px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .mode-toggle-container {
+    flex-direction: column;
+  }
+
+  .mode-toggle-btn {
+    width: 100%;
+  }
+
+  .multi-input-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .item-content {
+    width: 100%;
+  }
+
+  .route-item-actions,
+  .operator-item-actions,
+  .bustype-item-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .counter-content {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .counter-value {
+    font-size: 28px;
+  }
+}

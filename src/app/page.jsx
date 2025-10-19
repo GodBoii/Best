@@ -1,11 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import SimpleForm from '../components/SimpleForm';
+import SimpleFormMulti from '../components/SimpleFormMulti';
 import StorageToggle from '../components/StorageToggle';
 import '../styles/globals.css';
 
 export default function Home() {
+  const [isMultiMode, setIsMultiMode] = useState(true);
+
   return (
     <div className="app-container">
       <header className="app-header">
@@ -25,8 +29,24 @@ export default function Home() {
         </Link>
       </nav>
 
+      {/* Mode Toggle */}
+      <div className="mode-toggle-container">
+        <button
+          onClick={() => setIsMultiMode(false)}
+          className={`mode-toggle-btn ${!isMultiMode ? 'active' : ''}`}
+        >
+          Single Entry Mode
+        </button>
+        <button
+          onClick={() => setIsMultiMode(true)}
+          className={`mode-toggle-btn ${isMultiMode ? 'active' : ''}`}
+        >
+          Multi-Input Mode
+        </button>
+      </div>
+
       <main className="app-main">
-        <SimpleForm />
+        {isMultiMode ? <SimpleFormMulti /> : <SimpleForm />}
       </main>
 
       <footer className="app-footer">
