@@ -135,7 +135,7 @@ export default function ReportPage() {
           <button>Schedule Entry</button>
         </Link>
         <Link href="/report">
-          <button className="active">Generate Report</button>
+          <button className="active">Depot Report</button>
         </Link>
       </nav>
 

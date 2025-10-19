@@ -1,0 +1,231 @@
+/* ============================================
+   BUTTON STYLES - FLAT DESIGN
+   ============================================ */
+
+/* Base Button Styles */
+button,
+.btn-add-new,
+.btn-modify,
+.btn-delete,
+.btn-submit,
+.save-btn,
+.add-entry-btn,
+.btn-generate-report,
+.btn-preview,
+.btn-download,
+.modal-btn,
+.remove-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  box-shadow: 0 2px 6px var(--shadow);
+}
+
+button:hover,
+.btn-add-new:hover:not(:disabled),
+.btn-modify:hover:not(:disabled),
+.btn-delete:hover:not(:disabled),
+.btn-submit:hover:not(:disabled),
+.save-btn:hover:not(:disabled),
+.add-entry-btn:hover:not(:disabled),
+.btn-generate-report:hover:not(:disabled),
+.btn-preview:hover:not(:disabled),
+.btn-download:hover:not(:disabled),
+.modal-btn:hover:not(:disabled) {
+  box-shadow: 0 2px 6px var(--shadow-hover);
+  transform: translateY(-1px);
+}
+
+button:active,
+.btn-add-new:active,
+.btn-modify:active,
+.btn-delete:active,
+.btn-submit:active,
+.save-btn:active,
+.add-entry-btn:active,
+.btn-generate-report:active,
+.btn-preview:active,
+.btn-download:active,
+.modal-btn:active {
+  transform: translateY(0);
+}
+
+button:disabled,
+.btn-add-new:disabled,
+.btn-modify:disabled,
+.btn-delete:disabled,
+.btn-submit:disabled,
+.save-btn:disabled,
+.add-entry-btn:disabled,
+.btn-generate-report:disabled,
+.btn-preview:disabled,
+.btn-download:disabled,
+.modal-btn:disabled {
+  background-color: var(--light-alt);
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Primary Buttons */
+.btn-submit,
+.save-btn,
+.btn-generate-report,
+.btn-modify,
+.modal-btn-save {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: var(--white);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.btn-submit:hover:not(:disabled),
+.save-btn:hover:not(:disabled),
+.btn-generate-report:hover:not(:disabled),
+.btn-modify:hover:not(:disabled),
+.modal-btn-save:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-dark) 100%);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+/* Success Buttons */
+.btn-add-new,
+.add-entry-btn,
+.btn-download {
+  background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+  color: var(--white);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-add-new:hover:not(:disabled),
+.add-entry-btn:hover:not(:disabled),
+.btn-download:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--success-dark) 0%, #047857 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+/* Danger Buttons */
+.btn-delete,
+.remove-btn {
+  background: linear-gradient(135deg, var(--danger) 0%, var(--danger-dark) 100%);
+  color: var(--white);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-delete:hover:not(:disabled),
+.remove-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--danger-dark) 0%, #b91c1c 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* Preview Buttons */
+.btn-preview {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: var(--white);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+}
+
+.btn-preview:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-dark) 0%, #0369a1 100%);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+}
+
+/* Cancel/Secondary Buttons */
+.modal-btn-cancel,
+.form-actions button[type="button"] {
+  background: var(--white);
+  color: var(--text-dark);
+  border: 2px solid var(--border-dark);
+  box-shadow: 0 1px 3px var(--shadow);
+}
+
+.modal-btn-cancel:hover:not(:disabled),
+.form-actions button[type="button"]:hover:not(:disabled) {
+  background: var(--light);
+  border-color: var(--medium);
+}
+
+/* Remove Button Special Style */
+.remove-btn {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--border);
+}
+
+.form-actions .btn-submit {
+  flex: 1;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  padding-top: 1rem;
+  border-top: 2px solid var(--border);
+}
+
+/* Unified Action Containers */
+.depot-actions-unified,
+.operator-actions-unified,
+.bustype-actions-unified,
+.route-actions-unified {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.add-entry-action {
+  text-align: center;
+  padding-top: 1rem;
+  border-top: 2px solid var(--border);
+}
+
+.add-entry-btn {
+  padding: 1.25rem 2.5rem;
+  font-size: 1.1rem;
+}
+
+/* Table Action Buttons */
+table td button {
+  padding: 0.5rem 1rem;
+  margin-right: 0.5rem;
+  font-size: 0.875rem;
+}
+
+table td button:first-child {
+  background: var(--primary);
+  color: var(--white);
+}
+
+table td button:last-child {
+  background: var(--danger);
+  color: var(--white);
+}

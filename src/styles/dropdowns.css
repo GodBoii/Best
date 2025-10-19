@@ -1,0 +1,202 @@
+/* ============================================
+   DROPDOWN STYLES - DEPOT, OPERATOR, BUS TYPE, ROUTE
+   ============================================ */
+
+/* Unified Container Styles */
+.depot-unified-container,
+.operator-unified-container,
+.bustype-unified-container,
+.route-unified-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Input Row Layouts */
+.depot-unified-container {
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.operator-inputs-row,
+.bustype-inputs-row,
+.route-inputs-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+/* Input Wrappers */
+.depot-input-wrapper,
+.operator-input-wrapper,
+.bustype-input-wrapper,
+.route-input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.depot-input-wrapper label,
+.operator-input-wrapper label,
+.bustype-input-wrapper label,
+.route-input-wrapper label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+}
+
+/* Short Code/Name Wrappers */
+.operator-short-wrapper,
+.bustype-short-wrapper,
+.route-code-wrapper {
+  width: 200px;
+}
+
+.operator-short-wrapper label,
+.bustype-short-wrapper label,
+.route-code-wrapper label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-dark);
+  font-size: 0.9rem;
+}
+
+/* Dropdown Menus */
+.depot-dropdown,
+.operator-dropdown,
+.bustype-dropdown,
+.route-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border: 2px solid var(--primary);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.15);
+  margin-top: -2px;
+}
+
+/* Dropdown Items */
+.depot-dropdown-item,
+.operator-dropdown-item,
+.bustype-dropdown-item,
+.route-dropdown-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.depot-dropdown-item:last-child,
+.operator-dropdown-item:last-child,
+.bustype-dropdown-item:last-child,
+.route-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.depot-dropdown-item:hover,
+.operator-dropdown-item:hover,
+.bustype-dropdown-item:hover,
+.route-dropdown-item:hover {
+  background: var(--light);
+  border-left: 3px solid var(--primary-light);
+}
+
+.depot-dropdown-item.selected,
+.operator-dropdown-item.selected,
+.bustype-dropdown-item.selected,
+.route-dropdown-item.selected {
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.1) 0%, var(--white) 100%);
+  font-weight: 600;
+  border-left: 4px solid var(--primary);
+  color: var(--primary);
+}
+
+/* Dropdown Item Content */
+.operator-name,
+.bustype-name,
+.route-name {
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+.operator-code,
+.bustype-code,
+.route-code {
+  color: var(--white);
+  font-weight: 700;
+  font-size: 0.8rem;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+/* Selected Info Boxes */
+.selected-depot-info,
+.selected-operator-info,
+.selected-bustype-info,
+.selected-route-info,
+.selected-schedule-type-info {
+  margin-top: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(37, 99, 235, 0.02) 100%);
+  border: 2px solid var(--primary-light);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.1);
+}
+
+.info-label {
+  font-weight: 600;
+  color: var(--text-medium);
+  font-size: 0.875rem;
+}
+
+.info-value {
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* Scrollbar Styling for Dropdowns */
+.depot-dropdown::-webkit-scrollbar,
+.operator-dropdown::-webkit-scrollbar,
+.bustype-dropdown::-webkit-scrollbar,
+.route-dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.depot-dropdown::-webkit-scrollbar-track,
+.operator-dropdown::-webkit-scrollbar-track,
+.bustype-dropdown::-webkit-scrollbar-track,
+.route-dropdown::-webkit-scrollbar-track {
+  background: var(--light);
+}
+
+.depot-dropdown::-webkit-scrollbar-thumb,
+.operator-dropdown::-webkit-scrollbar-thumb,
+.bustype-dropdown::-webkit-scrollbar-thumb,
+.route-dropdown::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-radius: 4px;
+}
+
+.depot-dropdown::-webkit-scrollbar-thumb:hover,
+.operator-dropdown::-webkit-scrollbar-thumb:hover,
+.bustype-dropdown::-webkit-scrollbar-thumb:hover,
+.route-dropdown::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, #1e40af 100%);
+}

@@ -1,0 +1,228 @@
+/* ============================================
+   RESPONSIVE DESIGN - MOBILE & TABLET
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Header */
+  .app-header {
+    padding: 1.25rem 1rem;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .app-header h1 {
+    font-size: 1.25rem;
+    text-align: center;
+  }
+
+  /* Navigation */
+  .app-nav {
+    flex-wrap: wrap;
+  }
+
+  .app-nav button {
+    flex: 1 1 auto;
+    min-width: 120px;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  /* Main Content */
+  .app-main {
+    padding: 1rem 0.75rem;
+  }
+
+  /* Containers */
+  .manager-container,
+  .schedule-creator,
+  .simple-form-container,
+  .report-form-section,
+  .report-preview-container {
+    padding: 1.25rem;
+  }
+
+  /* Form Rows */
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-data-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Entries List */
+  .entries-list {
+    grid-template-columns: 1fr;
+  }
+
+  /* Actions */
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+
+  /* Depot Container */
+  .depot-unified-container {
+    flex-direction: column;
+  }
+
+  .depot-actions-unified {
+    width: 100%;
+  }
+
+  .depot-actions-unified button {
+    flex: 1;
+  }
+
+  /* Operator Container */
+  .operator-inputs-row {
+    flex-direction: column;
+  }
+
+  .operator-short-wrapper {
+    width: 100%;
+  }
+
+  .operator-actions-unified {
+    width: 100%;
+  }
+
+  .operator-actions-unified button {
+    flex: 1;
+  }
+
+  /* Bus Type Container */
+  .bustype-inputs-row {
+    flex-direction: column;
+  }
+
+  .bustype-short-wrapper {
+    width: 100%;
+  }
+
+  .bustype-actions-unified {
+    width: 100%;
+  }
+
+  .bustype-actions-unified button {
+    flex: 1;
+  }
+
+  /* Route Container */
+  .route-inputs-row {
+    flex-direction: column;
+  }
+
+  .route-code-wrapper {
+    width: 100%;
+  }
+
+  .route-actions-unified {
+    width: 100%;
+  }
+
+  .route-actions-unified button {
+    flex: 1;
+  }
+
+  /* Schedule Type */
+  .schedule-type-buttons {
+    flex-direction: column;
+  }
+
+  .schedule-input-row {
+    flex-direction: column;
+  }
+
+  .schedule-inputs-container {
+    padding: 1.5rem;
+  }
+
+  /* Report Inputs */
+  .report-inputs {
+    flex-direction: column;
+  }
+
+  .report-inputs .form-group {
+    width: 100%;
+  }
+
+  .report-inputs button {
+    width: 100%;
+  }
+
+  /* Report Preview */
+  .report-preview-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .report-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .report-actions button {
+    width: 100%;
+  }
+
+  /* Modal */
+  .modal-content {
+    width: 95%;
+    max-width: none;
+  }
+
+  .modal-header {
+    padding: 1.5rem;
+  }
+
+  .modal-header h3 {
+    font-size: 1.3rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .modal-footer {
+    padding: 1rem 1.5rem;
+    flex-direction: column;
+  }
+
+  .modal-footer button {
+    width: 100%;
+  }
+
+  /* Tables */
+  .report-table {
+    font-size: 0.75rem;
+  }
+
+  .report-table th,
+  .report-table td {
+    padding: 0.5rem 0.25rem;
+  }
+}
+
+/* Tablet Specific */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .app-header {
+    padding: 2rem 2rem;
+  }
+
+  .app-main {
+    padding: 2rem 1.5rem;
+  }
+
+  .entries-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .schedule-data-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

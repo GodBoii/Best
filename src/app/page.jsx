@@ -18,7 +18,7 @@ export default function Home() {
           <button className="active">Schedule Entry</button>
         </Link>
         <Link href="/report">
-          <button>Generate Report</button>
+          <button>Depot Report</button>
         </Link>
       </nav>
 

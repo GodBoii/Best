@@ -1,0 +1,53 @@
+/* ============================================
+   TABLE STYLES
+   ============================================ */
+
+.table-container {
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 8px var(--shadow);
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--white);
+}
+
+table thead {
+  background: var(--dark);
+  color: var(--white);
+}
+
+table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-bottom: 2px solid var(--border);
+}
+
+table td {
+  padding: 0.875rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dark);
+  font-weight: 400;
+}
+
+table tbody tr {
+  transition: all var(--transition-fast);
+}
+
+table tbody tr:hover {
+  background: var(--cream);
+}
+
+table tbody tr:nth-child(even) {
+  background: var(--light);
+}
+
+table tbody tr:nth-child(even):hover {
+  background: var(--light-alt);
+}
