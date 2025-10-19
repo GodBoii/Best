@@ -3,9 +3,20 @@
 import React, { useState } from 'react';
 import { generateReportPDF } from '../services/reportGenerator';
 
+/**
+ * ReportPreview Component
+ * Displays a preview of the bus schedule report in the browser
+ * and provides buttons to download or print the PDF version
+ * 
+ * @param {Object} reportData - Contains depot, date, and entries for the report
+ */
 export default function ReportPreview({ reportData }) {
   const [generating, setGenerating] = useState(false);
 
+  /**
+   * Handle PDF download
+   * Generates and downloads the PDF file to the user's device
+   */
   const handleDownloadPDF = async () => {
     setGenerating(true);
     try {
@@ -20,6 +31,10 @@ export default function ReportPreview({ reportData }) {
     }
   };
 
+  /**
+   * Handle PDF print preview
+   * Opens the PDF in a new browser tab for preview/printing
+   */
   const handlePrintPreview = async () => {
     setGenerating(true);
     try {
@@ -34,24 +49,28 @@ export default function ReportPreview({ reportData }) {
     }
   };
 
-  // Group entries by category and operator
-  // For BEST: group by bus_type (no operator)
-  // For WET_LEASE: group by operator (all bus types under same operator go together)
+  /**
+   * Group entries by category, operator, and bus type
+   * - BEST entries: grouped by bus_type only (no operator)
+   * - WET_LEASE entries: grouped by BOTH operator AND bus_type (each combination gets its own section)
+   * This creates separate sections for each unique combination
+   */
   const groupedEntries = reportData.entries.reduce((acc, entry) => {
     const category = entry.bus_types?.category || 'BEST';
     const busTypeId = entry.bus_types?.id || 'unknown';
     const operatorId = entry.operator_id;
 
     let groupKey;
-    // If entry has an operator_id, it's WET_LEASE regardless of category field
+    // If entry has an operator_id, it's a WET_LEASE entry
     if (operatorId) {
-      // WET_LEASE entries: group by operator ONLY (not by bus_type)
-      groupKey = `WL_${operatorId}`;
+      // WET_LEASE entries: group by BOTH operator AND bus_type
+      groupKey = `WL_${operatorId}_${busTypeId}`;
     } else {
-      // BEST entries: group by bus_type
+      // BEST entries: group by bus_type only
       groupKey = `BEST_${busTypeId}`;
     }
 
+    // Create new group if it doesn't exist
     if (!acc[groupKey]) {
       acc[groupKey] = {
         category: operatorId ? 'WET_LEASE' : 'BEST',
@@ -71,14 +90,51 @@ export default function ReportPreview({ reportData }) {
     return acc;
   }, {});
 
-  // Sort groups: BEST categories first, then WET_LEASE
+  /**
+   * Sort groups in the following order:
+   * 1. BEST categories first (sorted by display_order)
+   * 2. WET_LEASE categories (sorted alphabetically by operator name, then by bus type name)
+   * 3. Special case: "BEST" operator name comes first among WET_LEASE entries
+   */
   const sortedGroups = Object.entries(groupedEntries).sort((a, b) => {
-    return a[1].sortOrder - b[1].sortOrder;
+    const groupA = a[1];
+    const groupB = b[1];
+    
+    // BEST category entries (no operator) come before WET_LEASE
+    if (groupA.category === 'BEST' && groupB.category !== 'BEST') return -1;
+    if (groupA.category !== 'BEST' && groupB.category === 'BEST') return 1;
+    
+    // Both BEST category: sort by display_order
+    if (groupA.category === 'BEST' && groupB.category === 'BEST') {
+      return (groupA.busType?.display_order || 0) - (groupB.busType?.display_order || 0);
+    }
+    
+    // Both WET_LEASE: special handling for "BEST" operator name
+    const operatorA = groupA.operator?.name || '';
+    const operatorB = groupB.operator?.name || '';
+    
+    // If operator A is "BEST", it comes first
+    if (operatorA === 'BEST' && operatorB !== 'BEST') return -1;
+    if (operatorA !== 'BEST' && operatorB === 'BEST') return 1;
+    
+    // Both are "BEST" operator OR both are other operators: sort by operator name
+    const operatorCompare = operatorA.localeCompare(operatorB);
+    
+    if (operatorCompare !== 0) return operatorCompare;
+    
+    // Same operator: sort by bus type name
+    const busTypeA = groupA.busType?.name || '';
+    const busTypeB = groupB.busType?.name || '';
+    return busTypeA.localeCompare(busTypeB);
   });
 
-  // Calculate totals for a group
+  /**
+   * Calculate totals for a group of entries
+   * Sums up all schedule positions and duty allocations
+   */
   const calculateGroupTotals = (entries) => {
     return entries.reduce((totals, entry) => {
+      // Helper to parse values for calculation
       const parseValue = (val) => {
         if (val === '-' || val === null || val === undefined || val === '') return 0;
         return parseInt(val) || 0;
@@ -104,6 +160,10 @@ export default function ReportPreview({ reportData }) {
     });
   };
 
+  /**
+   * Format values for display
+   * Converts null, undefined, or empty strings to '-'
+   */
   const formatValue = (val) => {
     if (val === '-' || val === null || val === undefined || val === '') return '-';
     return val;
@@ -140,9 +200,12 @@ export default function ReportPreview({ reportData }) {
           <table className="report-table">
             <thead>
               <tr>
-                <th rowSpan="2">Route</th>
-                <th rowSpan="2">Bus Type</th>
-                <th rowSpan="2">Code No.</th>
+                <th rowSpan="3">Route</th>
+                <th rowSpan="3">Code No.</th>
+                <th colSpan="6">Schedule Turnout Position</th>
+                <th colSpan="4">Allocation of Duties</th>
+              </tr>
+              <tr>
                 <th colSpan="3">Mon To Sat</th>
                 <th colSpan="3">Sunday</th>
                 <th colSpan="2">DRIVERS</th>
@@ -166,14 +229,18 @@ export default function ReportPreview({ reportData }) {
                 const { category, operator, busType, entries } = group;
                 const totals = calculateGroupTotals(entries);
 
-                // Build category name
+                /**
+                 * Build category name for the section header
+                 * - BEST: Shows only bus type name (e.g., "AC")
+                 * - WET_LEASE: Shows "Operator Name - Bus Type Name" (e.g., "TMT - AC")
+                 */
                 let categoryName;
                 if (category === 'BEST') {
                   categoryName = busType?.name || 'Unknown Bus Type';
                 } else {
-                  // For WET_LEASE, collect all unique bus type names in this group
-                  const busTypeNames = [...new Set(entries.map(e => e.bus_types?.name))].filter(Boolean).join(', ');
-
+                  // For WET_LEASE, show bus type and operator
+                  const busTypeName = busType?.name || 'Unknown Bus Type';
+                  
                   // Try to get operator name from the group or from any entry in the group
                   let operatorName = operator?.name;
                   if (!operatorName) {
@@ -182,19 +249,20 @@ export default function ReportPreview({ reportData }) {
                     operatorName = entryWithOperator?.operators?.name || 'Unknown Operator';
                   }
 
-                  // Format: "Operator Name - Bus Type Names"
-                  categoryName = `${operatorName} - ${busTypeNames || 'Unknown Bus Type'}`;
+                  // Format: "Operator Name - Bus Type Name"
+                  categoryName = `${operatorName} - ${busTypeName}`;
                 }
 
                 return (
                   <React.Fragment key={groupKey}>
+                    {/* Category header row */}
                     <tr className="category-header">
-                      <td colSpan="13">{categoryName}</td>
+                      <td colSpan="12">{categoryName}</td>
                     </tr>
+                    {/* Data rows for each entry in this group */}
                     {entries.map((entry, idx) => (
                       <tr key={idx}>
                         <td>{entry.routes?.name || '-'}</td>
-                        <td>{entry.bus_types?.short_name || ''}</td>
                         <td>{entry.routes?.code || '-'}</td>
                         <td>{formatValue(entry.mon_sat_am)}</td>
                         <td>{formatValue(entry.mon_sat_noon)}</td>
@@ -208,8 +276,9 @@ export default function ReportPreview({ reportData }) {
                         <td>{formatValue(entry.duties_cond_sun)}</td>
                       </tr>
                     ))}
+                    {/* Total row for this group */}
                     <tr className="total-row">
-                      <td colSpan="3">Total :-</td>
+                      <td colSpan="2">Total :-</td>
                       <td>{totals.mon_sat_am || 0}</td>
                       <td>{totals.mon_sat_noon || 0}</td>
                       <td>{totals.mon_sat_pm || 0}</td>
