@@ -399,10 +399,10 @@ export const generateReportPDF = async (reportData, preview = false) => {
           0: { halign: 'center', cellWidth: columnWidths[0] },
           1: { halign: 'center', cellWidth: columnWidths[1] },
           2: { halign: 'center', cellWidth: columnWidths[2] },
-          3: { halign: 'center', cellWidth: columnWidths[3], fontSize: 7 }, // NOON (Mon-Sat)
+          3: { halign: 'center', cellWidth: columnWidths[3] },
           4: { halign: 'center', cellWidth: columnWidths[4] },
           5: { halign: 'center', cellWidth: columnWidths[5] },
-          6: { halign: 'center', cellWidth: columnWidths[6], fontSize: 7 }, // NOON (Sunday)
+          6: { halign: 'center', cellWidth: columnWidths[6] },
           7: { halign: 'center', cellWidth: columnWidths[7] },
           8: { halign: 'center', cellWidth: columnWidths[8] },
           9: { halign: 'center', cellWidth: columnWidths[9] },
@@ -412,13 +412,7 @@ export const generateReportPDF = async (reportData, preview = false) => {
         didParseCell: function (data) {
           // CRITICAL: Preserve the fontSize for all cells
           data.cell.styles.font = 'times';
-
-          // Apply specific font size to NOON columns (columns 3 and 6)
-          if (data.column.index === 3 || data.column.index === 6) {
-            data.cell.styles.fontSize = 7;
-          } else {
-            data.cell.styles.fontSize = tableFontSize;
-          }
+          data.cell.styles.fontSize = tableFontSize;
 
           // Style category title row (first row) - white background, bold, left-aligned
           if (data.row.index === 0) {
