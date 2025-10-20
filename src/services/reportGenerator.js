@@ -31,7 +31,7 @@ export const generateReportPDF = async (reportData, preview = false) => {
     doc.setFont('times');
 
     // Add report header with depot name and date (centered)
-    doc.setFontSize(12);
+    doc.setFontSize(10);
     doc.setFont('times', 'bold');
     const formattedDate = new Date(reportData.date).toLocaleDateString('en-GB', {
       day: '2-digit',
@@ -42,7 +42,7 @@ export const generateReportPDF = async (reportData, preview = false) => {
     const headerPageWidth = doc.internal.pageSize.getWidth();
     const textWidth = doc.getTextWidth(headerText);
     const xPosition = (headerPageWidth - textWidth) / 2;
-    doc.text(headerText, xPosition, 12);
+    doc.text(headerText, xPosition, 10);
 
     // Define consistent margins and column widths for portrait orientation
     // Fixed column widths optimized for A4 portrait (210mm width)
@@ -73,7 +73,7 @@ export const generateReportPDF = async (reportData, preview = false) => {
     // Add unified column headers at the top (only once)
     // Using body instead of head to ensure consistent width calculation with data tables
     doc.autoTable({
-      startY: 18,
+      startY: 15,
       margin: { left: leftMargin, right: rightMargin },
       body: [
         [
@@ -105,7 +105,7 @@ export const generateReportPDF = async (reportData, preview = false) => {
       styles: {
         font: 'times',
         fontSize: 8,
-        cellPadding: 1,
+        cellPadding: 0.5,
         lineColor: [0, 0, 0],
         lineWidth: 0.1,
         fillColor: [255, 255, 255],
@@ -378,7 +378,7 @@ export const generateReportPDF = async (reportData, preview = false) => {
         styles: {
           font: 'times',
           fontSize: tableFontSize,
-          cellPadding: 1,
+          cellPadding: 0.5,
           lineColor: [0, 0, 0],
           lineWidth: 0.1
         },
@@ -428,8 +428,8 @@ export const generateReportPDF = async (reportData, preview = false) => {
         }
       });
 
-      // Update Y position for next table (add small gap between tables)
-      startY = doc.lastAutoTable.finalY + 1;
+      // Update Y position for next table (minimal gap)
+      startY = doc.lastAutoTable.finalY + 0.3;
     });
 
     // Add BEST Total row if there are any BEST category entries
@@ -455,7 +455,7 @@ export const generateReportPDF = async (reportData, preview = false) => {
         styles: {
           font: 'times',
           fontSize: 9,
-          cellPadding: 1,
+          cellPadding: 0.5,
           fontStyle: 'bold',
           fillColor: [255, 255, 255],
           halign: 'center'
@@ -475,7 +475,7 @@ export const generateReportPDF = async (reportData, preview = false) => {
           11: { cellWidth: columnWidths[11], halign: 'center' }
         }
       });
-      startY = doc.lastAutoTable.finalY + 2;
+      startY = doc.lastAutoTable.finalY + 1;
     }
 
     // Add Grand Total row (sum of all entries - BEST and WET_LEASE)
@@ -499,7 +499,7 @@ export const generateReportPDF = async (reportData, preview = false) => {
       styles: {
         font: 'times',
         fontSize: 10,
-        cellPadding: 1,
+        cellPadding: 0.5,
         fontStyle: 'bold',
         fillColor: [255, 255, 255],
         halign: 'center',
