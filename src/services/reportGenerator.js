@@ -20,9 +20,9 @@ export const generateReportPDF = async (reportData, preview = false) => {
     // Import autoTable plugin - this extends jsPDF prototype for table generation
     await import('jspdf-autotable');
 
-    // Initialize PDF document in landscape orientation for wide tables
+    // Initialize PDF document in portrait orientation for A4 paper
     const doc = new jsPDF({
-      orientation: 'landscape',
+      orientation: 'portrait',
       unit: 'mm',
       format: 'a4',
     });
@@ -31,7 +31,7 @@ export const generateReportPDF = async (reportData, preview = false) => {
     doc.setFont('times');
 
     // Add report header with depot name and date (centered)
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.setFont('times', 'bold');
     const formattedDate = new Date(reportData.date).toLocaleDateString('en-GB', {
       day: '2-digit',
@@ -42,70 +42,70 @@ export const generateReportPDF = async (reportData, preview = false) => {
     const headerPageWidth = doc.internal.pageSize.getWidth();
     const textWidth = doc.getTextWidth(headerText);
     const xPosition = (headerPageWidth - textWidth) / 2;
-    doc.text(headerText, xPosition, 15);
+    doc.text(headerText, xPosition, 12);
 
-    // Define consistent margins and column widths
-    // Fixed column widths for consistent alignment across all tables
-    // Total: 30 + 18 + (6×14) + (4×24) = 30 + 18 + 84 + 96 = 228mm
+    // Define consistent margins and column widths for portrait orientation
+    // Fixed column widths optimized for A4 portrait (210mm width)
+    // Total: 24 + 14 + (6×11) + (4×18) = 24 + 14 + 66 + 72 = 176mm
     const columnWidths = {
-      0: 30,  // Route
-      1: 18,  // Code No.
-      2: 14,  // AM (Mon-Sat)
-      3: 14,  // NOON (Mon-Sat)
-      4: 14,  // PM (Mon-Sat)
-      5: 14,  // AM (Sunday)
-      6: 14,  // NOON (Sunday)
-      7: 14,  // PM (Sunday)
-      8: 24,  // Drivers Mon-Sat
-      9: 24,  // Drivers Sunday
-      10: 24, // Conductors Mon-Sat
-      11: 24  // Conductors Sunday
+      0: 24,  // Route
+      1: 14,  // Code No.
+      2: 11,  // AM (Mon-Sat)
+      3: 11,  // NOON (Mon-Sat)
+      4: 11,  // PM (Mon-Sat)
+      5: 11,  // AM (Sunday)
+      6: 11,  // NOON (Sunday)
+      7: 11,  // PM (Sunday)
+      8: 18,  // Drivers Mon-Sat
+      9: 18,  // Drivers Sunday
+      10: 18, // Conductors Mon-Sat
+      11: 18  // Conductors Sunday
     };
 
     // Calculate margins to center the table
-    // A4 landscape width = 297mm, table width = 228mm
-    // Remaining space = 297 - 228 = 69mm, so 34.5mm on each side
-    const tableWidth = 228;
-    const pageWidth = 297;
+    // A4 portrait width = 210mm, table width = 176mm
+    // Remaining space = 210 - 176 = 34mm, so 17mm on each side
+    const tableWidth = 176;
+    const pageWidth = 210;
     const leftMargin = (pageWidth - tableWidth) / 2;
     const rightMargin = (pageWidth - tableWidth) / 2;
 
     // Add unified column headers at the top (only once)
     // Using body instead of head to ensure consistent width calculation with data tables
     doc.autoTable({
-      startY: 22,
+      startY: 18,
       margin: { left: leftMargin, right: rightMargin },
       body: [
         [
           { content: 'Route', rowSpan: 3, styles: { valign: 'middle', halign: 'center', fontStyle: 'bold', font: 'times' } },
           { content: 'Code No.', rowSpan: 3, styles: { valign: 'middle', halign: 'center', fontStyle: 'bold', font: 'times' } },
-          { content: 'Schedule Turnout Position', colSpan: 6, styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 12 } },
-          { content: 'Allocation of Duties', colSpan: 4, styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 12 } }
+          { content: 'Schedule Turnout Position', colSpan: 6, styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 9 } },
+          { content: 'Allocation of Duties', colSpan: 4, styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 9 } }
         ],
         [
-          { content: 'Mon To Sat', colSpan: 3, styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 12 } },
-          { content: 'Sunday', colSpan: 3, styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 12 } },
-          { content: 'DRIVERS', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 12 } },
-          { content: 'CONDUCTORS', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 12 } }
+          { content: 'Mon To Sat', colSpan: 3, styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 8 } },
+          { content: 'Sunday', colSpan: 3, styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 8 } },
+          { content: 'DRIVERS', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 8 } },
+          { content: 'CONDUCTORS', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 8 } }
         ],
         [
-          { content: 'AM', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 12 } },
-          { content: 'NOON', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 10 } },
-          { content: 'PM', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 12 } },
-          { content: 'AM', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 12 } },
-          { content: 'NOON', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 10 } },
-          { content: 'PM', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 12 } },
-          { content: 'Mon To Sat', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 12 } },
-          { content: 'Sunday', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 12 } },
-          { content: 'Mon To Sat', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 12 } },
-          { content: 'Sunday', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 12 } }
+          { content: 'AM', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 8 } },
+          { content: 'NOON', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 7 } },
+          { content: 'PM', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 8 } },
+          { content: 'AM', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 8 } },
+          { content: 'NOON', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 7 } },
+          { content: 'PM', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 8 } },
+          { content: 'Mon To Sat', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 7 } },
+          { content: 'Sunday', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 7 } },
+          { content: 'Mon To Sat', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 7 } },
+          { content: 'Sunday', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 7 } }
         ]
       ],
       theme: 'grid',
       styles: {
         font: 'times',
-        fontSize: 10,
-        cellPadding: 1.5,
+        fontSize: 8,
+        cellPadding: 1,
         lineColor: [0, 0, 0],
         lineWidth: 0.1,
         fillColor: [255, 255, 255],
@@ -117,16 +117,16 @@ export const generateReportPDF = async (reportData, preview = false) => {
       columnStyles: {
         0: { halign: 'center', cellWidth: columnWidths[0] },
         1: { halign: 'center', cellWidth: columnWidths[1] },
-        2: { halign: 'center', cellWidth: columnWidths[2], fontSize: 12 },
-        3: { halign: 'center', cellWidth: columnWidths[3], fontSize: 12 },
-        4: { halign: 'center', cellWidth: columnWidths[4], fontSize: 12 },
-        5: { halign: 'center', cellWidth: columnWidths[5], fontSize: 12 },
-        6: { halign: 'center', cellWidth: columnWidths[6], fontSize: 12 },
-        7: { halign: 'center', cellWidth: columnWidths[7], fontSize: 12 },
-        8: { halign: 'center', cellWidth: columnWidths[8], fontSize: 12 },
-        9: { halign: 'center', cellWidth: columnWidths[9], fontSize: 12 },
-        10: { halign: 'center', cellWidth: columnWidths[10], fontSize: 12 },
-        11: { halign: 'center', cellWidth: columnWidths[11], fontSize: 12 }
+        2: { halign: 'center', cellWidth: columnWidths[2], fontSize: 8 },
+        3: { halign: 'center', cellWidth: columnWidths[3], fontSize: 8 },
+        4: { halign: 'center', cellWidth: columnWidths[4], fontSize: 8 },
+        5: { halign: 'center', cellWidth: columnWidths[5], fontSize: 8 },
+        6: { halign: 'center', cellWidth: columnWidths[6], fontSize: 8 },
+        7: { halign: 'center', cellWidth: columnWidths[7], fontSize: 8 },
+        8: { halign: 'center', cellWidth: columnWidths[8], fontSize: 8 },
+        9: { halign: 'center', cellWidth: columnWidths[9], fontSize: 8 },
+        10: { halign: 'center', cellWidth: columnWidths[10], fontSize: 8 },
+        11: { halign: 'center', cellWidth: columnWidths[11], fontSize: 8 }
       }
     });
 
@@ -366,8 +366,8 @@ export const generateReportPDF = async (reportData, preview = false) => {
       ]);
 
       // Determine font size based on category
-      // WET_LEASE (operator-bus type) tables get larger font for better readability
-      const tableFontSize = category === 'WET_LEASE' ? 12 : 8;
+      // Adjusted for portrait orientation - smaller fonts to fit narrower page
+      const tableFontSize = category === 'WET_LEASE' ? 9 : 7;
 
       // Generate table for this group (without repeating column headers)
       doc.autoTable({
@@ -378,7 +378,7 @@ export const generateReportPDF = async (reportData, preview = false) => {
         styles: {
           font: 'times',
           fontSize: tableFontSize,
-          cellPadding: 1.5,
+          cellPadding: 1,
           lineColor: [0, 0, 0],
           lineWidth: 0.1
         },
@@ -399,10 +399,10 @@ export const generateReportPDF = async (reportData, preview = false) => {
           0: { halign: 'center', cellWidth: columnWidths[0] },
           1: { halign: 'center', cellWidth: columnWidths[1] },
           2: { halign: 'center', cellWidth: columnWidths[2] },
-          3: { halign: 'center', cellWidth: columnWidths[3], fontSize: 10 }, // NOON (Mon-Sat)
+          3: { halign: 'center', cellWidth: columnWidths[3], fontSize: 7 }, // NOON (Mon-Sat)
           4: { halign: 'center', cellWidth: columnWidths[4] },
           5: { halign: 'center', cellWidth: columnWidths[5] },
-          6: { halign: 'center', cellWidth: columnWidths[6], fontSize: 10 }, // NOON (Sunday)
+          6: { halign: 'center', cellWidth: columnWidths[6], fontSize: 7 }, // NOON (Sunday)
           7: { halign: 'center', cellWidth: columnWidths[7] },
           8: { halign: 'center', cellWidth: columnWidths[8] },
           9: { halign: 'center', cellWidth: columnWidths[9] },
@@ -415,7 +415,7 @@ export const generateReportPDF = async (reportData, preview = false) => {
 
           // Apply specific font size to NOON columns (columns 3 and 6)
           if (data.column.index === 3 || data.column.index === 6) {
-            data.cell.styles.fontSize = 10;
+            data.cell.styles.fontSize = 7;
           } else {
             data.cell.styles.fontSize = tableFontSize;
           }
@@ -460,8 +460,8 @@ export const generateReportPDF = async (reportData, preview = false) => {
         theme: 'grid',
         styles: {
           font: 'times',
-          fontSize: 12,
-          cellPadding: 1.5,
+          fontSize: 9,
+          cellPadding: 1,
           fontStyle: 'bold',
           fillColor: [255, 255, 255],
           halign: 'center'
@@ -504,8 +504,8 @@ export const generateReportPDF = async (reportData, preview = false) => {
       theme: 'grid',
       styles: {
         font: 'times',
-        fontSize: 14,
-        cellPadding: 1.5,
+        fontSize: 10,
+        cellPadding: 1,
         fontStyle: 'bold',
         fillColor: [255, 255, 255],
         halign: 'center',
