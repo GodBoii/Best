@@ -125,13 +125,7 @@ export default function SimpleForm() {
 
       alert('Schedule entry saved successfully!');
       
-      // Reset form
-      setSelectedDepot(null);
-      setScheduleDate('');
-      setSelectedOperator(null);
-      setSelectedScheduleType(null);
-      setSelectedBusType(null);
-      setSelectedRoute(null);
+      // Keep form values for next entry - user can modify as needed
 
     } catch (error) {
       console.error('Error saving schedule entry:', error);
