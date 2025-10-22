@@ -12,7 +12,7 @@ import backupManager from '../lib/storage/backupManager';
 import '../styles/globals.css';
 
 export default function Home() {
-  const [isMultiMode, setIsMultiMode] = useState(true);
+  const [isMultiMode, setIsMultiMode] = useState(false);
   const [showDataLossWarning, setShowDataLossWarning] = useState(false);
 
   useEffect(() => {

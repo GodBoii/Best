@@ -10,6 +10,9 @@ export default function StorageHealthDashboard() {
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [showDatabaseViewer, setShowDatabaseViewer] = useState(false);
+  const [databaseData, setDatabaseData] = useState(null);
+  const [loadingDatabase, setLoadingDatabase] = useState(false);
 
   useEffect(() => {
     loadHealthData();
@@ -68,6 +71,35 @@ export default function StorageHealthDashboard() {
     };
 
     input.click();
+  };
+
+  const handleViewDatabase = async () => {
+    setLoadingDatabase(true);
+    setShowDatabaseViewer(true);
+    
+    try {
+      // Check if in local mode
+      if (storageManager.getMode() !== 'local') {
+        alert('⚠️ Database viewer is only available in Local Storage mode');
+        setShowDatabaseViewer(false);
+        return;
+      }
+
+      // Get all data from IndexedDB
+      const adapter = storageManager.indexedDBAdapter;
+      if (!adapter) {
+        throw new Error('IndexedDB adapter not initialized');
+      }
+
+      const exportedData = await adapter.exportData();
+      setDatabaseData(exportedData);
+    } catch (error) {
+      console.error('Error loading database:', error);
+      alert('❌ Failed to load database: ' + error.message);
+      setShowDatabaseViewer(false);
+    } finally {
+      setLoadingDatabase(false);
+    }
   };
 
   const handleRequestPersistence = async () => {
@@ -261,6 +293,21 @@ export default function StorageHealthDashboard() {
             </div>
           </details>
         )}
+
+        <div className="database-actions">
+          <button 
+            onClick={handleViewDatabase}
+            className="btn-view-database"
+            disabled={storageManager.getMode() !== 'local'}
+          >
+            🗄️ View Database
+          </button>
+          {storageManager.getMode() !== 'local' && (
+            <p className="help-text">
+              Switch to Local Storage mode to view database
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Backup Info */}
@@ -317,6 +364,59 @@ export default function StorageHealthDashboard() {
               <li key={index}>{issue}</li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Database Viewer Modal */}
+      {showDatabaseViewer && (
+        <div className="modal-overlay" onClick={() => setShowDatabaseViewer(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📊 Local Database Viewer</h2>
+              <button 
+                className="modal-close"
+                onClick={() => setShowDatabaseViewer(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {loadingDatabase ? (
+                <div className="loading-state">
+                  <p>⏳ Loading database...</p>
+                </div>
+              ) : databaseData ? (
+                <div className="database-content">
+                  <div className="database-meta">
+                    <p><strong>Export Date:</strong> {new Date(databaseData.exportDate).toLocaleString()}</p>
+                    <p><strong>Database Version:</strong> {databaseData.version}</p>
+                  </div>
+
+                  {Object.entries(databaseData.data).map(([tableName, records]) => (
+                    <details key={tableName} className="table-section" open={records.length > 0}>
+                      <summary className="table-header">
+                        <span className="table-name">{tableName}</span>
+                        <span className="table-count">{records.length} records</span>
+                      </summary>
+                      
+                      {records.length > 0 ? (
+                        <div className="table-data">
+                          <pre className="json-display">
+                            {JSON.stringify(records, null, 2)}
+                          </pre>
+                        </div>
+                      ) : (
+                        <p className="empty-table">No records in this table</p>
+                      )}
+                    </details>
+                  ))}
+                </div>
+              ) : (
+                <p className="error-state">❌ Failed to load database</p>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -584,6 +684,202 @@ export default function StorageHealthDashboard() {
           margin-bottom: 8px;
         }
 
+        .database-actions {
+          margin-top: 16px;
+        }
+
+        .btn-view-database {
+          width: 100%;
+          padding: 12px 20px;
+          background: #6f42c1;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-view-database:hover:not(:disabled) {
+          background: #5a32a3;
+        }
+
+        .btn-view-database:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.7);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
+        }
+
+        .modal-content {
+          background: white;
+          border-radius: 12px;
+          width: 100%;
+          max-width: 1200px;
+          max-height: 90vh;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px 24px;
+          border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-header h2 {
+          margin: 0;
+          font-size: 22px;
+          color: #333;
+        }
+
+        .modal-close {
+          background: none;
+          border: none;
+          font-size: 28px;
+          color: #666;
+          cursor: pointer;
+          padding: 0;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 4px;
+          transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+          background: #f0f0f0;
+          color: #333;
+        }
+
+        .modal-body {
+          padding: 24px;
+          overflow-y: auto;
+          flex: 1;
+        }
+
+        .loading-state,
+        .error-state {
+          text-align: center;
+          padding: 40px;
+          color: #666;
+          font-size: 16px;
+        }
+
+        .database-content {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .database-meta {
+          background: #f8f9fa;
+          padding: 16px;
+          border-radius: 8px;
+          border-left: 4px solid #6f42c1;
+        }
+
+        .database-meta p {
+          margin: 4px 0;
+          font-size: 14px;
+          color: #333;
+        }
+
+        .table-section {
+          background: white;
+          border: 2px solid #e9ecef;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        .table-section[open] {
+          border-color: #6f42c1;
+        }
+
+        .table-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 16px 20px;
+          background: #f8f9fa;
+          cursor: pointer;
+          font-weight: 600;
+          color: #333;
+          transition: all 0.2s;
+        }
+
+        .table-header:hover {
+          background: #e9ecef;
+        }
+
+        .table-section[open] .table-header {
+          background: #6f42c1;
+          color: white;
+        }
+
+        .table-name {
+          font-size: 16px;
+          text-transform: capitalize;
+        }
+
+        .table-count {
+          font-size: 14px;
+          background: white;
+          color: #6f42c1;
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-weight: 600;
+        }
+
+        .table-section[open] .table-count {
+          background: rgba(255, 255, 255, 0.2);
+          color: white;
+        }
+
+        .table-data {
+          padding: 0;
+          max-height: 500px;
+          overflow: auto;
+        }
+
+        .json-display {
+          margin: 0;
+          padding: 20px;
+          background: #f8f9fa;
+          font-family: 'Courier New', monospace;
+          font-size: 12px;
+          line-height: 1.6;
+          color: #333;
+          overflow-x: auto;
+          white-space: pre;
+        }
+
+        .empty-table {
+          padding: 20px;
+          text-align: center;
+          color: #999;
+          font-style: italic;
+          margin: 0;
+        }
+
         @media (max-width: 768px) {
           .health-dashboard {
             padding: 12px;
@@ -597,6 +893,31 @@ export default function StorageHealthDashboard() {
 
           .backup-actions {
             flex-direction: column;
+          }
+
+          .modal-overlay {
+            padding: 10px;
+          }
+
+          .modal-content {
+            max-height: 95vh;
+          }
+
+          .modal-header {
+            padding: 16px;
+          }
+
+          .modal-header h2 {
+            font-size: 18px;
+          }
+
+          .modal-body {
+            padding: 16px;
+          }
+
+          .json-display {
+            font-size: 11px;
+            padding: 12px;
           }
         }
       `}</style>

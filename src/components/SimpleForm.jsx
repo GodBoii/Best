@@ -9,8 +9,17 @@ import BusTypeSection from './BusTypeSection';
 import RouteSection from './RouteSection';
 
 export default function SimpleForm() {
+  // Get current date in YYYY-MM-DD format
+  const getCurrentDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const [selectedDepot, setSelectedDepot] = useState(null);
-  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleDate, setScheduleDate] = useState(getCurrentDate());
   const [selectedOperator, setSelectedOperator] = useState(null);
   const [selectedScheduleType, setSelectedScheduleType] = useState(null);
   const [selectedBusType, setSelectedBusType] = useState(null);

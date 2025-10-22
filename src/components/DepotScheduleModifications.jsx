@@ -7,8 +7,17 @@ import OperatorSection from './OperatorSection';
 import BusTypeSection from './BusTypeSection';
 
 export default function DepotScheduleModifications() {
+  // Get current date in YYYY-MM-DD format
+  const getCurrentDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const [selectedDepot, setSelectedDepot] = useState(null);
-  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleDate, setScheduleDate] = useState(getCurrentDate());
   const [selectedOperator, setSelectedOperator] = useState(null);
   const [selectedBusType, setSelectedBusType] = useState(null);
   const [entries, setEntries] = useState([]);

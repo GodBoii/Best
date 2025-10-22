@@ -9,9 +9,18 @@ import RouteSectionMulti from './RouteSectionMulti';
 import ScheduleTypeSectionMulti from './ScheduleTypeSectionMulti';
 
 export default function SimpleFormMulti() {
+  // Get current date in YYYY-MM-DD format
+  const getCurrentDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Single fields
   const [selectedDepot, setSelectedDepot] = useState(null);
-  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleDate, setScheduleDate] = useState(getCurrentDate());
   
   // Multi fields (arrays)
   const [operators, setOperators] = useState([]);

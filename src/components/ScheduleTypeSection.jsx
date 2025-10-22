@@ -10,7 +10,7 @@ export default function ScheduleTypeSection({ onScheduleTypeSelect, selectedSche
   const [monSatDutiesDrivers, setMonSatDutiesDrivers] = useState(selectedScheduleType?.monSat?.duties?.drivers || '');
   const [monSatDutiesConductors, setMonSatDutiesConductors] = useState(selectedScheduleType?.monSat?.duties?.conductors || '');
   const [monSatConductorManuallyEdited, setMonSatConductorManuallyEdited] = useState(false);
-  
+
   // Sunday inputs
   const [sundayBusesAM, setSundayBusesAM] = useState(selectedScheduleType?.sunday?.buses?.am || '');
   const [sundayBusesNoon, setSundayBusesNoon] = useState(selectedScheduleType?.sunday?.buses?.noon || '');
@@ -99,7 +99,7 @@ export default function ScheduleTypeSection({ onScheduleTypeSelect, selectedSche
             <span className="schedule-icon">📅</span>
             <h4>Monday to Saturday</h4>
           </div>
-          
+
           <div className="schedule-inputs-container">
             {/* Buses Section */}
             <div className="schedule-input-group">
@@ -178,7 +178,7 @@ export default function ScheduleTypeSection({ onScheduleTypeSelect, selectedSche
             <span className="schedule-icon">☀️</span>
             <h4>Sunday</h4>
           </div>
-          
+
           <div className="schedule-inputs-container">
             {/* Buses Section */}
             <div className="schedule-input-group">
