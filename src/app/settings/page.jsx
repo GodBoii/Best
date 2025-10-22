@@ -1,17 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import SummaryReport from '../../components/SummaryReport';
-import StorageToggle from '../../components/StorageToggle';
+import StorageHealthDashboard from '../../components/StorageHealthDashboard';
 import '../../styles/globals.css';
 
-export default function SummaryPage() {
+export default function SettingsPage() {
   return (
     <div className="app-container">
       <header className="app-header">
-        <h1>Bus Schedule Management System</h1>
-        <StorageToggle />
+        <h1>Storage Settings & Health</h1>
       </header>
 
       <nav className="app-nav">
@@ -22,15 +19,18 @@ export default function SummaryPage() {
           <button>Depot Report</button>
         </Link>
         <Link href="/summary">
-          <button className="active">Summary Report</button>
+          <button>Summary Report</button>
         </Link>
         <Link href="/fleet">
           <button>FLEET Schedule</button>
         </Link>
+        <Link href="/settings">
+          <button className="active">Settings</button>
+        </Link>
       </nav>
 
       <main className="app-main">
-        <SummaryReport />
+        <StorageHealthDashboard />
       </main>
 
       <footer className="app-footer">

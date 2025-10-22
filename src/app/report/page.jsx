@@ -140,6 +140,9 @@ export default function ReportPage() {
         <Link href="/summary">
           <button>Summary Report</button>
         </Link>
+        <Link href="/fleet">
+          <button>FLEET Schedule</button>
+        </Link>
       </nav>
 
       <main className="app-main">

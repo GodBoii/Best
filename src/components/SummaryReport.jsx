@@ -49,10 +49,11 @@ export default function SummaryReport() {
         const client = storageManager.getClient();
         console.log('Storage Mode:', storageManager.getMode());
 
-        // 1. Fetch all depots
+        // 1. Fetch all depots (sorted by display_order, then by name)
         const { data: depots, error: depotsError } = await client
             .from('depots')
             .select('*')
+            .order('display_order', { ascending: true })
             .order('name', { ascending: true });
 
         if (depotsError) throw new Error('Error fetching depots: ' + depotsError.message);

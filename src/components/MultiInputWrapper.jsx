@@ -15,7 +15,7 @@ export default function MultiInputWrapper({
   return (
     <div className="form-section">
       <h3>{sectionNumber}. {title}</h3>
-      
+
       <div className="multi-input-container">
         {/* Input area for adding new items */}
         <div className="multi-input-add-area">
@@ -28,7 +28,7 @@ export default function MultiInputWrapper({
             <div className="selected-items-header">
               <span className="items-count">Selected Items ({items.length})</span>
             </div>
-            
+
             {items.map((item, index) => (
               <div key={index} className="multi-input-item">
                 <div className="item-content">

@@ -42,7 +42,7 @@ export const generateReportPDF = async (reportData, preview = false) => {
     const headerPageWidth = doc.internal.pageSize.getWidth();
     const textWidth = doc.getTextWidth(headerText);
     const xPosition = (headerPageWidth - textWidth) / 2;
-    doc.text(headerText, xPosition, 10);
+    doc.text(headerText, xPosition, 7);
 
     // Define consistent margins and column widths for portrait orientation
     // Fixed column widths optimized for A4 portrait (210mm width)
@@ -73,7 +73,7 @@ export const generateReportPDF = async (reportData, preview = false) => {
     // Add unified column headers at the top (only once)
     // Using body instead of head to ensure consistent width calculation with data tables
     doc.autoTable({
-      startY: 15,
+      startY: 10,
       margin: { left: leftMargin, right: rightMargin },
       body: [
         [
@@ -101,13 +101,13 @@ export const generateReportPDF = async (reportData, preview = false) => {
           { content: 'Sunday', styles: { halign: 'center', fontStyle: 'bold', font: 'times', fontSize: 7 } }
         ]
       ],
-      theme: 'grid',
+      theme: 'plain',
       styles: {
         font: 'times',
         fontSize: 8,
         cellPadding: 0.5,
         lineColor: [0, 0, 0],
-        lineWidth: 0.1,
+        lineWidth: 0,
         fillColor: [255, 255, 255],
         textColor: [0, 0, 0],
         fontStyle: 'bold',
@@ -127,6 +127,34 @@ export const generateReportPDF = async (reportData, preview = false) => {
         9: { halign: 'center', cellWidth: columnWidths[9], fontSize: 8 },
         10: { halign: 'center', cellWidth: columnWidths[10], fontSize: 8 },
         11: { halign: 'center', cellWidth: columnWidths[11], fontSize: 8 }
+      },
+      didDrawCell: function(data) {
+        const { cell, row, column, cursor } = data;
+        const isLastRow = row.index === 2; // Last row of header (AM, NOON, PM row)
+        
+        // Draw outer borders (table perimeter)
+        doc.setLineWidth(0.1);
+        doc.setDrawColor(0, 0, 0);
+        
+        // Top border (only first row)
+        if (row.index === 0) {
+          doc.line(cursor.x, cursor.y, cursor.x + cell.width, cursor.y);
+        }
+        
+        // Bottom border (only last row of header)
+        if (isLastRow) {
+          doc.line(cursor.x, cursor.y + cell.height, cursor.x + cell.width, cursor.y + cell.height);
+        }
+        
+        // Left border (only first column)
+        if (column.index === 0) {
+          doc.line(cursor.x, cursor.y, cursor.x, cursor.y + cell.height);
+        }
+        
+        // Right border (only last column)
+        if (column.index === 11) {
+          doc.line(cursor.x + cell.width, cursor.y, cursor.x + cell.width, cursor.y + cell.height);
+        }
       }
     });
 
@@ -267,8 +295,11 @@ export const generateReportPDF = async (reportData, preview = false) => {
       });
     };
 
-    // Track Y position for next table
+    // Track Y position for next table and table boundaries for outer border
     let startY = doc.lastAutoTable.finalY;
+    const headerStartY = 10; // Header starts at Y=10
+    let tableLeftX = leftMargin; // Left edge of tables
+    let tableRightX = leftMargin + tableWidth; // Right edge of tables
 
     // Initialize BEST total accumulator (for all BEST category entries)
     let bestTotal = {
@@ -374,13 +405,13 @@ export const generateReportPDF = async (reportData, preview = false) => {
         startY: startY,
         margin: { left: leftMargin, right: rightMargin },
         body: tableData,
-        theme: 'grid',
+        theme: 'plain',
         styles: {
           font: 'times',
           fontSize: tableFontSize,
           cellPadding: 0.5,
           lineColor: [0, 0, 0],
-          lineWidth: 0.1
+          lineWidth: 0
         },
         headStyles: {
           font: 'times',
@@ -425,6 +456,33 @@ export const generateReportPDF = async (reportData, preview = false) => {
             data.cell.styles.fontStyle = 'bold';
             data.cell.styles.fillColor = [255, 255, 255];
           }
+        },
+        didDrawCell: function(data) {
+          const { cell, row, column, cursor } = data;
+          const isCategoryRow = row.index === 0;
+          const isTotalRow = row.index === tableData.length - 1;
+          const isFirstDataRow = row.index === 1;
+          
+          doc.setLineWidth(0.1);
+          doc.setDrawColor(0, 0, 0);
+          
+          // Left and Right outer borders - DON'T draw here, will draw continuous border at end
+          // Removed to allow continuous outer border
+          
+          // Top border for category row (connects to previous table)
+          if (isCategoryRow && isFirstDataRow) {
+            doc.line(cursor.x, cursor.y, cursor.x + cell.width, cursor.y);
+          }
+          
+          // Horizontal line above Total row
+          if (isTotalRow) {
+            doc.line(cursor.x, cursor.y, cursor.x + cell.width, cursor.y);
+          }
+          
+          // Bottom border for Total row
+          if (isTotalRow) {
+            doc.line(cursor.x, cursor.y + cell.height, cursor.x + cell.width, cursor.y + cell.height);
+          }
         }
       });
 
@@ -451,14 +509,15 @@ export const generateReportPDF = async (reportData, preview = false) => {
           bestTotal.duties_cond_ms || 0,
           bestTotal.duties_cond_sun || 0
         ]],
-        theme: 'grid',
+        theme: 'plain',
         styles: {
           font: 'times',
           fontSize: 9,
           cellPadding: 0.5,
           fontStyle: 'bold',
           fillColor: [255, 255, 255],
-          halign: 'center'
+          halign: 'center',
+          lineWidth: 0
         },
         columnStyles: {
           0: { cellWidth: columnWidths[0], halign: 'center' },
@@ -473,6 +532,20 @@ export const generateReportPDF = async (reportData, preview = false) => {
           9: { cellWidth: columnWidths[9], halign: 'center' },
           10: { cellWidth: columnWidths[10], halign: 'center' },
           11: { cellWidth: columnWidths[11], halign: 'center' }
+        },
+        didDrawCell: function(data) {
+          const { cell, column, cursor } = data;
+          
+          doc.setLineWidth(0.1);
+          doc.setDrawColor(0, 0, 0);
+          
+          // Top border (all cells)
+          doc.line(cursor.x, cursor.y, cursor.x + cell.width, cursor.y);
+          
+          // Bottom border (all cells)
+          doc.line(cursor.x, cursor.y + cell.height, cursor.x + cell.width, cursor.y + cell.height);
+          
+          // Left and Right outer borders - removed, will draw continuous border at end
         }
       });
       startY = doc.lastAutoTable.finalY + 1;
@@ -495,7 +568,7 @@ export const generateReportPDF = async (reportData, preview = false) => {
         grandTotal.duties_cond_ms || 0,
         grandTotal.duties_cond_sun || 0
       ]],
-      theme: 'grid',
+      theme: 'plain',
       styles: {
         font: 'times',
         fontSize: 10,
@@ -504,7 +577,7 @@ export const generateReportPDF = async (reportData, preview = false) => {
         fillColor: [255, 255, 255],
         halign: 'center',
         lineColor: [0, 0, 0],
-        lineWidth: 0.3
+        lineWidth: 0
       },
       columnStyles: {
         0: { cellWidth: columnWidths[0], halign: 'center' },
@@ -519,8 +592,35 @@ export const generateReportPDF = async (reportData, preview = false) => {
         9: { cellWidth: columnWidths[9], halign: 'center' },
         10: { cellWidth: columnWidths[10], halign: 'center' },
         11: { cellWidth: columnWidths[11], halign: 'center' }
+      },
+      didDrawCell: function(data) {
+        const { cell, column, cursor } = data;
+        
+        doc.setLineWidth(0.1);
+        doc.setDrawColor(0, 0, 0);
+        
+        // Top border (all cells)
+        doc.line(cursor.x, cursor.y, cursor.x + cell.width, cursor.y);
+        
+        // Bottom border (all cells) - thicker for grand total
+        doc.setLineWidth(0.2);
+        doc.line(cursor.x, cursor.y + cell.height, cursor.x + cell.width, cursor.y + cell.height);
+        doc.setLineWidth(0.1);
+        
+        // Left and Right outer borders - removed, will draw continuous border at end
       }
     });
+
+    // Draw continuous outer border around ALL tables (from header to grand total)
+    const tableEndY = doc.lastAutoTable.finalY;
+    doc.setLineWidth(0.1);
+    doc.setDrawColor(0, 0, 0);
+    
+    // Left border - continuous from header start to grand total end
+    doc.line(tableLeftX, headerStartY, tableLeftX, tableEndY);
+    
+    // Right border - continuous from header start to grand total end
+    doc.line(tableRightX, headerStartY, tableRightX, tableEndY);
 
     // Save or preview the PDF
     if (preview) {
