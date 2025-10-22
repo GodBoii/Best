@@ -200,24 +200,34 @@
 
 .report-title {
   text-align: center;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  padding: 15px;
+  background: white;
+  color: black;
+  border: 2px solid black;
+  border-bottom: 1px solid black;
 }
 
 .report-title h3 {
-  margin: 0 0 10px 0;
-  font-size: 20px;
-  font-weight: 600;
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
 .effective-date,
 .day-type {
-  margin: 5px 0;
-  font-size: 14px;
-  font-weight: 500;
+  margin: 3px 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.data-note {
+  margin: 5px 0 0 0;
+  font-size: 9px;
+  font-weight: 400;
+  font-style: italic;
+  color: #333;
 }
 
 .table-wrapper {
@@ -229,8 +239,9 @@
 .summary-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
-  min-width: 1200px;
+  font-size: 8px;
+  min-width: 1000px;
+  border: 2px solid black;
 }
 
 /* Header Styles */
@@ -241,66 +252,74 @@
 }
 
 .header-row-1 th {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 12px 8px;
-  font-weight: 600;
+  background: white;
+  color: black;
+  padding: 5px 2px;
+  font-weight: 700;
   text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  font-size: 13px;
+  border: 1px solid black;
+  font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.2px;
 }
 
 .header-row-2 th {
-  background: #f5f5f5;
-  color: #333;
-  padding: 10px 8px;
-  font-weight: 600;
+  background: white;
+  color: black;
+  padding: 4px 2px;
+  font-weight: 700;
   text-align: center;
-  border: 1px solid #ddd;
-  font-size: 12px;
+  border: 1px solid black;
+  font-size: 8px;
 }
 
 .best-header {
-  background: #e3f2fd !important;
-  color: #1976d2 !important;
+  background: white !important;
+  color: black !important;
 }
 
 .wetlease-header {
-  background: #fff3e0 !important;
-  color: #f57c00 !important;
+  background: white !important;
+  color: black !important;
 }
 
 .header-row-3 th {
-  background: #fafafa;
-  color: #555;
-  padding: 8px 6px;
-  font-weight: 500;
+  background: white;
+  color: black;
+  padding: 3px 2px;
+  font-weight: 600;
   text-align: center;
-  border: 1px solid #ddd;
-  font-size: 11px;
+  border: 1px solid black;
+  font-size: 7px;
 }
 
 .depot-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: white !important;
+  background: white !important;
+  color: black !important;
   position: sticky;
   left: 0;
   z-index: 11;
-  min-width: 120px;
+  min-width: 80px;
+  max-width: 80px;
+  font-weight: 700;
 }
 
 .bustype-header,
 .operator-header {
-  min-width: 40px;
+  min-width: 25px;
+  max-width: 25px;
+  font-weight: 600;
+  padding: 3px 1px;
 }
 
 .total-header {
-  background: #e0e0e0 !important;
-  color: #333 !important;
-  font-weight: 600 !important;
-  min-width: 50px;
+  background: white !important;
+  color: black !important;
+  font-weight: 700 !important;
+  min-width: 30px;
+  max-width: 30px;
+  font-size: 6px;
+  padding: 3px 1px;
 }
 
 /* Body Styles */
@@ -313,86 +332,101 @@
 }
 
 .depot-cell {
-  background: #fafafa;
+  background: white;
   font-weight: 600;
-  padding: 10px 12px;
+  padding: 4px 4px;
   text-align: left;
-  border: 1px solid #ddd;
+  border: 1px solid black;
   position: sticky;
   left: 0;
   z-index: 5;
-  min-width: 120px;
+  min-width: 80px;
+  max-width: 80px;
+  font-size: 8px;
 }
 
 .data-cell {
-  padding: 8px 6px;
+  padding: 3px 1px;
   text-align: center;
-  border: 1px solid #e0e0e0;
-  color: #333;
+  border: 1px solid black;
+  color: black;
+  background: white;
+  font-size: 7px;
+  min-width: 25px;
+  max-width: 25px;
 }
 
 .data-cell:hover {
-  background-color: #e8f5e9;
+  background-color: #f5f5f5;
 }
 
 .total-cell {
-  padding: 8px 6px;
+  padding: 3px 1px;
   text-align: center;
-  border: 1px solid #ddd;
-  background: #f5f5f5;
-  font-weight: 600;
-  color: #333;
+  border: 1px solid black;
+  background: white;
+  font-weight: 700;
+  color: black;
+  font-size: 7px;
+  min-width: 30px;
+  max-width: 30px;
 }
 
 /* Total Row */
 .total-row {
-  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+  background: white;
   font-weight: 700;
 }
 
 .total-row .depot-cell {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  font-size: 13px;
+  background: white;
+  color: black;
+  font-size: 9px;
+  font-weight: 700;
+  border: 1px solid black;
 }
 
 .grand-total-cell {
-  padding: 10px 6px;
+  padding: 4px 1px;
   text-align: center;
-  border: 1px solid #999;
-  background: #e0e0e0;
+  border: 1px solid black;
+  background: white;
   font-weight: 700;
-  color: #333;
-  font-size: 13px;
+  color: black;
+  font-size: 8px;
+  min-width: 25px;
+  max-width: 25px;
 }
 
 /* Footer */
 .report-footer {
-  padding: 20px;
-  background: #fafafa;
-  border-top: 2px solid #ddd;
+  padding: 10px 15px;
+  background: white;
+  border: 2px solid black;
+  border-top: 1px solid black;
 }
 
 .note {
-  margin: 0 0 15px 0;
-  font-size: 13px;
-  color: #555;
+  margin: 0 0 8px 0;
+  font-size: 10px;
+  color: black;
+  font-weight: 600;
 }
 
 .operator-details {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .operator-detail {
   display: inline-block;
-  padding: 6px 12px;
-  background: #fff3e0;
-  border: 1px solid #ffb74d;
-  border-radius: 4px;
-  font-size: 12px;
-  color: #e65100;
+  padding: 3px 8px;
+  background: white;
+  border: 1px solid black;
+  border-radius: 0;
+  font-size: 9px;
+  color: black;
 }
 
 /* Responsive Design */
@@ -470,149 +504,169 @@
 
   /* Report title styling */
   .report-title {
-    padding: 15px;
+    padding: 8px;
     page-break-after: avoid;
+    background: white !important;
+    border: 2px solid black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .report-title h3 {
-    font-size: 18px;
-    margin-bottom: 8px;
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: black !important;
   }
 
   .effective-date,
   .day-type {
-    font-size: 13px;
+    font-size: 10px;
+    color: black !important;
+  }
+
+  .data-note {
+    font-size: 7px;
+    color: black !important;
   }
 
   /* Table wrapper */
   .table-wrapper {
     overflow: visible;
-    padding: 10px;
+    padding: 0;
     page-break-inside: avoid;
   }
 
   /* Table styling */
   .summary-table {
-    font-size: 8px;
+    font-size: 6px;
     width: 100%;
     border-collapse: collapse;
+    border: 2px solid black !important;
   }
 
   .summary-table th,
   .summary-table td {
-    padding: 4px 3px;
-    border: 1px solid #333 !important;
+    padding: 1px 1px;
+    border: 1px solid black !important;
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   /* Header styles */
   .header-row-1 th {
-    background: #667eea !important;
-    color: white !important;
-    font-size: 9px;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    font-size: 7px;
+    padding: 2px 1px;
+    font-weight: 700;
   }
 
   .header-row-2 th {
-    background: #f5f5f5 !important;
-    font-size: 8px;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .best-header {
-    background: #e3f2fd !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .wetlease-header {
-    background: #fff3e0 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    font-size: 6px;
+    padding: 2px 1px;
+    font-weight: 700;
   }
 
   .header-row-3 th {
-    background: #fafafa !important;
-    font-size: 7px;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    font-size: 5px;
+    padding: 2px 1px;
+    font-weight: 600;
+  }
+
+  .best-header,
+  .wetlease-header {
+    background: white !important;
+    color: black !important;
+  }
+
+  .depot-header {
+    min-width: 60px !important;
+    max-width: 60px !important;
+  }
+
+  .bustype-header,
+  .operator-header {
+    min-width: 20px !important;
+    max-width: 20px !important;
+  }
+
+  .total-header {
+    min-width: 25px !important;
+    max-width: 25px !important;
+    font-size: 5px !important;
   }
 
   /* Body styles */
   .depot-cell {
-    background: #fafafa !important;
     font-weight: 600;
-    font-size: 8px;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    font-size: 6px;
+    padding: 2px 2px;
+    min-width: 60px !important;
+    max-width: 60px !important;
   }
 
   .data-cell {
-    font-size: 7px;
+    font-size: 5px;
+    padding: 1px 1px;
+    min-width: 20px !important;
+    max-width: 20px !important;
   }
 
   .total-cell {
-    background: #f5f5f5 !important;
-    font-weight: 600;
-    font-size: 8px;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    font-weight: 700;
+    font-size: 5px;
+    padding: 1px 1px;
+    min-width: 25px !important;
+    max-width: 25px !important;
   }
 
   /* Total row */
-  .total-row {
-    background: #e0e0e0 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
   .total-row .depot-cell {
-    background: #667eea !important;
-    color: white !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    font-size: 7px;
+    font-weight: 700;
+    border: 1px solid black !important;
   }
 
   .grand-total-cell {
-    background: #e0e0e0 !important;
     font-weight: 700;
-    font-size: 8px;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    font-size: 6px;
+    padding: 2px 1px;
+    border: 1px solid black !important;
+    min-width: 20px !important;
+    max-width: 20px !important;
   }
 
   /* Footer */
   .report-footer {
-    padding: 10px;
-    background: #fafafa !important;
+    padding: 6px 8px;
+    background: white !important;
     page-break-before: avoid;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    border: 2px solid black !important;
+    border-top: 1px solid black !important;
   }
 
   .note {
-    font-size: 10px;
-    margin-bottom: 8px;
+    font-size: 8px;
+    margin-bottom: 5px;
+    color: black !important;
   }
 
   .operator-details {
-    gap: 5px;
+    gap: 4px;
   }
 
   .operator-detail {
-    padding: 4px 8px;
-    font-size: 9px;
-    background: #fff3e0 !important;
-    border: 1px solid #ffb74d !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    padding: 2px 5px;
+    font-size: 7px;
+    background: white !important;
+    border: 1px solid black !important;
+    color: black !important;
   }
 
   /* Page setup */
   @page {
     size: A4 landscape;
-    margin: 10mm 8mm;
+    margin: 8mm 6mm;
   }
 
   /* Prevent page breaks inside table rows */

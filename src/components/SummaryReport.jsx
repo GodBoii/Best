@@ -67,26 +67,40 @@ export default function SummaryReport() {
         if (operatorsError) throw new Error('Error fetching operators: ' + operatorsError.message);
         console.log('Operators fetched:', operators?.length, operators);
 
-        // 3. Fetch all bus types
+        // 3. Fetch all bus types (sorted by display_order and category)
         const { data: busTypes, error: busTypesError } = await client
             .from('bus_types')
-            .select('*');
+            .select('*')
+            .order('display_order', { ascending: true });
 
         if (busTypesError) throw new Error('Error fetching bus types: ' + busTypesError.message);
         console.log('Bus Types fetched:', busTypes?.length, busTypes);
 
-        // 4. Fetch schedules for the selected date
-        const { data: schedules, error: schedulesError } = await client
+        // 4. Fetch the latest schedule for each depot (on or before the selected date)
+        // First, get all schedules up to the selected date
+        const { data: allSchedules, error: schedulesError } = await client
             .from('schedules')
             .select('id, depot_id, schedule_date')
-            .eq('schedule_date', date);
+            .lte('schedule_date', date)
+            .order('schedule_date', { ascending: false });
 
         if (schedulesError) throw new Error('Error fetching schedules: ' + schedulesError.message);
-        console.log('Schedules fetched:', schedules?.length, schedules);
+        console.log('All Schedules fetched:', allSchedules?.length);
 
-        if (!schedules || schedules.length === 0) {
-            throw new Error('No schedule data found for the selected date');
+        if (!allSchedules || allSchedules.length === 0) {
+            throw new Error('No schedule data found for any depot');
         }
+
+        // Get the latest schedule for each depot
+        const schedulesByDepot = new Map();
+        allSchedules.forEach(schedule => {
+            if (!schedulesByDepot.has(schedule.depot_id)) {
+                schedulesByDepot.set(schedule.depot_id, schedule);
+            }
+        });
+
+        const schedules = Array.from(schedulesByDepot.values());
+        console.log('Latest schedules per depot:', schedules.length, schedules);
 
         // 5. Fetch all schedule entries for these schedules
         const scheduleIds = schedules.map(s => s.id);
@@ -110,9 +124,14 @@ export default function SummaryReport() {
         console.log('BEST Operator:', bestOperator);
         console.log('Wet Lease Operators:', wetLeaseOperators);
 
-        // 7. Get unique bus type codes (short names like AC, NON-AC, etc.)
-        const busTypeCodes = [...new Set(busTypes.map(bt => bt.short_name || bt.name.substring(0, 2).toUpperCase()))].filter(Boolean).sort();
+        // 7. Group bus types by category and get codes
+        const bestBusTypes = busTypes.filter(bt => bt.category === 'BEST');
+        const wetLeaseBusTypes = busTypes.filter(bt => bt.category === 'WET_LEASE');
+
+        const busTypeCodes = [...new Set(busTypes.map(bt => bt.short_name || bt.name.substring(0, 2).toUpperCase()))].filter(Boolean);
         console.log('Bus Type Codes:', busTypeCodes);
+        console.log('BEST Bus Types:', bestBusTypes);
+        console.log('Wet Lease Bus Types:', wetLeaseBusTypes);
 
         // 8. Aggregate data by depot and time period
         const depotData = depots.map(depot => {
@@ -124,12 +143,13 @@ export default function SummaryReport() {
                 return createEmptyDepotData(depot, busTypeCodes, wetLeaseOperators);
             }
 
-            console.log(`Schedule found for ${depot.name}:`, depotSchedule.id);
+            console.log(`Schedule found for ${depot.name}:`, depotSchedule.id, 'Date:', depotSchedule.schedule_date);
             const depotEntries = filteredEntries.filter(e => e.schedule_id === depotSchedule.id);
             console.log(`Entries for ${depot.name}:`, depotEntries.length);
 
             return {
                 name: depot.name,
+                scheduleDate: depotSchedule.schedule_date,
                 morning: aggregateTimePeriod(depotEntries, 'morning', busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type),
                 noon: aggregateTimePeriod(depotEntries, 'noon', busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type),
                 evening: aggregateTimePeriod(depotEntries, 'evening', busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type)
@@ -148,6 +168,14 @@ export default function SummaryReport() {
             depots: depotData,
             totals,
             busTypeCodes,
+            bestBusTypes: bestBusTypes.map(bt => ({
+                code: bt.short_name || bt.name.substring(0, 2).toUpperCase(),
+                name: bt.name
+            })),
+            wetLeaseBusTypes: wetLeaseBusTypes.map(bt => ({
+                code: bt.short_name || bt.name.substring(0, 2).toUpperCase(),
+                name: bt.name
+            })),
             wetLeaseOperators: wetLeaseOperators.map(op => op.short_code || op.name.substring(0, 2).toUpperCase()),
             operatorDetails: operators
         };
@@ -219,7 +247,7 @@ export default function SummaryReport() {
         // Count buses based on the column value
         entries.forEach(entry => {
             const busCount = entry[columnName];
-            
+
             // Skip if value is '-' or empty or 0
             if (!busCount || busCount === '-' || busCount === '0' || busCount === 0) {
                 return;
@@ -591,6 +619,9 @@ export default function SummaryReport() {
                         <p className="day-type">
                             {reportData.dayType === 'MON_SAT' ? 'MONDAY TO SATURDAY' : 'ONLY SUNDAY'}
                         </p>
+                        <p className="data-note">
+                            * Showing latest available data for each depot (on or before selected date)
+                        </p>
                     </div>
 
                     <div className="table-wrapper">
@@ -599,7 +630,7 @@ export default function SummaryReport() {
                                 {/* Main header row */}
                                 <tr className="header-row-1">
                                     <th rowSpan="3" className="depot-header">Depot</th>
-                                    {['MORNING', 'NOON', 'EVENING'].map((period, idx) => (
+                                    {['MORNING', 'NOON', 'EVENING'].map((period) => (
                                         <th
                                             key={period}
                                             colSpan={reportData.busTypeCodes.length + reportData.wetLeaseOperators.length + 2}
@@ -612,7 +643,7 @@ export default function SummaryReport() {
 
                                 {/* Sub-header row (BEST / Wet Lease) */}
                                 <tr className="header-row-2">
-                                    {['MORNING', 'NOON', 'EVENING'].map((period, idx) => (
+                                    {['MORNING', 'NOON', 'EVENING'].map((period) => (
                                         <React.Fragment key={`header2-${period}`}>
                                             <th
                                                 colSpan={reportData.busTypeCodes.length + 1}
@@ -632,15 +663,15 @@ export default function SummaryReport() {
 
                                 {/* Bus type / Operator row */}
                                 <tr className="header-row-3">
-                                    {['MORNING', 'NOON', 'EVENING'].map((period, idx) => (
+                                    {['MORNING', 'NOON', 'EVENING'].map((period) => (
                                         <React.Fragment key={`header3-${period}`}>
                                             {/* BEST bus types */}
-                                            {reportData.busTypeCodes.map(code => (
-                                                <th key={`${period}-best-${code}`} className="bustype-header">
-                                                    {code}
+                                            {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
+                                                <th key={`${period}-best-${bt.code}`} className="bustype-header">
+                                                    {bt.code}
                                                 </th>
                                             ))}
-                                            <th key={`${period}-best-total`} className="total-header">TOTAL</th>
+                                            <th key={`${period}-best-total`} className="total-header">TOT</th>
 
                                             {/* Wet Lease operators */}
                                             {reportData.wetLeaseOperators.map(code => (
@@ -648,7 +679,7 @@ export default function SummaryReport() {
                                                     {code}
                                                 </th>
                                             ))}
-                                            <th key={`${period}-wl-total`} className="total-header">TOTAL</th>
+                                            <th key={`${period}-wl-total`} className="total-header">TOT</th>
                                         </React.Fragment>
                                     ))}
                                 </tr>
@@ -660,9 +691,9 @@ export default function SummaryReport() {
                                         <td className="depot-cell">{depot.name}</td>
 
                                         {/* Morning data */}
-                                        {reportData.busTypeCodes.map(code => (
-                                            <td key={`${depot.name}-morning-best-${code}`} className="data-cell">
-                                                {depot.morning.best[code] || 0}
+                                        {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
+                                            <td key={`${depot.name}-morning-best-${bt.code}`} className="data-cell">
+                                                {depot.morning.best[bt.code] || 0}
                                             </td>
                                         ))}
                                         <td className="total-cell">{depot.morning.best.total}</td>
@@ -674,9 +705,9 @@ export default function SummaryReport() {
                                         <td className="total-cell">{depot.morning.wetLease.total}</td>
 
                                         {/* Noon data */}
-                                        {reportData.busTypeCodes.map(code => (
-                                            <td key={`${depot.name}-noon-best-${code}`} className="data-cell">
-                                                {depot.noon.best[code] || 0}
+                                        {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
+                                            <td key={`${depot.name}-noon-best-${bt.code}`} className="data-cell">
+                                                {depot.noon.best[bt.code] || 0}
                                             </td>
                                         ))}
                                         <td className="total-cell">{depot.noon.best.total}</td>
@@ -688,9 +719,9 @@ export default function SummaryReport() {
                                         <td className="total-cell">{depot.noon.wetLease.total}</td>
 
                                         {/* Evening data */}
-                                        {reportData.busTypeCodes.map(code => (
-                                            <td key={`${depot.name}-evening-best-${code}`} className="data-cell">
-                                                {depot.evening.best[code] || 0}
+                                        {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
+                                            <td key={`${depot.name}-evening-best-${bt.code}`} className="data-cell">
+                                                {depot.evening.best[bt.code] || 0}
                                             </td>
                                         ))}
                                         <td className="total-cell">{depot.evening.best.total}</td>
@@ -708,9 +739,9 @@ export default function SummaryReport() {
                                     <td className="depot-cell">Total :-</td>
 
                                     {/* Morning totals */}
-                                    {reportData.busTypeCodes.map(code => (
-                                        <td key={`total-morning-best-${code}`} className="grand-total-cell">
-                                            {reportData.totals.morning.best[code] || 0}
+                                    {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
+                                        <td key={`total-morning-best-${bt.code}`} className="grand-total-cell">
+                                            {reportData.totals.morning.best[bt.code] || 0}
                                         </td>
                                     ))}
                                     <td className="grand-total-cell">{reportData.totals.morning.best.total}</td>
@@ -722,9 +753,9 @@ export default function SummaryReport() {
                                     <td className="grand-total-cell">{reportData.totals.morning.wetLease.total}</td>
 
                                     {/* Noon totals */}
-                                    {reportData.busTypeCodes.map(code => (
-                                        <td key={`total-noon-best-${code}`} className="grand-total-cell">
-                                            {reportData.totals.noon.best[code] || 0}
+                                    {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
+                                        <td key={`total-noon-best-${bt.code}`} className="grand-total-cell">
+                                            {reportData.totals.noon.best[bt.code] || 0}
                                         </td>
                                     ))}
                                     <td className="grand-total-cell">{reportData.totals.noon.best.total}</td>
@@ -736,9 +767,9 @@ export default function SummaryReport() {
                                     <td className="grand-total-cell">{reportData.totals.noon.wetLease.total}</td>
 
                                     {/* Evening totals */}
-                                    {reportData.busTypeCodes.map(code => (
-                                        <td key={`total-evening-best-${code}`} className="grand-total-cell">
-                                            {reportData.totals.evening.best[code] || 0}
+                                    {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
+                                        <td key={`total-evening-best-${bt.code}`} className="grand-total-cell">
+                                            {reportData.totals.evening.best[bt.code] || 0}
                                         </td>
                                     ))}
                                     <td className="grand-total-cell">{reportData.totals.evening.best.total}</td>
