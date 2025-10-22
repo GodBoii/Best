@@ -150,6 +150,7 @@ export default function SummaryReport() {
             return {
                 name: depot.name,
                 scheduleDate: depotSchedule.schedule_date,
+                fleetCategory: aggregateFleetCategory(depotEntries, busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type),
                 morning: aggregateTimePeriod(depotEntries, 'morning', busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type),
                 noon: aggregateTimePeriod(depotEntries, 'noon', busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type),
                 evening: aggregateTimePeriod(depotEntries, 'evening', busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type)
@@ -201,10 +202,115 @@ export default function SummaryReport() {
 
         return {
             name: depot.name,
+            fleetCategory: JSON.parse(JSON.stringify(emptyPeriod)),
             morning: JSON.parse(JSON.stringify(emptyPeriod)),
             noon: JSON.parse(JSON.stringify(emptyPeriod)),
             evening: JSON.parse(JSON.stringify(emptyPeriod))
         };
+    };
+
+    const aggregateFleetCategory = (entries, busTypeCodes, bestOperator, wetLeaseOperators, busTypes, dayType) => {
+        console.log('=== AGGREGATING FLEET CATEGORY ===');
+        console.log('Day Type:', dayType);
+        console.log('Total Entries:', entries.length);
+
+        const result = {
+            best: {},
+            wetLease: {},
+            total: 0
+        };
+
+        // Initialize bus type counts
+        busTypeCodes.forEach(code => {
+            result.best[code] = 0;
+        });
+
+        // Initialize wet lease operator counts
+        wetLeaseOperators.forEach(op => {
+            const code = op.short_code || op.name.substring(0, 2).toUpperCase();
+            result.wetLease[code] = 0;
+        });
+
+        // Determine which columns to check based on day type
+        let columns;
+        if (dayType === 'MON_SAT') {
+            columns = ['mon_sat_am', 'mon_sat_noon', 'mon_sat_pm'];
+        } else {
+            columns = ['sun_am', 'sun_noon', 'sun_pm'];
+        }
+
+        console.log('Columns to check:', columns);
+
+        // Count buses across all time periods (take maximum value)
+        entries.forEach(entry => {
+            // Get the maximum count across all time periods for this entry
+            const counts = columns.map(col => {
+                const val = entry[col];
+                if (!val || val === '-' || val === '0') return 0;
+                const num = parseInt(val, 10);
+                return isNaN(num) ? 0 : num;
+            });
+            const maxCount = Math.max(...counts);
+
+            if (maxCount <= 0) return;
+
+            const busType = busTypes.find(bt => bt.id === entry.bus_type_id);
+            const busTypeCode = busType ? (busType.short_name || busType.name.substring(0, 2).toUpperCase()) : 'XX';
+
+            console.log('Processing Entry for Fleet Category:', {
+                id: entry.id,
+                operator_id: entry.operator_id,
+                bus_type_id: entry.bus_type_id,
+                busTypeCode: busTypeCode,
+                maxCount: maxCount,
+                counts: counts
+            });
+
+            // Check if BEST
+            const isBEST = entry.operator_id === null ||
+                entry.operator_id === bestOperator?.id ||
+                entry.operator_id === undefined;
+
+            if (isBEST) {
+                if (!result.best[busTypeCode]) {
+                    result.best[busTypeCode] = 0;
+                }
+                result.best[busTypeCode] += maxCount;
+                console.log(`  -> BEST ${busTypeCode}: +${maxCount} = ${result.best[busTypeCode]}`);
+            } else {
+                const operator = wetLeaseOperators.find(op => op.id === entry.operator_id);
+                if (operator) {
+                    const opCode = operator.short_code || operator.name.substring(0, 2).toUpperCase();
+                    if (!result.wetLease[opCode]) {
+                        result.wetLease[opCode] = 0;
+                    }
+                    result.wetLease[opCode] += maxCount;
+                    console.log(`  -> Wet Lease ${opCode}: +${maxCount} = ${result.wetLease[opCode]}`);
+                } else {
+                    if (!result.best[busTypeCode]) {
+                        result.best[busTypeCode] = 0;
+                    }
+                    result.best[busTypeCode] += maxCount;
+                    console.log(`  -> Defaulting to BEST ${busTypeCode}: +${maxCount} = ${result.best[busTypeCode]}`);
+                }
+            }
+        });
+
+        // Calculate totals
+        result.best.total = Object.keys(result.best)
+            .filter(k => k !== 'total')
+            .reduce((sum, k) => sum + result.best[k], 0);
+
+        result.wetLease.total = Object.keys(result.wetLease)
+            .filter(k => k !== 'total')
+            .reduce((sum, k) => sum + result.wetLease[k], 0);
+
+        result.total = result.best.total + result.wetLease.total;
+
+        console.log('Fleet Category Result:', result);
+        console.log('=== END FLEET CATEGORY AGGREGATION ===\n');
+
+        return result;
     };
 
     const aggregateTimePeriod = (entries, timePeriod, busTypeCodes, bestOperator, wetLeaseOperators, busTypes, dayType) => {
@@ -323,13 +429,14 @@ export default function SummaryReport() {
 
     const calculateGrandTotals = (depotData, busTypeCodes, wetLeaseOperators) => {
         const totals = {
+            fleetCategory: { best: {}, wetLease: {}, total: 0 },
             morning: { best: {}, wetLease: {}, total: 0 },
             noon: { best: {}, wetLease: {}, total: 0 },
             evening: { best: {}, wetLease: {}, total: 0 }
         };
 
         // Initialize
-        ['morning', 'noon', 'evening'].forEach(period => {
+        ['fleetCategory', 'morning', 'noon', 'evening'].forEach(period => {
             busTypeCodes.forEach(code => {
                 totals[period].best[code] = 0;
             });
@@ -344,7 +451,7 @@ export default function SummaryReport() {
 
         // Sum up all depots
         depotData.forEach(depot => {
-            ['morning', 'noon', 'evening'].forEach(period => {
+            ['fleetCategory', 'morning', 'noon', 'evening'].forEach(period => {
                 // BEST totals
                 busTypeCodes.forEach(code => {
                     totals[period].best[code] += depot[period].best[code] || 0;
@@ -378,7 +485,7 @@ export default function SummaryReport() {
 
         // Headers
         csv += 'Depot,';
-        ['MORNING', 'NOON', 'EVENING'].forEach(period => {
+        ['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].forEach(period => {
             csv += `${period} - BEST,`.repeat(reportData.busTypeCodes.length);
             csv += 'BEST TOTAL,';
             csv += `${period} - Wet Lease,`.repeat(reportData.wetLeaseOperators.length);
@@ -388,7 +495,7 @@ export default function SummaryReport() {
 
         // Sub-headers
         csv += ',';
-        ['MORNING', 'NOON', 'EVENING'].forEach(() => {
+        ['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].forEach(() => {
             reportData.busTypeCodes.forEach(code => csv += `${code},`);
             csv += 'TOTAL,';
             reportData.wetLeaseOperators.forEach(code => csv += `${code},`);
@@ -399,7 +506,7 @@ export default function SummaryReport() {
         // Data rows
         reportData.depots.forEach(depot => {
             csv += `${depot.name},`;
-            ['morning', 'noon', 'evening'].forEach(period => {
+            ['fleetCategory', 'morning', 'noon', 'evening'].forEach(period => {
                 reportData.busTypeCodes.forEach(code => {
                     csv += `${depot[period].best[code] || 0},`;
                 });
@@ -414,7 +521,7 @@ export default function SummaryReport() {
 
         // Total row
         csv += 'Total :-,';
-        ['morning', 'noon', 'evening'].forEach(period => {
+        ['fleetCategory', 'morning', 'noon', 'evening'].forEach(period => {
             reportData.busTypeCodes.forEach(code => {
                 csv += `${reportData.totals[period].best[code] || 0},`;
             });
@@ -630,7 +737,7 @@ export default function SummaryReport() {
                                 {/* Main header row */}
                                 <tr className="header-row-1">
                                     <th rowSpan="3" className="depot-header">Depot</th>
-                                    {['MORNING', 'NOON', 'EVENING'].map((period) => (
+                                    {['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].map((period) => (
                                         <th
                                             key={period}
                                             colSpan={reportData.busTypeCodes.length + reportData.wetLeaseOperators.length + 2}
@@ -643,7 +750,7 @@ export default function SummaryReport() {
 
                                 {/* Sub-header row (BEST / Wet Lease) */}
                                 <tr className="header-row-2">
-                                    {['MORNING', 'NOON', 'EVENING'].map((period) => (
+                                    {['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].map((period) => (
                                         <React.Fragment key={`header2-${period}`}>
                                             <th
                                                 colSpan={reportData.busTypeCodes.length + 1}
@@ -663,7 +770,7 @@ export default function SummaryReport() {
 
                                 {/* Bus type / Operator row */}
                                 <tr className="header-row-3">
-                                    {['MORNING', 'NOON', 'EVENING'].map((period) => (
+                                    {['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].map((period) => (
                                         <React.Fragment key={`header3-${period}`}>
                                             {/* BEST bus types */}
                                             {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
@@ -689,6 +796,20 @@ export default function SummaryReport() {
                                 {reportData.depots.map((depot, idx) => (
                                     <tr key={depot.name} className="data-row">
                                         <td className="depot-cell">{depot.name}</td>
+
+                                        {/* Fleet Category data */}
+                                        {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
+                                            <td key={`${depot.name}-fleet-best-${bt.code}`} className="data-cell">
+                                                {depot.fleetCategory.best[bt.code] || 0}
+                                            </td>
+                                        ))}
+                                        <td className="total-cell">{depot.fleetCategory.best.total}</td>
+                                        {reportData.wetLeaseOperators.map(code => (
+                                            <td key={`${depot.name}-fleet-wl-${code}`} className="data-cell">
+                                                {depot.fleetCategory.wetLease[code] || 0}
+                                            </td>
+                                        ))}
+                                        <td className="total-cell">{depot.fleetCategory.wetLease.total}</td>
 
                                         {/* Morning data */}
                                         {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
@@ -737,6 +858,20 @@ export default function SummaryReport() {
                                 {/* Grand Total Row */}
                                 <tr className="total-row">
                                     <td className="depot-cell">Total :-</td>
+
+                                    {/* Fleet Category totals */}
+                                    {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
+                                        <td key={`total-fleet-best-${bt.code}`} className="grand-total-cell">
+                                            {reportData.totals.fleetCategory.best[bt.code] || 0}
+                                        </td>
+                                    ))}
+                                    <td className="grand-total-cell">{reportData.totals.fleetCategory.best.total}</td>
+                                    {reportData.wetLeaseOperators.map(code => (
+                                        <td key={`total-fleet-wl-${code}`} className="grand-total-cell">
+                                            {reportData.totals.fleetCategory.wetLease[code] || 0}
+                                        </td>
+                                    ))}
+                                    <td className="grand-total-cell">{reportData.totals.fleetCategory.wetLease.total}</td>
 
                                     {/* Morning totals */}
                                     {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (

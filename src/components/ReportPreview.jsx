@@ -129,6 +129,56 @@ export default function ReportPreview({ reportData }) {
   });
 
   /**
+   * Merge entries with the same route into a single entry
+   * Combines Mon-Sat and Sunday data from separate entries
+   */
+  const mergeEntriesByRoute = (entries) => {
+    const routeMap = new Map();
+
+    entries.forEach(entry => {
+      const routeId = entry.route_id;
+      
+      if (!routeMap.has(routeId)) {
+        // First entry for this route - initialize with current entry
+        routeMap.set(routeId, { ...entry });
+      } else {
+        // Route already exists - merge the data
+        const existing = routeMap.get(routeId);
+        
+        // Helper to merge values - prefer non-dash values
+        const mergeValue = (existingVal, newVal) => {
+          const isDash = (val) => val === '-' || val === null || val === undefined || val === '';
+          
+          // If existing is dash/empty, use new value
+          if (isDash(existingVal)) return newVal;
+          // If new is dash/empty, keep existing
+          if (isDash(newVal)) return existingVal;
+          // Both have values - prefer the non-zero one, or sum them
+          const existingNum = parseInt(existingVal) || 0;
+          const newNum = parseInt(newVal) || 0;
+          return Math.max(existingNum, newNum).toString();
+        };
+
+        // Merge all schedule and duty fields
+        existing.mon_sat_am = mergeValue(existing.mon_sat_am, entry.mon_sat_am);
+        existing.mon_sat_noon = mergeValue(existing.mon_sat_noon, entry.mon_sat_noon);
+        existing.mon_sat_pm = mergeValue(existing.mon_sat_pm, entry.mon_sat_pm);
+        existing.sun_am = mergeValue(existing.sun_am, entry.sun_am);
+        existing.sun_noon = mergeValue(existing.sun_noon, entry.sun_noon);
+        existing.sun_pm = mergeValue(existing.sun_pm, entry.sun_pm);
+        existing.duties_driver_ms = mergeValue(existing.duties_driver_ms, entry.duties_driver_ms);
+        existing.duties_cond_ms = mergeValue(existing.duties_cond_ms, entry.duties_cond_ms);
+        existing.duties_driver_sun = mergeValue(existing.duties_driver_sun, entry.duties_driver_sun);
+        existing.duties_cond_sun = mergeValue(existing.duties_cond_sun, entry.duties_cond_sun);
+        
+        routeMap.set(routeId, existing);
+      }
+    });
+
+    return Array.from(routeMap.values());
+  };
+
+  /**
    * Calculate totals for a group of entries
    * Sums up all schedule positions and duty allocations
    */
@@ -232,7 +282,10 @@ export default function ReportPreview({ reportData }) {
             <tbody>
               {sortedGroups.map(([groupKey, group]) => {
                 const { category, operator, busType, entries } = group;
-                const totals = calculateGroupTotals(entries);
+                
+                // Merge entries with the same route before displaying
+                const mergedEntries = mergeEntriesByRoute(entries);
+                const totals = calculateGroupTotals(mergedEntries);
 
                 /**
                  * Build category name for the section header
@@ -265,7 +318,7 @@ export default function ReportPreview({ reportData }) {
                       <td colSpan="12">{categoryName}</td>
                     </tr>
                     {/* Data rows for each entry in this group */}
-                    {entries.map((entry, idx) => (
+                    {mergedEntries.map((entry, idx) => (
                       <tr key={idx}>
                         <td>{entry.routes?.name || '-'}</td>
                         <td>{entry.routes?.code || '-'}</td>
