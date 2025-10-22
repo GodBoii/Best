@@ -113,8 +113,10 @@ export default function SummaryReport() {
         if (entriesError) throw new Error('Error fetching schedule entries: ' + entriesError.message);
         console.log('All Entries fetched:', entries?.length);
 
-        // Filter entries by schedule IDs
-        const filteredEntries = entries.filter(e => scheduleIds.includes(e.schedule_id));
+        // Filter entries by schedule IDs and exclude deleted entries
+        const filteredEntries = entries.filter(e => 
+          scheduleIds.includes(e.schedule_id) && !e.is_deleted
+        );
         console.log('Filtered Entries:', filteredEntries.length);
         console.log('Sample Entry:', filteredEntries[0]);
 

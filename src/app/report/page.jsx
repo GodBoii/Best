@@ -75,15 +75,23 @@ export default function ReportPage() {
 
       if (entriesError) throw entriesError;
 
+      // Filter out soft-deleted entries (works for both online and local storage)
+      const activeEntries = (entries || []).filter(entry => {
+        if (!entry.is_deleted) return true;
+        if (!entry.deleted_at) return true;
+        return new Date(entry.deleted_at) > new Date(reportDate);
+      });
+
       // Get depot name
       const depot = depots.find(d => d.id === selectedDepot);
 
       console.log('=== FETCHED ENTRIES ===');
       console.log('Total entries:', entries?.length);
+      console.log('Active entries:', activeEntries?.length);
       console.log('Sample entry structure:', entries?.[0]);
       
-      const withOperators = entries?.filter(e => e.operator_id);
-      const withoutOperators = entries?.filter(e => !e.operator_id);
+      const withOperators = activeEntries?.filter(e => e.operator_id);
+      const withoutOperators = activeEntries?.filter(e => !e.operator_id);
       
       console.log('\n=== ENTRIES WITH OPERATORS (WET_LEASE) ===');
       console.log('Count:', withOperators?.length);
@@ -111,8 +119,8 @@ export default function ReportPage() {
       setReportData({
         depot: depot.name,
         date: reportDate,
-        actualDataDate: schedule.schedule_date,  // The actual date of the data being used
-        entries: entries || []
+        actualDataDate: schedule.schedule_date,
+        entries: activeEntries || []
       });
 
     } catch (error) {

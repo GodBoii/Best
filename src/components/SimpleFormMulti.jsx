@@ -65,7 +65,10 @@ export default function SimpleFormMulti() {
               operator_id: operator.id,
               bus_type_id: busType.id,
               route_id: route.id,
-              ...formatScheduleTypeData(scheduleType)
+              ...formatScheduleTypeData(scheduleType),
+              is_deleted: false,
+              deleted_at: null,
+              modified_at: new Date().toISOString()
             });
           });
         });

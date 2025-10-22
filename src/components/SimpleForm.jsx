@@ -118,7 +118,10 @@ export default function SimpleForm() {
         .from('schedule_entries')
         .insert([{
           schedule_id: scheduleId,
-          ...scheduleEntryData
+          ...scheduleEntryData,
+          is_deleted: false,
+          deleted_at: null,
+          modified_at: new Date().toISOString()
         }]);
 
       if (entryError) throw entryError;
