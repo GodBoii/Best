@@ -159,6 +159,7 @@ class IndexedDBAdapter {
       gte: (field, value) => self._selectWithFilter(storeName, field, value, 'gte'),
       lt: (field, value) => self._selectWithFilter(storeName, field, value, 'lt'),
       gt: (field, value) => self._selectWithFilter(storeName, field, value, 'gt'),
+      in: (field, values) => self._selectWithFilter(storeName, field, values, 'in'),
       order: (field, options = {}) => self._selectWithOrder(storeName, field, options),
       single: async () => {
         await self.initPromise;
@@ -202,6 +203,7 @@ class IndexedDBAdapter {
     const chainable = {
       eq: (field2, value2) => self._selectWithMultipleFiltersChainable(storeName, { ...filters, [field2]: { value: value2, operator: 'eq' } }),
       lte: (field2, value2) => self._selectWithMultipleFiltersChainable(storeName, { ...filters, [field2]: { value: value2, operator: 'lte' } }),
+      in: (field2, values) => self._selectWithMultipleFiltersChainable(storeName, { ...filters, [field2]: { value: values, operator: 'in' } }),
       order: (orderField, options) => self._selectWithFilterAndOrder(storeName, field, value, operator, orderField, options),
       limit: (count) => self._selectWithFilterAndLimit(storeName, field, value, operator, count),
       single: () => {
@@ -245,6 +247,9 @@ class IndexedDBAdapter {
             break;
           case 'gt':
             filtered = request.result.filter(item => item[field] > value);
+            break;
+          case 'in':
+            filtered = request.result.filter(item => Array.isArray(value) && value.includes(item[field]));
             break;
           case 'eq':
           default:
@@ -303,6 +308,8 @@ class IndexedDBAdapter {
                 return item[field] < value;
               case 'gt':
                 return item[field] > value;
+              case 'in':
+                return Array.isArray(value) && value.includes(item[field]);
               case 'eq':
               default:
                 return item[field] === value;
@@ -441,6 +448,7 @@ class IndexedDBAdapter {
 
     return {
       eq: (field, value) => self._selectWithMultipleFiltersChainable(storeName, { ...filters, [field]: { value, operator: 'eq' } }),
+      in: (field, values) => self._selectWithMultipleFiltersChainable(storeName, { ...filters, [field]: { value: values, operator: 'in' } }),
       order: (orderField, options) => self._selectWithMultipleFiltersAndOrder(storeName, filters, orderField, options),
       single: () => {
         return self.initPromise.then(async () => {
@@ -484,6 +492,8 @@ class IndexedDBAdapter {
                 return itemValue < filterValue;
               case 'gt':
                 return itemValue > filterValue;
+              case 'in':
+                return Array.isArray(filterValue) && filterValue.includes(itemValue);
               case 'eq':
               default:
                 return itemValue === filterValue;
@@ -862,6 +872,7 @@ class IndexedDBAdapter {
 
     return {
       eq: (field, value) => self._selectWithJoinsAndFilter(storeName, fields, { [field]: { value, operator: 'eq' } }),
+      in: (field, values) => self._selectWithJoinsAndFilter(storeName, fields, { [field]: { value: values, operator: 'in' } }),
       order: (field, options) => self.initPromise.then(() => self._selectWithJoinsAndOrder(storeName, fields, field, options))
     };
   }
@@ -871,6 +882,7 @@ class IndexedDBAdapter {
 
     return {
       eq: (field, value) => self._selectWithJoinsAndFilter(storeName, fields, { ...filters, [field]: { value, operator: 'eq' } }),
+      in: (field, values) => self._selectWithJoinsAndFilter(storeName, fields, { ...filters, [field]: { value: values, operator: 'in' } }),
       order: (field, options) => self.initPromise.then(() => self._selectWithJoinsFiltersAndOrder(storeName, fields, filters, field, options)),
       then: (resolve, reject) => {
         return self.initPromise

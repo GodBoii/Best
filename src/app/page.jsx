@@ -6,6 +6,7 @@ import SimpleForm from '../components/SimpleForm';
 import SimpleFormMulti from '../components/SimpleFormMulti';
 import StorageToggle from '../components/StorageToggle';
 import BackupReminder from '../components/BackupReminder';
+import MigrationRunner from '../components/MigrationRunner';
 import storageMonitor from '../lib/storage/storageMonitor';
 import backupManager from '../lib/storage/backupManager';
 import '../styles/globals.css';
@@ -72,6 +73,7 @@ export default function Home() {
   return (
     <div className="app-container">
       <BackupReminder />
+      <MigrationRunner />
       
       <header className="app-header">
         <h1>Bus Schedule Management System</h1>

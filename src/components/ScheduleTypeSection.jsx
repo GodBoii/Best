@@ -3,39 +3,52 @@
 import { useState, useEffect } from 'react';
 
 export default function ScheduleTypeSection({ onScheduleTypeSelect, selectedScheduleType }) {
-  const [selectedMainType, setSelectedMainType] = useState(selectedScheduleType?.mainType || null);
+  // Mon-Sat inputs
+  const [monSatBusesAM, setMonSatBusesAM] = useState(selectedScheduleType?.monSat?.buses?.am || '');
+  const [monSatBusesNoon, setMonSatBusesNoon] = useState(selectedScheduleType?.monSat?.buses?.noon || '');
+  const [monSatBusesPM, setMonSatBusesPM] = useState(selectedScheduleType?.monSat?.buses?.pm || '');
+  const [monSatDutiesDrivers, setMonSatDutiesDrivers] = useState(selectedScheduleType?.monSat?.duties?.drivers || '');
+  const [monSatDutiesConductors, setMonSatDutiesConductors] = useState(selectedScheduleType?.monSat?.duties?.conductors || '');
+  const [monSatConductorManuallyEdited, setMonSatConductorManuallyEdited] = useState(false);
   
-  // Buses inputs - separate for AM, NOON, PM
-  const [busesAM, setBusesAM] = useState(selectedScheduleType?.buses?.am || '');
-  const [busesNoon, setBusesNoon] = useState(selectedScheduleType?.buses?.noon || '');
-  const [busesPM, setBusesPM] = useState(selectedScheduleType?.buses?.pm || '');
-  
-  // Duties inputs
-  const [dutiesDrivers, setDutiesDrivers] = useState(selectedScheduleType?.duties?.drivers || '');
-  const [dutiesConductors, setDutiesConductors] = useState(selectedScheduleType?.duties?.conductors || '');
-  const [conductorManuallyEdited, setConductorManuallyEdited] = useState(false);
+  // Sunday inputs
+  const [sundayBusesAM, setSundayBusesAM] = useState(selectedScheduleType?.sunday?.buses?.am || '');
+  const [sundayBusesNoon, setSundayBusesNoon] = useState(selectedScheduleType?.sunday?.buses?.noon || '');
+  const [sundayBusesPM, setSundayBusesPM] = useState(selectedScheduleType?.sunday?.buses?.pm || '');
+  const [sundayDutiesDrivers, setSundayDutiesDrivers] = useState(selectedScheduleType?.sunday?.duties?.drivers || '');
+  const [sundayDutiesConductors, setSundayDutiesConductors] = useState(selectedScheduleType?.sunday?.duties?.conductors || '');
+  const [sundayConductorManuallyEdited, setSundayConductorManuallyEdited] = useState(false);
 
   useEffect(() => {
-    if (selectedMainType) {
-      const scheduleData = {
-        mainType: selectedMainType,
+    const scheduleData = {
+      monSat: {
         buses: {
-          am: busesAM,
-          noon: busesNoon,
-          pm: busesPM
+          am: monSatBusesAM,
+          noon: monSatBusesNoon,
+          pm: monSatBusesPM
         },
         duties: {
-          drivers: dutiesDrivers,
-          conductors: dutiesConductors
+          drivers: monSatDutiesDrivers,
+          conductors: monSatDutiesConductors
         }
-      };
-      onScheduleTypeSelect(scheduleData);
-    }
-  }, [selectedMainType, busesAM, busesNoon, busesPM, dutiesDrivers, dutiesConductors]);
-
-  const handleMainTypeSelect = (type) => {
-    setSelectedMainType(type);
-  };
+      },
+      sunday: {
+        buses: {
+          am: sundayBusesAM,
+          noon: sundayBusesNoon,
+          pm: sundayBusesPM
+        },
+        duties: {
+          drivers: sundayDutiesDrivers,
+          conductors: sundayDutiesConductors
+        }
+      }
+    };
+    onScheduleTypeSelect(scheduleData);
+  }, [
+    monSatBusesAM, monSatBusesNoon, monSatBusesPM, monSatDutiesDrivers, monSatDutiesConductors,
+    sundayBusesAM, sundayBusesNoon, sundayBusesPM, sundayDutiesDrivers, sundayDutiesConductors
+  ]);
 
   const handleNumberInput = (value, setter) => {
     // Only allow numbers and max 2 digits
@@ -44,48 +57,49 @@ export default function ScheduleTypeSection({ onScheduleTypeSelect, selectedSche
     }
   };
 
-  const handleDriversChange = (value) => {
-    handleNumberInput(value, setDutiesDrivers);
+  const handleMonSatDriversChange = (value) => {
+    handleNumberInput(value, setMonSatDutiesDrivers);
     // Auto-copy to conductors if not manually edited
-    if (!conductorManuallyEdited) {
-      setDutiesConductors(value);
+    if (!monSatConductorManuallyEdited) {
+      setMonSatDutiesConductors(value);
     }
   };
 
-  const handleConductorsChange = (value) => {
-    handleNumberInput(value, setDutiesConductors);
+  const handleMonSatConductorsChange = (value) => {
+    handleNumberInput(value, setMonSatDutiesConductors);
     // Mark as manually edited
-    setConductorManuallyEdited(true);
+    setMonSatConductorManuallyEdited(true);
+  };
+
+  const handleSundayDriversChange = (value) => {
+    handleNumberInput(value, setSundayDutiesDrivers);
+    // Auto-copy to conductors if not manually edited
+    if (!sundayConductorManuallyEdited) {
+      setSundayDutiesConductors(value);
+    }
+  };
+
+  const handleSundayConductorsChange = (value) => {
+    handleNumberInput(value, setSundayDutiesConductors);
+    // Mark as manually edited
+    setSundayConductorManuallyEdited(true);
   };
 
   return (
     <div className="form-section">
       <h3>4. Schedule Type</h3>
+      <p className="form-description" style={{ marginBottom: '15px', color: '#666' }}>
+        Enter schedule data for both Mon-Sat and Sunday. Leave fields empty or 0 if not applicable.
+      </p>
 
       <div className="schedule-type-container">
-        {/* Main Type Selection */}
-        <div className="schedule-main-types">
-          <label className="schedule-type-label">Select Schedule Type: <span className="required">*</span></label>
-          <div className="schedule-type-buttons">
-            <button
-              type="button"
-              onClick={() => handleMainTypeSelect('Mon to Sat')}
-              className={`schedule-type-btn ${selectedMainType === 'Mon to Sat' ? 'active' : ''}`}
-            >
-              Mon to Sat
-            </button>
-            <button
-              type="button"
-              onClick={() => handleMainTypeSelect('Sunday')}
-              className={`schedule-type-btn ${selectedMainType === 'Sunday' ? 'active' : ''}`}
-            >
-              Sunday
-            </button>
+        {/* Mon-Sat Section */}
+        <div className="schedule-section-card">
+          <div className="schedule-section-header">
+            <span className="schedule-icon">📅</span>
+            <h4>Monday to Saturday</h4>
           </div>
-        </div>
-
-        {/* Buses and Duties Inputs */}
-        {selectedMainType && (
+          
           <div className="schedule-inputs-container">
             {/* Buses Section */}
             <div className="schedule-input-group">
@@ -95,8 +109,8 @@ export default function ScheduleTypeSection({ onScheduleTypeSelect, selectedSche
                   <label className="schedule-field-label">AM</label>
                   <input
                     type="text"
-                    value={busesAM}
-                    onChange={(e) => handleNumberInput(e.target.value, setBusesAM)}
+                    value={monSatBusesAM}
+                    onChange={(e) => handleNumberInput(e.target.value, setMonSatBusesAM)}
                     placeholder="0"
                     maxLength={2}
                     className="schedule-number-input"
@@ -106,8 +120,8 @@ export default function ScheduleTypeSection({ onScheduleTypeSelect, selectedSche
                   <label className="schedule-field-label">NOON</label>
                   <input
                     type="text"
-                    value={busesNoon}
-                    onChange={(e) => handleNumberInput(e.target.value, setBusesNoon)}
+                    value={monSatBusesNoon}
+                    onChange={(e) => handleNumberInput(e.target.value, setMonSatBusesNoon)}
                     placeholder="0"
                     maxLength={2}
                     className="schedule-number-input"
@@ -117,8 +131,8 @@ export default function ScheduleTypeSection({ onScheduleTypeSelect, selectedSche
                   <label className="schedule-field-label">PM</label>
                   <input
                     type="text"
-                    value={busesPM}
-                    onChange={(e) => handleNumberInput(e.target.value, setBusesPM)}
+                    value={monSatBusesPM}
+                    onChange={(e) => handleNumberInput(e.target.value, setMonSatBusesPM)}
                     placeholder="0"
                     maxLength={2}
                     className="schedule-number-input"
@@ -135,8 +149,8 @@ export default function ScheduleTypeSection({ onScheduleTypeSelect, selectedSche
                   <label className="schedule-field-label">Drivers</label>
                   <input
                     type="text"
-                    value={dutiesDrivers}
-                    onChange={(e) => handleDriversChange(e.target.value)}
+                    value={monSatDutiesDrivers}
+                    onChange={(e) => handleMonSatDriversChange(e.target.value)}
                     placeholder="0"
                     maxLength={2}
                     className="schedule-number-input"
@@ -146,8 +160,8 @@ export default function ScheduleTypeSection({ onScheduleTypeSelect, selectedSche
                   <label className="schedule-field-label">Conductors</label>
                   <input
                     type="text"
-                    value={dutiesConductors}
-                    onChange={(e) => handleConductorsChange(e.target.value)}
+                    value={monSatDutiesConductors}
+                    onChange={(e) => handleMonSatConductorsChange(e.target.value)}
                     placeholder="0"
                     maxLength={2}
                     className="schedule-number-input"
@@ -156,17 +170,86 @@ export default function ScheduleTypeSection({ onScheduleTypeSelect, selectedSche
               </div>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Selected Info */}
-        {selectedScheduleType && selectedMainType && (
-          <div className="selected-schedule-type-info">
-            <span className="info-label">Selected:</span>
-            <span className="info-value">
-              {selectedMainType} - Buses: {busesAM || 0}/{busesNoon || 0}/{busesPM || 0} | Duties: Drivers:{dutiesDrivers || 0} Conductors:{dutiesConductors || 0}
-            </span>
+        {/* Sunday Section */}
+        <div className="schedule-section-card">
+          <div className="schedule-section-header">
+            <span className="schedule-icon">☀️</span>
+            <h4>Sunday</h4>
           </div>
-        )}
+          
+          <div className="schedule-inputs-container">
+            {/* Buses Section */}
+            <div className="schedule-input-group">
+              <label className="schedule-input-label">Buses (AM, NOON, PM):</label>
+              <div className="schedule-input-row">
+                <div className="schedule-input-field">
+                  <label className="schedule-field-label">AM</label>
+                  <input
+                    type="text"
+                    value={sundayBusesAM}
+                    onChange={(e) => handleNumberInput(e.target.value, setSundayBusesAM)}
+                    placeholder="0"
+                    maxLength={2}
+                    className="schedule-number-input"
+                  />
+                </div>
+                <div className="schedule-input-field">
+                  <label className="schedule-field-label">NOON</label>
+                  <input
+                    type="text"
+                    value={sundayBusesNoon}
+                    onChange={(e) => handleNumberInput(e.target.value, setSundayBusesNoon)}
+                    placeholder="0"
+                    maxLength={2}
+                    className="schedule-number-input"
+                  />
+                </div>
+                <div className="schedule-input-field">
+                  <label className="schedule-field-label">PM</label>
+                  <input
+                    type="text"
+                    value={sundayBusesPM}
+                    onChange={(e) => handleNumberInput(e.target.value, setSundayBusesPM)}
+                    placeholder="0"
+                    maxLength={2}
+                    className="schedule-number-input"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Duties Section */}
+            <div className="schedule-input-group">
+              <label className="schedule-input-label">Duties:</label>
+              <div className="schedule-input-row">
+                <div className="schedule-input-field">
+                  <label className="schedule-field-label">Drivers</label>
+                  <input
+                    type="text"
+                    value={sundayDutiesDrivers}
+                    onChange={(e) => handleSundayDriversChange(e.target.value)}
+                    placeholder="0"
+                    maxLength={2}
+                    className="schedule-number-input"
+                  />
+                </div>
+                <div className="schedule-input-field">
+                  <label className="schedule-field-label">Conductors</label>
+                  <input
+                    type="text"
+                    value={sundayDutiesConductors}
+                    onChange={(e) => handleSundayConductorsChange(e.target.value)}
+                    placeholder="0"
+                    maxLength={2}
+                    className="schedule-number-input"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

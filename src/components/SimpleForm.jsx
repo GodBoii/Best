@@ -36,7 +36,7 @@ export default function SimpleForm() {
     }
 
     if (!selectedScheduleType) {
-      alert('Please select a schedule type');
+      alert('Please enter schedule data');
       return;
     }
 
@@ -58,26 +58,23 @@ export default function SimpleForm() {
         return (value === '' || value === null || value === undefined) ? '-' : value;
       };
 
-      // Determine if it's Mon-Sat or Sunday schedule
-      const isMonSat = selectedScheduleType.mainType === 'Mon to Sat';
-
-      // Prepare schedule entry data based on schedule type
+      // Prepare schedule entry data with both Mon-Sat and Sunday values
       const scheduleEntryData = {
         route_id: selectedRoute.id,
         bus_type_id: selectedBusType.id,
         operator_id: selectedOperator.id,
         // Mon-Sat columns
-        mon_sat_am: isMonSat ? formatValue(selectedScheduleType.buses.am) : '-',
-        mon_sat_noon: isMonSat ? formatValue(selectedScheduleType.buses.noon) : '-',
-        mon_sat_pm: isMonSat ? formatValue(selectedScheduleType.buses.pm) : '-',
-        duties_driver_ms: isMonSat ? formatValue(selectedScheduleType.duties.drivers) : '-',
-        duties_cond_ms: isMonSat ? formatValue(selectedScheduleType.duties.conductors) : '-',
+        mon_sat_am: formatValue(selectedScheduleType.monSat.buses.am),
+        mon_sat_noon: formatValue(selectedScheduleType.monSat.buses.noon),
+        mon_sat_pm: formatValue(selectedScheduleType.monSat.buses.pm),
+        duties_driver_ms: formatValue(selectedScheduleType.monSat.duties.drivers),
+        duties_cond_ms: formatValue(selectedScheduleType.monSat.duties.conductors),
         // Sunday columns
-        sun_am: !isMonSat ? formatValue(selectedScheduleType.buses.am) : '-',
-        sun_noon: !isMonSat ? formatValue(selectedScheduleType.buses.noon) : '-',
-        sun_pm: !isMonSat ? formatValue(selectedScheduleType.buses.pm) : '-',
-        duties_driver_sun: !isMonSat ? formatValue(selectedScheduleType.duties.drivers) : '-',
-        duties_cond_sun: !isMonSat ? formatValue(selectedScheduleType.duties.conductors) : '-'
+        sun_am: formatValue(selectedScheduleType.sunday.buses.am),
+        sun_noon: formatValue(selectedScheduleType.sunday.buses.noon),
+        sun_pm: formatValue(selectedScheduleType.sunday.buses.pm),
+        duties_driver_sun: formatValue(selectedScheduleType.sunday.duties.drivers),
+        duties_cond_sun: formatValue(selectedScheduleType.sunday.duties.conductors)
       };
 
       // First, check if a schedule exists for this depot and date
@@ -114,6 +111,7 @@ export default function SimpleForm() {
       }
 
       // Now insert the schedule entry
+      const currentTimestamp = new Date().toISOString();
       const { error: entryError } = await storageManager
         .from('schedule_entries')
         .insert([{
@@ -121,7 +119,8 @@ export default function SimpleForm() {
           ...scheduleEntryData,
           is_deleted: false,
           deleted_at: null,
-          modified_at: new Date().toISOString()
+          created_at: currentTimestamp,
+          modified_at: currentTimestamp
         }]);
 
       if (entryError) throw entryError;

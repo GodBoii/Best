@@ -50,31 +50,33 @@ export default function DepotScheduleModifications() {
 
     setLoading(true);
     try {
-      // First get the schedule ID
-      console.log('📅 Fetching schedule...');
-      const { data: schedule, error: scheduleError } = await storageManager
+      // Get ALL schedules for this depot up to the selected date
+      console.log('📅 Fetching schedules up to selected date...');
+      const { data: schedules, error: scheduleError } = await storageManager
         .from('schedules')
-        .select('id')
+        .select('id, schedule_date')
         .eq('depot_id', selectedDepot.id)
-        .eq('schedule_date', scheduleDate)
-        .single();
+        .lte('schedule_date', scheduleDate);
 
-      console.log('Schedule query result:', { schedule, scheduleError });
+      console.log('Schedule query result:', { count: schedules?.length, scheduleError });
 
       if (scheduleError) {
-        if (scheduleError.code === 'PGRST116') {
-          // No schedule found for this date
-          console.log('⚠️ No schedule found for this depot and date');
-          setEntries([]);
-          return;
-        }
         throw scheduleError;
       }
 
-      console.log('✅ Schedule found:', schedule.id);
+      if (!schedules || schedules.length === 0) {
+        console.log('⚠️ No schedules found for this depot up to selected date');
+        setEntries([]);
+        return;
+      }
 
-      // Get all entries for this schedule, operator, and bus type
-      console.log('📋 Fetching schedule entries...');
+      console.log(`✅ Found ${schedules.length} schedules`);
+
+      // Get schedule IDs
+      const scheduleIds = schedules.map(s => s.id);
+
+      // Get all entries from ALL those schedules for this operator and bus type
+      console.log('📋 Fetching schedule entries from all schedules...');
       const { data, error } = await storageManager
         .from('schedule_entries')
         .select(`
@@ -85,33 +87,68 @@ export default function DepotScheduleModifications() {
             code
           )
         `)
-        .eq('schedule_id', schedule.id)
+        .in('schedule_id', scheduleIds)
         .eq('operator_id', selectedOperator.id)
         .eq('bus_type_id', selectedBusType.id);
 
       console.log('Entries query result:', { 
         count: data?.length, 
-        data: data,
         error 
       });
 
       if (error) throw error;
 
-      // Filter out deleted entries manually (for compatibility with local storage)
-      const activeEntries = (data || []).filter(entry => {
-        const isDeleted = entry.is_deleted === true;
-        console.log(`Entry ${entry.routes?.name}: is_deleted=${entry.is_deleted}, filtered=${isDeleted}`);
-        return !isDeleted;
-      });
+      // Deduplicate entries - keep only the latest version of each route
+      const routeMap = new Map();
 
-      // Sort by date (most recent first) - modified_at takes priority over created_at
+      for (const entry of (data || [])) {
+        const routeId = entry.route_id;
+        
+        // Check if this entry is deleted on or before selected date
+        if (entry.is_deleted && entry.deleted_at) {
+          const deletedDate = new Date(entry.deleted_at);
+          const selectedDate = new Date(scheduleDate);
+          
+          if (deletedDate <= selectedDate) {
+            // Mark as deleted
+            routeMap.set(routeId, { deleted: true });
+            console.log(`🗑️ Route ${entry.routes?.name} marked as deleted`);
+            continue;
+          }
+        }
+        
+        // Get existing entry for this route
+        const existing = routeMap.get(routeId);
+        
+        // Skip if already marked as deleted
+        if (existing?.deleted) {
+          console.log(`⏭️ Skipping ${entry.routes?.name} - already deleted`);
+          continue;
+        }
+        
+        // Determine timestamp
+        const entryTimestamp = entry.modified_at || entry.created_at;
+        const existingTimestamp = existing ? (existing.modified_at || existing.created_at) : null;
+        
+        // If no existing entry, or this entry is newer, use it
+        if (!existing || (entryTimestamp && existingTimestamp && new Date(entryTimestamp) > new Date(existingTimestamp))) {
+          routeMap.set(routeId, entry);
+          console.log(`✅ Using ${entry.routes?.name} from ${entryTimestamp}`);
+        }
+      }
+
+      // Filter out deleted entries and convert to array
+      const activeEntries = Array.from(routeMap.values())
+        .filter(entry => !entry.deleted);
+
+      // Sort by date (most recent first)
       const sortedEntries = activeEntries.sort((a, b) => {
         const dateA = new Date(a.modified_at || a.created_at || 0);
         const dateB = new Date(b.modified_at || b.created_at || 0);
-        return dateB - dateA; // Descending order (newest first)
+        return dateB - dateA;
       });
 
-      console.log(`✅ Found ${sortedEntries.length} active entries (${data?.length || 0} total)`);
+      console.log(`✅ Found ${sortedEntries.length} active entries after deduplication (${data?.length || 0} total)`);
       setEntries(sortedEntries);
     } catch (error) {
       console.error('❌ Error loading entries:', error);
@@ -152,7 +189,46 @@ export default function DepotScheduleModifications() {
         return (isNaN(num) || num === 0) ? '-' : value;
       };
 
-      const updateData = {
+      // Create a NEW entry with the updated data (version control approach)
+      // This preserves the old entry for historical tracking
+      const currentTimestamp = new Date().toISOString();
+      
+      // First, get the schedule for the selected date
+      let scheduleId;
+      const { data: existingSchedule, error: scheduleCheckError } = await storageManager
+        .from('schedules')
+        .select('id')
+        .eq('depot_id', selectedDepot.id)
+        .eq('schedule_date', scheduleDate)
+        .single();
+
+      if (scheduleCheckError && scheduleCheckError.code !== 'PGRST116') {
+        throw scheduleCheckError;
+      }
+
+      if (existingSchedule) {
+        scheduleId = existingSchedule.id;
+      } else {
+        // Create new schedule for this date
+        const { data: newSchedule, error: scheduleCreateError } = await storageManager
+          .from('schedules')
+          .insert([{
+            depot_id: selectedDepot.id,
+            schedule_date: scheduleDate
+          }])
+          .select()
+          .single();
+
+        if (scheduleCreateError) throw scheduleCreateError;
+        scheduleId = newSchedule.id;
+      }
+
+      // Create new entry with updated values
+      const newEntryData = {
+        schedule_id: scheduleId,
+        route_id: editingEntry.route_id,
+        bus_type_id: editingEntry.bus_type_id,
+        operator_id: editingEntry.operator_id,
         mon_sat_am: formatValue(editForm.mon_sat_am),
         mon_sat_noon: formatValue(editForm.mon_sat_noon),
         mon_sat_pm: formatValue(editForm.mon_sat_pm),
@@ -163,20 +239,22 @@ export default function DepotScheduleModifications() {
         duties_cond_ms: formatValue(editForm.duties_cond_ms),
         duties_driver_sun: formatValue(editForm.duties_driver_sun),
         duties_cond_sun: formatValue(editForm.duties_cond_sun),
-        modified_at: new Date().toISOString()
+        is_deleted: false,
+        deleted_at: null,
+        created_at: currentTimestamp,
+        modified_at: currentTimestamp
       };
 
-      console.log('Update data:', updateData);
+      console.log('New entry data:', newEntryData);
 
       const { error } = await storageManager
         .from('schedule_entries')
-        .update(updateData)
-        .eq('id', editingEntry.id);
+        .insert([newEntryData]);
 
       if (error) throw error;
 
-      console.log('✅ Entry updated successfully');
-      alert('Entry updated successfully!');
+      console.log('✅ New version of entry created successfully');
+      alert('Entry updated successfully! A new version has been created.');
       setShowEditModal(false);
       setEditingEntry(null);
       loadEntries(); // Reload entries
@@ -202,22 +280,71 @@ export default function DepotScheduleModifications() {
 
     setLoading(true);
     try {
-      const deleteData = {
+      const currentTimestamp = new Date().toISOString();
+      
+      // Create a deletion entry (version control approach)
+      // First, get the schedule for the selected date
+      let scheduleId;
+      const { data: existingSchedule, error: scheduleCheckError } = await storageManager
+        .from('schedules')
+        .select('id')
+        .eq('depot_id', selectedDepot.id)
+        .eq('schedule_date', scheduleDate)
+        .single();
+
+      if (scheduleCheckError && scheduleCheckError.code !== 'PGRST116') {
+        throw scheduleCheckError;
+      }
+
+      if (existingSchedule) {
+        scheduleId = existingSchedule.id;
+      } else {
+        // Create new schedule for this date
+        const { data: newSchedule, error: scheduleCreateError } = await storageManager
+          .from('schedules')
+          .insert([{
+            depot_id: selectedDepot.id,
+            schedule_date: scheduleDate
+          }])
+          .select()
+          .single();
+
+        if (scheduleCreateError) throw scheduleCreateError;
+        scheduleId = newSchedule.id;
+      }
+
+      // Create a new entry marked as deleted
+      const deleteEntryData = {
+        schedule_id: scheduleId,
+        route_id: deletingEntry.route_id,
+        bus_type_id: deletingEntry.bus_type_id,
+        operator_id: deletingEntry.operator_id,
+        mon_sat_am: deletingEntry.mon_sat_am,
+        mon_sat_noon: deletingEntry.mon_sat_noon,
+        mon_sat_pm: deletingEntry.mon_sat_pm,
+        sun_am: deletingEntry.sun_am,
+        sun_noon: deletingEntry.sun_noon,
+        sun_pm: deletingEntry.sun_pm,
+        duties_driver_ms: deletingEntry.duties_driver_ms,
+        duties_cond_ms: deletingEntry.duties_cond_ms,
+        duties_driver_sun: deletingEntry.duties_driver_sun,
+        duties_cond_sun: deletingEntry.duties_cond_sun,
         is_deleted: true,
-        deleted_at: scheduleDate
+        deleted_at: scheduleDate,
+        created_at: currentTimestamp,
+        modified_at: currentTimestamp
       };
 
-      console.log('Delete data:', deleteData);
+      console.log('Delete entry data:', deleteEntryData);
 
       const { error } = await storageManager
         .from('schedule_entries')
-        .update(deleteData)
-        .eq('id', deletingEntry.id);
+        .insert([deleteEntryData]);
 
       if (error) throw error;
 
-      console.log('✅ Entry deleted successfully');
-      alert('Entry deleted successfully!');
+      console.log('✅ Deletion entry created successfully');
+      alert('Entry deleted successfully! This will not appear in reports from this date onwards.');
       setShowDeleteModal(false);
       setDeletingEntry(null);
       loadEntries(); // Reload entries
