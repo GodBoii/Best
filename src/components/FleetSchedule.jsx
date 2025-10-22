@@ -10,14 +10,14 @@ export default function FleetSchedule() {
   const [depots, setDepots] = useState([]);
   const [operators, setOperators] = useState([]);
   const [busTypes, setBusTypes] = useState([]);
-  
+
   const [selectedDepot, setSelectedDepot] = useState('');
   const [depotNumber, setDepotNumber] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedOperator, setSelectedOperator] = useState('');
   const [selectedBusType, setSelectedBusType] = useState('');
   const [fleet, setFleet] = useState('');
-  
+
   const [fleetEntries, setFleetEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -36,7 +36,7 @@ export default function FleetSchedule() {
   const fetchData = async () => {
     try {
       const client = storageManager.getClient();
-      
+
       const [depotsRes, operatorsRes, busTypesRes] = await Promise.all([
         client.from('depots').select('*').order('name'),
         client.from('operators').select('*').order('name'),
@@ -110,7 +110,7 @@ export default function FleetSchedule() {
     setIsLoading(true);
     try {
       const client = storageManager.getClient();
-      
+
       // Save to database
       const { data, error } = await client
         .from('fleet_entries')
@@ -143,7 +143,7 @@ export default function FleetSchedule() {
       };
 
       setFleetEntries([...fleetEntries, newEntry]);
-      
+
       // Reset form
       setFleet('');
       alert('Fleet entry added successfully');
@@ -196,10 +196,10 @@ export default function FleetSchedule() {
       const { error } = await client
         .from('depots')
         .update({ display_order: depotNum })
-        .eq('id', parseInt(selectedDepot));
+        .eq('id', selectedDepot);
 
       if (error) throw error;
-      
+
       alert('Depot number saved successfully');
       await fetchData();
     } catch (error) {
@@ -210,7 +210,7 @@ export default function FleetSchedule() {
     }
   };
 
-  const selectedDepotData = depots.find(d => d.id === parseInt(selectedDepot));
+  const selectedDepotData = depots.find(d => d.id === selectedDepot);
 
   return (
     <>
@@ -220,186 +220,193 @@ export default function FleetSchedule() {
           <h2>FLEET Schedule Management</h2>
         </div>
 
-      <div className="fleet-form">
-        <div className="form-section">
-          <h3>1. Depot Information</h3>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Depot Name: <span className="required">*</span></label>
-              <select
-                value={selectedDepot}
-                onChange={(e) => {
-                  setSelectedDepot(e.target.value);
-                  const depot = depots.find(d => d.id === parseInt(e.target.value));
-                  setDepotNumber(depot?.display_order?.toString() || '');
-                }}
-                className="form-select"
-              >
-                <option value="">Select Depot</option>
-                {depots.map(depot => (
-                  <option key={depot.id} value={depot.id}>
-                    {depot.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div className="fleet-form">
+          <div className="form-section">
+            <h3>1. Depot Information</h3>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Depot Name: <span className="required">*</span></label>
+                <select
+                  value={selectedDepot}
+                  onChange={(e) => {
+                    setSelectedDepot(e.target.value);
+                    const depot = depots.find(d => d.id === e.target.value);
+                    setDepotNumber(depot?.display_order?.toString() || '');
+                  }}
+                  className="form-select"
+                >
+                  <option value="">Select Depot</option>
+                  {depots.map(depot => (
+                    <option key={depot.id} value={depot.id}>
+                      {depot.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="form-group">
-              <label>
-                Depot Number (for Summary Report):
-                <span className="info-text"> (Position in report)</span>
-              </label>
-              <div className="depot-number-group">
+              <div className="form-group">
+                <label>
+                  Depot Serial Number (for Summary Report):
+                  <span className="info-text"> (Position in report)</span>
+                </label>
+                <div className="depot-number-group">
+                  <input
+                    type="number"
+                    value={depotNumber}
+                    onChange={(e) => setDepotNumber(e.target.value)}
+                    placeholder={selectedDepotData?.display_order ? `Current: ${selectedDepotData.display_order}` : "Enter serial number"}
+                    className="form-input"
+                    min="0"
+                    disabled={!selectedDepot}
+                  />
+                  <button
+                    onClick={handleSaveDepotNumber}
+                    disabled={isLoading || !selectedDepot || !depotNumber}
+                    className="btn-save-depot-num"
+                    title={selectedDepotData?.display_order ? "Update serial number" : "Save serial number"}
+                  >
+                    {isLoading ? 'Saving...' : (selectedDepotData?.display_order ? 'Update' : 'Save')}
+                  </button>
+                </div>
+                {selectedDepotData?.display_order > 0 && (
+                  <span className="current-value">
+                    ✓ Current serial number: {selectedDepotData.display_order}
+                  </span>
+                )}
+                {!selectedDepotData?.display_order && selectedDepot && (
+                  <span className="info-text-small">
+                    No serial number set for this depot
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="form-section">
+            <h3>2. Schedule Details</h3>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Date: <span className="required">*</span></label>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Operator: <span className="required">*</span></label>
+                <select
+                  value={selectedOperator}
+                  onChange={(e) => setSelectedOperator(e.target.value)}
+                  className="form-select"
+                >
+                  <option value="">Select Operator</option>
+                  {operators.map(operator => (
+                    <option key={operator.id} value={operator.id}>
+                      {operator.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Bus Type: <span className="required">*</span></label>
+                <select
+                  value={selectedBusType}
+                  onChange={(e) => setSelectedBusType(e.target.value)}
+                  className="form-select"
+                >
+                  <option value="">Select Bus Type</option>
+                  {busTypes.map(busType => (
+                    <option key={busType.id} value={busType.id}>
+                      {busType.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>
+                  Fleet: <span className="required">*</span>
+                  <span className="info-text"> (Max 4 digits)</span>
+                </label>
                 <input
                   type="number"
-                  value={depotNumber}
-                  onChange={(e) => setDepotNumber(e.target.value)}
-                  placeholder="Enter number"
+                  value={fleet}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || (parseInt(val) >= 0 && parseInt(val) <= 9999)) {
+                      setFleet(val);
+                    }
+                  }}
+                  placeholder="0-9999"
                   className="form-input"
                   min="0"
+                  max="9999"
                 />
-                <button
-                  onClick={handleSaveDepotNumber}
-                  disabled={isLoading || !selectedDepot || !depotNumber}
-                  className="btn-save-depot-num"
-                >
-                  {isLoading ? 'Saving...' : 'Save'}
-                </button>
               </div>
-              {selectedDepotData?.display_order && (
-                <span className="current-value">
-                  Current: {selectedDepotData.display_order}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="form-section">
-          <h3>2. Schedule Details</h3>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Date: <span className="required">*</span></label>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="form-input"
-              />
             </div>
 
-            <div className="form-group">
-              <label>Operator: <span className="required">*</span></label>
-              <select
-                value={selectedOperator}
-                onChange={(e) => setSelectedOperator(e.target.value)}
-                className="form-select"
+            <div className="form-actions">
+              <button
+                onClick={handleAddEntry}
+                className="btn-add-entry"
+                disabled={!selectedDepot || !selectedDate || !selectedOperator || !selectedBusType || !fleet}
               >
-                <option value="">Select Operator</option>
-                {operators.map(operator => (
-                  <option key={operator.id} value={operator.id}>
-                    {operator.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Bus Type: <span className="required">*</span></label>
-              <select
-                value={selectedBusType}
-                onChange={(e) => setSelectedBusType(e.target.value)}
-                className="form-select"
-              >
-                <option value="">Select Bus Type</option>
-                {busTypes.map(busType => (
-                  <option key={busType.id} value={busType.id}>
-                    {busType.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>
-                Fleet: <span className="required">*</span>
-                <span className="info-text"> (Max 4 digits)</span>
-              </label>
-              <input
-                type="number"
-                value={fleet}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === '' || (parseInt(val) >= 0 && parseInt(val) <= 9999)) {
-                    setFleet(val);
-                  }
-                }}
-                placeholder="0-9999"
-                className="form-input"
-                min="0"
-                max="9999"
-              />
+                + Add Fleet Entry
+              </button>
             </div>
           </div>
 
-          <div className="form-actions">
-            <button
-              onClick={handleAddEntry}
-              className="btn-add-entry"
-              disabled={!selectedDepot || !selectedDate || !selectedOperator || !selectedBusType || !fleet}
-            >
-              + Add Fleet Entry
-            </button>
-          </div>
-        </div>
-
-        {fleetEntries.length > 0 && (
-          <div className="form-section">
-            <h3>Fleet Entries ({fleetEntries.length})</h3>
-            <div className="fleet-entries-list">
-              <table className="fleet-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Depot</th>
-                    <th>Depot No.</th>
-                    <th>Date</th>
-                    <th>Operator</th>
-                    <th>Bus Type</th>
-                    <th>Fleet</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {fleetEntries.map((entry, index) => (
-                    <tr key={entry.id}>
-                      <td>{index + 1}</td>
-                      <td>{entry.depot.name}</td>
-                      <td>{entry.depotNumber || '-'}</td>
-                      <td>{entry.date}</td>
-                      <td>{entry.operator.name}</td>
-                      <td>{entry.busType.name}</td>
-                      <td>{entry.fleet}</td>
-                      <td>
-                        <button
-                          onClick={() => handleRemoveEntry(entry.id)}
-                          className="btn-remove"
-                        >
-                          Remove
-                        </button>
-                      </td>
+          {fleetEntries.length > 0 && (
+            <div className="form-section">
+              <h3>Fleet Entries ({fleetEntries.length})</h3>
+              <div className="fleet-entries-list">
+                <table className="fleet-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Depot</th>
+                      <th>Depot No.</th>
+                      <th>Date</th>
+                      <th>Operator</th>
+                      <th>Bus Type</th>
+                      <th>Fleet</th>
+                      <th>Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {fleetEntries.map((entry, index) => (
+                      <tr key={entry.id}>
+                        <td>{index + 1}</td>
+                        <td>{entry.depot.name}</td>
+                        <td>{entry.depotNumber || '-'}</td>
+                        <td>{entry.date}</td>
+                        <td>{entry.operator.name}</td>
+                        <td>{entry.busType.name}</td>
+                        <td>{entry.fleet}</td>
+                        <td>
+                          <button
+                            onClick={() => handleRemoveEntry(entry.id)}
+                            className="btn-remove"
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Data Backup Utility */}
-        <DataBackupUtility />
+          {/* Data Backup Utility */}
+          <DataBackupUtility />
+        </div>
       </div>
-    </div>
     </>
   );
 }
