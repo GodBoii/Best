@@ -2,8 +2,10 @@
  * Generates a PDF report for bus schedules
  * @param {Object} reportData - The report data containing depot, date, and entries
  * @param {boolean} preview - If true, opens PDF in new tab; if false, downloads the file
+ * @param {Object} existingDoc - Optional existing jsPDF document for combined reports
+ * @param {boolean} isFirstPage - Whether this is the first page in a combined report
  */
-export const generateReportPDF = async (reportData, preview = false) => {
+export const generateReportPDF = async (reportData, preview = false, existingDoc = null, isFirstPage = true) => {
   try {
     // Validate that all required report data is present
     if (!reportData || !reportData.depot || !reportData.date || !reportData.entries) {
@@ -14,18 +16,24 @@ export const generateReportPDF = async (reportData, preview = false) => {
       throw new Error('No entries to generate report');
     }
 
-    // Dynamic import for client-side only (Next.js optimization)
-    const { default: jsPDF } = await import('jspdf');
+    // Use existing document or create new one
+    let doc;
+    if (existingDoc) {
+      doc = existingDoc;
+    } else {
+      // Dynamic import for client-side only (Next.js optimization)
+      const { default: jsPDF } = await import('jspdf');
 
-    // Import autoTable plugin - this extends jsPDF prototype for table generation
-    await import('jspdf-autotable');
+      // Import autoTable plugin - this extends jsPDF prototype for table generation
+      await import('jspdf-autotable');
 
-    // Initialize PDF document in portrait orientation for A4 paper
-    const doc = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-    });
+      // Initialize PDF document in portrait orientation for A4 paper
+      doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+    }
 
     // Set default font to Times New Roman
     doc.setFont('times');
@@ -675,18 +683,23 @@ export const generateReportPDF = async (reportData, preview = false) => {
     // Right border - continuous from header start to grand total end
     doc.line(tableRightX, headerStartY, tableRightX, tableEndY);
 
-    // Save or preview the PDF
-    if (preview) {
-      // Preview mode: open PDF in new browser tab
-      const blob = doc.output('blob');
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-    } else {
-      // Download mode: save PDF file with formatted filename
-      const cleanDepotName = reportData.depot.replace(/[^a-zA-Z0-9]/g, '-');
-      const cleanDate = formattedDate.replace(/\//g, '-');
-      doc.save(`Schedule-Report-${cleanDepotName}-${cleanDate}.pdf`);
+    // Only save/preview if this is not part of a combined report
+    if (!existingDoc) {
+      // Save or preview the PDF
+      if (preview) {
+        // Preview mode: open PDF in new browser tab
+        const blob = doc.output('blob');
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      } else {
+        // Download mode: save PDF file with formatted filename
+        const cleanDepotName = reportData.depot.replace(/[^a-zA-Z0-9]/g, '-');
+        const cleanDate = formattedDate.replace(/\//g, '-');
+        doc.save(`Schedule-Report-${cleanDepotName}-${cleanDate}.pdf`);
+      }
     }
+    
+    return doc;
   } catch (error) {
     console.error('Error generating PDF:', error);
     alert('Error generating PDF: ' + error.message);
