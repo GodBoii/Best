@@ -96,6 +96,9 @@ export default function Home() {
         <Link href="/fleet">
           <button>FLEET Schedule</button>
         </Link>
+        <Link href="/other-duties">
+          <button>Other Duties</button>
+        </Link>
         <Link href="/settings">
           <button>⚙️ Settings</button>
         </Link>

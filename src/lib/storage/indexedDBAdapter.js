@@ -4,7 +4,7 @@
  */
 
 const DB_NAME = 'BusScheduleDB';
-const DB_VERSION = 4;
+const DB_VERSION = 5; // Updated for Other Duties feature
 
 class IndexedDBAdapter {
   constructor() {
@@ -138,23 +138,34 @@ class IndexedDBAdapter {
           console.log('Created summary_settings store');
         }
 
-        // Add other duties stores in version 4
+        // Add Other Duties stores in version 5
+        if (!db.objectStoreNames.contains('platform_master')) {
+          const platformMasterStore = db.createObjectStore('platform_master', { keyPath: 'id' });
+          platformMasterStore.createIndex('name', 'name', { unique: true });
+          platformMasterStore.createIndex('display_order', 'display_order', { unique: false });
+          console.log('Created platform_master store');
+        }
+
         if (!db.objectStoreNames.contains('platform_duty_master')) {
-          const masterStore = db.createObjectStore('platform_duty_master', { keyPath: 'id' });
-          masterStore.createIndex('duty_name', 'duty_name', { unique: true });
+          const dutyMasterStore = db.createObjectStore('platform_duty_master', { keyPath: 'id' });
+          dutyMasterStore.createIndex('name', 'name', { unique: true });
+          dutyMasterStore.createIndex('display_order', 'display_order', { unique: false });
           console.log('Created platform_duty_master store');
         }
 
-        if (!db.objectStoreNames.contains('other_duties_platforms')) {
-          const platformStore = db.createObjectStore('other_duties_platforms', { keyPath: 'id' });
-          platformStore.createIndex('depot_date', ['depot_id', 'duty_date'], { unique: false });
-          platformStore.createIndex('depot_id', 'depot_id', { unique: false });
-          console.log('Created other_duties_platforms store');
+        if (!db.objectStoreNames.contains('other_duties_entries')) {
+          const otherDutiesStore = db.createObjectStore('other_duties_entries', { keyPath: 'id' });
+          otherDutiesStore.createIndex('depot_id', 'depot_id', { unique: false });
+          otherDutiesStore.createIndex('duty_date', 'duty_date', { unique: false });
+          otherDutiesStore.createIndex('depot_date', ['depot_id', 'duty_date'], { unique: false });
+          otherDutiesStore.createIndex('platform_id', 'platform_id', { unique: false });
+          console.log('Created other_duties_entries store');
         }
 
         if (!db.objectStoreNames.contains('other_duties_items')) {
-          const itemsStore = db.createObjectStore('other_duties_items', { keyPath: 'id' });
-          itemsStore.createIndex('platform_id', 'platform_id', { unique: false });
+          const otherDutiesItemsStore = db.createObjectStore('other_duties_items', { keyPath: 'id' });
+          otherDutiesItemsStore.createIndex('other_duties_entry_id', 'other_duties_entry_id', { unique: false });
+          otherDutiesItemsStore.createIndex('platform_duty_id', 'platform_duty_id', { unique: false });
           console.log('Created other_duties_items store');
         }
 
@@ -1040,7 +1051,7 @@ class IndexedDBAdapter {
   async verifyIntegrity() {
     await this.initPromise;
 
-    const requiredStores = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'fleet_entries', 'summary_settings'];
+    const requiredStores = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'fleet_entries', 'summary_settings', 'platform_master', 'platform_duty_master', 'other_duties_entries', 'other_duties_items'];
     const missingStores = [];
     const storeStats = {};
 
@@ -1075,7 +1086,7 @@ class IndexedDBAdapter {
   async exportData() {
     await this.initPromise;
 
-    const stores = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'fleet_entries', 'summary_settings'];
+    const stores = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'fleet_entries', 'summary_settings', 'platform_master', 'platform_duty_master', 'other_duties_entries', 'other_duties_items'];
     const exportData = {
       version: this.db.version,
       exportDate: new Date().toISOString(),
@@ -1100,7 +1111,7 @@ class IndexedDBAdapter {
 
     // Support both old format (direct data) and new format (with metadata)
     const data = importData.data || importData;
-    const stores = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'fleet_entries', 'summary_settings'];
+    const stores = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'fleet_entries', 'summary_settings', 'platform_master', 'platform_duty_master', 'other_duties_entries', 'other_duties_items'];
 
     console.log('Starting data import...');
     const importStats = {};

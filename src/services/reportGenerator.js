@@ -136,29 +136,29 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
         10: { halign: 'center', cellWidth: columnWidths[10], fontSize: 8 },
         11: { halign: 'center', cellWidth: columnWidths[11], fontSize: 8 }
       },
-      didDrawCell: function(data) {
+      didDrawCell: function (data) {
         const { cell, row, column, cursor } = data;
         const isLastRow = row.index === 2; // Last row of header (AM, NOON, PM row)
-        
+
         // Draw outer borders (table perimeter)
         doc.setLineWidth(0.1);
         doc.setDrawColor(0, 0, 0);
-        
+
         // Top border (only first row)
         if (row.index === 0) {
           doc.line(cursor.x, cursor.y, cursor.x + cell.width, cursor.y);
         }
-        
+
         // Bottom border (only last row of header)
         if (isLastRow) {
           doc.line(cursor.x, cursor.y + cell.height, cursor.x + cell.width, cursor.y + cell.height);
         }
-        
+
         // Left border (only first column)
         if (column.index === 0) {
           doc.line(cursor.x, cursor.y, cursor.x, cursor.y + cell.height);
         }
-        
+
         // Right border (only last column)
         if (column.index === 11) {
           doc.line(cursor.x + cell.width, cursor.y, cursor.x + cell.width, cursor.y + cell.height);
@@ -288,18 +288,18 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
 
       entries.forEach(entry => {
         const routeId = entry.route_id;
-        
+
         if (!routeMap.has(routeId)) {
           // First entry for this route - initialize with current entry
           routeMap.set(routeId, { ...entry });
         } else {
           // Route already exists - merge the data
           const existing = routeMap.get(routeId);
-          
+
           // Helper to merge values - prefer non-dash values
           const mergeValue = (existingVal, newVal) => {
             const isDash = (val) => val === '-' || val === null || val === undefined || val === '';
-            
+
             // If existing is dash/empty, use new value
             if (isDash(existingVal)) return newVal;
             // If new is dash/empty, keep existing
@@ -321,7 +321,7 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
           existing.duties_cond_ms = mergeValue(existing.duties_cond_ms, entry.duties_cond_ms);
           existing.duties_driver_sun = mergeValue(existing.duties_driver_sun, entry.duties_driver_sun);
           existing.duties_cond_sun = mergeValue(existing.duties_cond_sun, entry.duties_cond_sun);
-          
+
           routeMap.set(routeId, existing);
         }
       });
@@ -378,7 +378,7 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
     // Process each group and generate its table
     sortedGroups.forEach(([, group]) => {
       const { category, operator, busType, entries } = group;
-      
+
       // Merge entries with the same route before processing
       const mergedEntries = mergeEntriesByRoute(entries);
 
@@ -518,28 +518,28 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
             data.cell.styles.fillColor = [255, 255, 255];
           }
         },
-        didDrawCell: function(data) {
+        didDrawCell: function (data) {
           const { cell, row, column, cursor } = data;
           const isCategoryRow = row.index === 0;
           const isTotalRow = row.index === tableData.length - 1;
           const isFirstDataRow = row.index === 1;
-          
+
           doc.setLineWidth(0.1);
           doc.setDrawColor(0, 0, 0);
-          
+
           // Left and Right outer borders - DON'T draw here, will draw continuous border at end
           // Removed to allow continuous outer border
-          
+
           // Top border for category row (connects to previous table)
           if (isCategoryRow && isFirstDataRow) {
             doc.line(cursor.x, cursor.y, cursor.x + cell.width, cursor.y);
           }
-          
+
           // Horizontal line above Total row
           if (isTotalRow) {
             doc.line(cursor.x, cursor.y, cursor.x + cell.width, cursor.y);
           }
-          
+
           // Bottom border for Total row
           if (isTotalRow) {
             doc.line(cursor.x, cursor.y + cell.height, cursor.x + cell.width, cursor.y + cell.height);
@@ -594,18 +594,18 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
           10: { cellWidth: columnWidths[10], halign: 'center' },
           11: { cellWidth: columnWidths[11], halign: 'center' }
         },
-        didDrawCell: function(data) {
+        didDrawCell: function (data) {
           const { cell, column, cursor } = data;
-          
+
           doc.setLineWidth(0.1);
           doc.setDrawColor(0, 0, 0);
-          
+
           // Top border (all cells)
           doc.line(cursor.x, cursor.y, cursor.x + cell.width, cursor.y);
-          
+
           // Bottom border (all cells)
           doc.line(cursor.x, cursor.y + cell.height, cursor.x + cell.width, cursor.y + cell.height);
-          
+
           // Left and Right outer borders - removed, will draw continuous border at end
         }
       });
@@ -654,20 +654,20 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
         10: { cellWidth: columnWidths[10], halign: 'center' },
         11: { cellWidth: columnWidths[11], halign: 'center' }
       },
-      didDrawCell: function(data) {
+      didDrawCell: function (data) {
         const { cell, column, cursor } = data;
-        
+
         doc.setLineWidth(0.1);
         doc.setDrawColor(0, 0, 0);
-        
+
         // Top border (all cells)
         doc.line(cursor.x, cursor.y, cursor.x + cell.width, cursor.y);
-        
+
         // Bottom border (all cells) - thicker for grand total
         doc.setLineWidth(0.2);
         doc.line(cursor.x, cursor.y + cell.height, cursor.x + cell.width, cursor.y + cell.height);
         doc.setLineWidth(0.1);
-        
+
         // Left and Right outer borders - removed, will draw continuous border at end
       }
     });
@@ -676,12 +676,65 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
     const tableEndY = doc.lastAutoTable.finalY;
     doc.setLineWidth(0.1);
     doc.setDrawColor(0, 0, 0);
-    
+
     // Left border - continuous from header start to grand total end
     doc.line(tableLeftX, headerStartY, tableLeftX, tableEndY);
-    
+
     // Right border - continuous from header start to grand total end
     doc.line(tableRightX, headerStartY, tableRightX, tableEndY);
+
+    // Add Other Duties section if data exists
+    if (reportData.depot_id && reportData.date) {
+      try {
+        // Import helper functions
+        const { fetchOtherDutiesForReport, formatOtherDutiesForReport } = await import('../lib/otherDutiesHelper');
+
+        // Fetch Other Duties data
+        const otherDutiesData = await fetchOtherDutiesForReport(reportData.depot_id, reportData.date);
+
+        if (otherDutiesData && otherDutiesData.length > 0) {
+          // Format the data
+          const formattedLines = formatOtherDutiesForReport(otherDutiesData);
+
+          // Add some space before Other Duties
+          let otherDutiesY = tableEndY + 5;
+
+          // Set font for Other Duties
+          doc.setFontSize(9);
+          doc.setFont('times', 'normal');
+
+          // Use only left half of A4 page (105mm out of 210mm)
+          const maxWidth = 105; // Half of A4 width
+          const lineHeight = 5;
+
+          formattedLines.forEach((line) => {
+            // Check if we need a new page
+            if (otherDutiesY > 280) {
+              doc.addPage();
+              otherDutiesY = 10;
+            }
+
+            // Split text if it's too long (text wrapping)
+            const splitText = doc.splitTextToSize(line, maxWidth);
+            
+            // Add each wrapped line
+            splitText.forEach((textLine) => {
+              // Check again for page break
+              if (otherDutiesY > 280) {
+                doc.addPage();
+                otherDutiesY = 10;
+              }
+              
+              doc.text(textLine, leftMargin, otherDutiesY);
+              otherDutiesY += lineHeight;
+            });
+          });
+        }
+      } catch (error) {
+        console.error('Error adding Other Duties to PDF:', error);
+        // Continue without Other Duties if there's an error
+      }
+    }
 
     // Only save/preview if this is not part of a combined report
     if (!existingDoc) {
@@ -698,7 +751,7 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
         doc.save(`Schedule-Report-${cleanDepotName}-${cleanDate}.pdf`);
       }
     }
-    
+
     return doc;
   } catch (error) {
     console.error('Error generating PDF:', error);

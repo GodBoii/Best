@@ -27,6 +27,9 @@ export default function SummaryPage() {
         <Link href="/fleet">
           <button>FLEET Schedule</button>
         </Link>
+        <Link href="/other-duties">
+          <button>Other Duties</button>
+        </Link>
       </nav>
 
       <main className="app-main">

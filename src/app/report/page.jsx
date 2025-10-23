@@ -324,6 +324,7 @@ export default function ReportPage() {
 
     return {
       depot: depot.name,
+      depot_id: depotId, // Add depot ID for Other Duties lookup
       date: date,
       actualDataDate: date, // Using selected date since we're aggregating
       entries: activeEntries
@@ -480,6 +481,9 @@ export default function ReportPage() {
         </Link>
         <Link href="/fleet">
           <button>FLEET Schedule</button>
+        </Link>
+        <Link href="/other-duties">
+          <button>Other Duties</button>
         </Link>
       </nav>
 

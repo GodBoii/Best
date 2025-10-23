@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { generateReportPDF } from '../services/reportGenerator';
+import { fetchOtherDutiesForReport, formatOtherDutiesForReport } from '../lib/otherDutiesHelper';
 
 /**
  * ReportPreview Component
@@ -12,6 +13,54 @@ import { generateReportPDF } from '../services/reportGenerator';
  */
 export default function ReportPreview({ reportData }) {
   const [generating, setGenerating] = useState(false);
+  const [otherDutiesData, setOtherDutiesData] = useState([]);
+  const [otherDutiesLoading, setOtherDutiesLoading] = useState(true);
+
+  // Fetch Other Duties data when report data changes
+  useEffect(() => {
+    const loadOtherDuties = async () => {
+      if (!reportData || !reportData.date) {
+        setOtherDutiesData([]);
+        setOtherDutiesLoading(false);
+        return;
+      }
+
+      setOtherDutiesLoading(true);
+      try {
+        let depotId = reportData.depot_id;
+
+        // If depot_id is not provided, look it up by name
+        if (!depotId && reportData.depot) {
+          const storageManager = (await import('../lib/storage/storageManager')).default;
+          const client = storageManager.getClient();
+
+          const { data: depots } = await client
+            .from('depots')
+            .select('id')
+            .eq('name', reportData.depot)
+            .single();
+
+          if (depots && depots.id) {
+            depotId = depots.id;
+          }
+        }
+
+        if (depotId) {
+          const duties = await fetchOtherDutiesForReport(depotId, reportData.date);
+          setOtherDutiesData(duties);
+        } else {
+          setOtherDutiesData([]);
+        }
+      } catch (error) {
+        console.error('Error loading other duties:', error);
+        setOtherDutiesData([]);
+      } finally {
+        setOtherDutiesLoading(false);
+      }
+    };
+
+    loadOtherDuties();
+  }, [reportData]);
 
   /**
    * Handle PDF download
@@ -99,29 +148,29 @@ export default function ReportPreview({ reportData }) {
   const sortedGroups = Object.entries(groupedEntries).sort((a, b) => {
     const groupA = a[1];
     const groupB = b[1];
-    
+
     // BEST category entries (no operator) come before WET_LEASE
     if (groupA.category === 'BEST' && groupB.category !== 'BEST') return -1;
     if (groupA.category !== 'BEST' && groupB.category === 'BEST') return 1;
-    
+
     // Both BEST category: sort by display_order
     if (groupA.category === 'BEST' && groupB.category === 'BEST') {
       return (groupA.busType?.display_order || 0) - (groupB.busType?.display_order || 0);
     }
-    
+
     // Both WET_LEASE: special handling for "BEST" operator name
     const operatorA = groupA.operator?.name || '';
     const operatorB = groupB.operator?.name || '';
-    
+
     // If operator A is "BEST", it comes first
     if (operatorA === 'BEST' && operatorB !== 'BEST') return -1;
     if (operatorA !== 'BEST' && operatorB === 'BEST') return 1;
-    
+
     // Both are "BEST" operator OR both are other operators: sort by operator name
     const operatorCompare = operatorA.localeCompare(operatorB);
-    
+
     if (operatorCompare !== 0) return operatorCompare;
-    
+
     // Same operator: sort by bus type name
     const busTypeA = groupA.busType?.name || '';
     const busTypeB = groupB.busType?.name || '';
@@ -137,18 +186,18 @@ export default function ReportPreview({ reportData }) {
 
     entries.forEach(entry => {
       const routeId = entry.route_id;
-      
+
       if (!routeMap.has(routeId)) {
         // First entry for this route - initialize with current entry
         routeMap.set(routeId, { ...entry });
       } else {
         // Route already exists - merge the data
         const existing = routeMap.get(routeId);
-        
+
         // Helper to merge values - prefer non-dash values
         const mergeValue = (existingVal, newVal) => {
           const isDash = (val) => val === '-' || val === null || val === undefined || val === '';
-          
+
           // If existing is dash/empty, use new value
           if (isDash(existingVal)) return newVal;
           // If new is dash/empty, keep existing
@@ -170,7 +219,7 @@ export default function ReportPreview({ reportData }) {
         existing.duties_cond_ms = mergeValue(existing.duties_cond_ms, entry.duties_cond_ms);
         existing.duties_driver_sun = mergeValue(existing.duties_driver_sun, entry.duties_driver_sun);
         existing.duties_cond_sun = mergeValue(existing.duties_cond_sun, entry.duties_cond_sun);
-        
+
         routeMap.set(routeId, existing);
       }
     });
@@ -282,7 +331,7 @@ export default function ReportPreview({ reportData }) {
             <tbody>
               {sortedGroups.map(([groupKey, group]) => {
                 const { category, operator, busType, entries } = group;
-                
+
                 // Merge entries with the same route before displaying
                 const mergedEntries = mergeEntriesByRoute(entries);
                 const totals = calculateGroupTotals(mergedEntries);
@@ -298,7 +347,7 @@ export default function ReportPreview({ reportData }) {
                 } else {
                   // For WET_LEASE, show bus type and operator
                   const busTypeName = busType?.name || 'Unknown Bus Type';
-                  
+
                   // Try to get operator name from the group or from any entry in the group
                   let operatorName = operator?.name;
                   if (!operatorName) {
@@ -354,6 +403,19 @@ export default function ReportPreview({ reportData }) {
             </tbody>
           </table>
         </div>
+
+        {/* Other Duties Section - Display without heading */}
+        {!otherDutiesLoading && otherDutiesData.length > 0 && (
+          <div className="other-duties-section">
+            <div className="other-duties-list">
+              {formatOtherDutiesForReport(otherDutiesData).map((line, index) => (
+                <div key={index} className="other-duty-line">
+                  {line}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -843,7 +843,7 @@ export default function SummaryReport() {
                                     >
                                         Wet Lease
                                     </th>
-
+                                    
                                     {/* Morning, Noon, Evening - BEST has no total, grand total at end */}
                                     {['MORNING', 'NOON', 'EVENING'].map((period) => (
                                         <React.Fragment key={`header2-${period}`}>
@@ -886,7 +886,7 @@ export default function SummaryReport() {
                                             {code}
                                         </th>
                                     ))}
-
+                                    
                                     {/* Morning, Noon, Evening - no BEST total */}
                                     {['MORNING', 'NOON', 'EVENING'].map((period) => (
                                         <React.Fragment key={`header3-${period}`}>

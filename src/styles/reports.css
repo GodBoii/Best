@@ -273,3 +273,48 @@
     page-break-after: auto;
   }
 }
+
+/* ============================================
+   OTHER DUTIES SECTION IN REPORT
+   ============================================ */
+
+.other-duties-section {
+  margin-top: 1.5rem;
+  padding: 0;
+  max-width: 50%; /* Use only left half of the page */
+}
+
+.other-duties-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.other-duty-line {
+  padding: 0.5rem 0;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: var(--dark);
+  line-height: 1.6;
+  border-bottom: 1px solid #f0f0f0;
+  word-wrap: break-word; /* Wrap long text */
+  overflow-wrap: break-word; /* Modern browsers */
+}
+
+.other-duty-line:last-child {
+  border-bottom: none;
+}
+
+/* Print styles for Other Duties */
+@media print {
+  .other-duties-section {
+    page-break-inside: avoid;
+    background: white;
+    border: 1px solid #000;
+  }
+
+  .other-duty-line {
+    background: white;
+    border-left: 2px solid #000;
+  }
+}

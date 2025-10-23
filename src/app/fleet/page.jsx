@@ -26,6 +26,9 @@ export default function FleetPage() {
         <Link href="/fleet">
           <button className="active">FLEET Schedule</button>
         </Link>
+        <Link href="/other-duties">
+          <button>Other Duties</button>
+        </Link>
       </nav>
 
       <main className="app-main">
