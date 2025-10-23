@@ -79,7 +79,7 @@ export default function SummaryReport() {
         // 3.5. Fetch saved bus type selections
         let bestSelectedIds = [];
         let wetLeaseSelectedIds = [];
-        
+
         try {
             const { data: settings, error: settingsError } = await client
                 .from('summary_settings')
@@ -135,8 +135,8 @@ export default function SummaryReport() {
         console.log('All Entries fetched:', entries?.length);
 
         // Filter entries by schedule IDs and exclude deleted entries
-        const filteredEntries = entries.filter(e => 
-          scheduleIds.includes(e.schedule_id) && !e.is_deleted
+        const filteredEntries = entries.filter(e =>
+            scheduleIds.includes(e.schedule_id) && !e.is_deleted
         );
         console.log('Filtered Entries:', filteredEntries.length);
         console.log('Sample Entry:', filteredEntries[0]);
@@ -151,12 +151,12 @@ export default function SummaryReport() {
         // Filter bus types based on saved selections
         let bestBusTypes = busTypes;
         let wetLeaseBusTypes = busTypes;
-        
+
         if (bestSelectedIds.length > 0) {
             bestBusTypes = busTypes.filter(bt => bestSelectedIds.includes(bt.id));
             console.log('Filtered BEST bus types based on selection:', bestBusTypes);
         }
-        
+
         if (wetLeaseSelectedIds.length > 0) {
             wetLeaseBusTypes = busTypes.filter(bt => wetLeaseSelectedIds.includes(bt.id));
             console.log('Filtered Wet Lease bus types based on selection:', wetLeaseBusTypes);
@@ -798,12 +798,8 @@ export default function SummaryReport() {
                 <div className="summary-content" ref={reportRef}>
                     <div className="report-title">
                         <h3>SUMMARY OF SERVICE ALLOCATION OF ALL DEPOTS</h3>
-                        <p className="effective-date">W. E. F. :- {reportData.effectiveDate}</p>
-                        <p className="day-type">
-                            {reportData.dayType === 'MON_SAT' ? 'MONDAY TO SATURDAY' : 'ONLY SUNDAY'}
-                        </p>
-                        <p className="data-note">
-                            * Showing latest available data for each depot (on or before selected date)
+                        <p className="combined-date-type">
+                            {reportData.dayType === 'MON_SAT' ? 'MONDAY TO SATURDAY' : 'ONLY SUNDAY'}  W. E. F.:- {reportData.effectiveDate}
                         </p>
                     </div>
 
