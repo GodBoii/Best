@@ -4,7 +4,7 @@
  */
 
 const DB_NAME = 'BusScheduleDB';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 class IndexedDBAdapter {
   constructor() {
@@ -129,6 +129,13 @@ class IndexedDBAdapter {
           fleetStore.createIndex('schedule_date', 'schedule_date', { unique: false });
           fleetStore.createIndex('depot_date', ['depot_id', 'schedule_date'], { unique: false });
           console.log('Created fleet_entries store');
+        }
+
+        // Add summary_settings store in version 3
+        if (!db.objectStoreNames.contains('summary_settings')) {
+          const settingsStore = db.createObjectStore('summary_settings', { keyPath: 'id' });
+          settingsStore.createIndex('setting_key', 'setting_key', { unique: true });
+          console.log('Created summary_settings store');
         }
 
         console.log('Database upgrade complete - all data preserved');
@@ -1013,7 +1020,7 @@ class IndexedDBAdapter {
   async verifyIntegrity() {
     await this.initPromise;
 
-    const requiredStores = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'fleet_entries'];
+    const requiredStores = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'fleet_entries', 'summary_settings'];
     const missingStores = [];
     const storeStats = {};
 
@@ -1048,7 +1055,7 @@ class IndexedDBAdapter {
   async exportData() {
     await this.initPromise;
 
-    const stores = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'fleet_entries'];
+    const stores = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'fleet_entries', 'summary_settings'];
     const exportData = {
       version: this.db.version,
       exportDate: new Date().toISOString(),
@@ -1073,7 +1080,7 @@ class IndexedDBAdapter {
 
     // Support both old format (direct data) and new format (with metadata)
     const data = importData.data || importData;
-    const stores = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'fleet_entries'];
+    const stores = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'fleet_entries', 'summary_settings'];
 
     console.log('Starting data import...');
     const importStats = {};

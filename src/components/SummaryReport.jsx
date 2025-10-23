@@ -76,6 +76,27 @@ export default function SummaryReport() {
         if (busTypesError) throw new Error('Error fetching bus types: ' + busTypesError.message);
         console.log('Bus Types fetched:', busTypes?.length, busTypes);
 
+        // 3.5. Fetch saved bus type selections
+        let bestSelectedIds = [];
+        let wetLeaseSelectedIds = [];
+        
+        try {
+            const { data: settings, error: settingsError } = await client
+                .from('summary_settings')
+                .select('*')
+                .eq('setting_key', 'bus_type_selections')
+                .single();
+
+            if (!settingsError && settings && settings.setting_value) {
+                const selections = JSON.parse(settings.setting_value);
+                bestSelectedIds = selections.best || [];
+                wetLeaseSelectedIds = selections.wetLease || [];
+                console.log('Loaded bus type selections:', { bestSelectedIds, wetLeaseSelectedIds });
+            }
+        } catch (error) {
+            console.log('No saved selections found, showing all bus types');
+        }
+
         // 4. Fetch the latest schedule for each depot (on or before the selected date)
         // First, get all schedules up to the selected date
         const { data: allSchedules, error: schedulesError } = await client
@@ -127,8 +148,19 @@ export default function SummaryReport() {
         console.log('Wet Lease Operators:', wetLeaseOperators);
 
         // 7. Group bus types by category and get codes
-        const bestBusTypes = busTypes.filter(bt => bt.category === 'BEST');
-        const wetLeaseBusTypes = busTypes.filter(bt => bt.category === 'WET_LEASE');
+        // Filter bus types based on saved selections
+        let bestBusTypes = busTypes;
+        let wetLeaseBusTypes = busTypes;
+        
+        if (bestSelectedIds.length > 0) {
+            bestBusTypes = busTypes.filter(bt => bestSelectedIds.includes(bt.id));
+            console.log('Filtered BEST bus types based on selection:', bestBusTypes);
+        }
+        
+        if (wetLeaseSelectedIds.length > 0) {
+            wetLeaseBusTypes = busTypes.filter(bt => wetLeaseSelectedIds.includes(bt.id));
+            console.log('Filtered Wet Lease bus types based on selection:', wetLeaseBusTypes);
+        }
 
         const busTypeCodes = [...new Set(busTypes.map(bt => bt.short_name || bt.name.substring(0, 2).toUpperCase()))].filter(Boolean);
         console.log('Bus Type Codes:', busTypeCodes);
@@ -142,7 +174,7 @@ export default function SummaryReport() {
 
             if (!depotSchedule) {
                 console.log(`No schedule found for depot ${depot.name}`);
-                return createEmptyDepotData(depot, busTypeCodes, wetLeaseOperators);
+                return createEmptyDepotData(depot, bestBusTypes, wetLeaseOperators);
             }
 
             console.log(`Schedule found for ${depot.name}:`, depotSchedule.id, 'Date:', depotSchedule.schedule_date);
@@ -152,10 +184,10 @@ export default function SummaryReport() {
             return {
                 name: depot.name,
                 scheduleDate: depotSchedule.schedule_date,
-                fleetCategory: aggregateFleetCategory(depotEntries, busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type),
-                morning: aggregateTimePeriod(depotEntries, 'morning', busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type),
-                noon: aggregateTimePeriod(depotEntries, 'noon', busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type),
-                evening: aggregateTimePeriod(depotEntries, 'evening', busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type)
+                fleetCategory: aggregateFleetCategory(depotEntries, busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type, bestBusTypes, wetLeaseBusTypes),
+                morning: aggregateTimePeriod(depotEntries, 'morning', busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type, bestBusTypes, wetLeaseBusTypes),
+                noon: aggregateTimePeriod(depotEntries, 'noon', busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type, bestBusTypes, wetLeaseBusTypes),
+                evening: aggregateTimePeriod(depotEntries, 'evening', busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type, bestBusTypes, wetLeaseBusTypes)
             };
         });
 
@@ -163,7 +195,20 @@ export default function SummaryReport() {
         console.log('Depot Data:', depotData);
 
         // 9. Calculate grand totals
-        const totals = calculateGrandTotals(depotData, busTypeCodes, wetLeaseOperators);
+        const totals = calculateGrandTotals(depotData, bestBusTypes, wetLeaseOperators);
+
+        // Create filtered bus type codes for display
+        const bestBusTypeCodes = bestBusTypes.map(bt => ({
+            code: bt.short_name || bt.name.substring(0, 2).toUpperCase(),
+            name: bt.name,
+            id: bt.id
+        }));
+
+        const wetLeaseBusTypeCodes = wetLeaseBusTypes.map(bt => ({
+            code: bt.short_name || bt.name.substring(0, 2).toUpperCase(),
+            name: bt.name,
+            id: bt.id
+        }));
 
         return {
             effectiveDate: date,
@@ -171,27 +216,22 @@ export default function SummaryReport() {
             depots: depotData,
             totals,
             busTypeCodes,
-            bestBusTypes: bestBusTypes.map(bt => ({
-                code: bt.short_name || bt.name.substring(0, 2).toUpperCase(),
-                name: bt.name
-            })),
-            wetLeaseBusTypes: wetLeaseBusTypes.map(bt => ({
-                code: bt.short_name || bt.name.substring(0, 2).toUpperCase(),
-                name: bt.name
-            })),
+            bestBusTypes: bestBusTypeCodes,
+            wetLeaseBusTypes: wetLeaseBusTypeCodes,
             wetLeaseOperators: wetLeaseOperators.map(op => op.short_code || op.name.substring(0, 2).toUpperCase()),
             operatorDetails: operators
         };
     };
 
-    const createEmptyDepotData = (depot, busTypeCodes, wetLeaseOperators) => {
+    const createEmptyDepotData = (depot, bestBusTypes, wetLeaseOperators) => {
         const emptyPeriod = {
             best: {},
             wetLease: {},
             total: 0
         };
 
-        busTypeCodes.forEach(code => {
+        bestBusTypes.forEach(bt => {
+            const code = bt.short_name || bt.name.substring(0, 2).toUpperCase();
             emptyPeriod.best[code] = 0;
         });
         emptyPeriod.best.total = 0;
@@ -211,7 +251,7 @@ export default function SummaryReport() {
         };
     };
 
-    const aggregateFleetCategory = (entries, busTypeCodes, bestOperator, wetLeaseOperators, busTypes, dayType) => {
+    const aggregateFleetCategory = (entries, busTypeCodes, bestOperator, wetLeaseOperators, busTypes, dayType, bestBusTypes, wetLeaseBusTypes) => {
         console.log('=== AGGREGATING FLEET CATEGORY ===');
         console.log('Day Type:', dayType);
         console.log('Total Entries:', entries.length);
@@ -222,8 +262,9 @@ export default function SummaryReport() {
             total: 0
         };
 
-        // Initialize bus type counts
-        busTypeCodes.forEach(code => {
+        // Initialize bus type counts for BEST (only selected bus types)
+        bestBusTypes.forEach(bt => {
+            const code = bt.short_name || bt.name.substring(0, 2).toUpperCase();
             result.best[code] = 0;
         });
 
@@ -274,26 +315,42 @@ export default function SummaryReport() {
                 entry.operator_id === undefined;
 
             if (isBEST) {
-                if (!result.best[busTypeCode]) {
-                    result.best[busTypeCode] = 0;
-                }
-                result.best[busTypeCode] += maxCount;
-                console.log(`  -> BEST ${busTypeCode}: +${maxCount} = ${result.best[busTypeCode]}`);
-            } else {
-                const operator = wetLeaseOperators.find(op => op.id === entry.operator_id);
-                if (operator) {
-                    const opCode = operator.short_code || operator.name.substring(0, 2).toUpperCase();
-                    if (!result.wetLease[opCode]) {
-                        result.wetLease[opCode] = 0;
-                    }
-                    result.wetLease[opCode] += maxCount;
-                    console.log(`  -> Wet Lease ${opCode}: +${maxCount} = ${result.wetLease[opCode]}`);
-                } else {
+                // Only count if this bus type is in the BEST selection
+                const isBusTypeSelected = bestBusTypes.some(bt => bt.id === entry.bus_type_id);
+                if (isBusTypeSelected) {
                     if (!result.best[busTypeCode]) {
                         result.best[busTypeCode] = 0;
                     }
                     result.best[busTypeCode] += maxCount;
-                    console.log(`  -> Defaulting to BEST ${busTypeCode}: +${maxCount} = ${result.best[busTypeCode]}`);
+                    console.log(`  -> BEST ${busTypeCode}: +${maxCount} = ${result.best[busTypeCode]}`);
+                } else {
+                    console.log(`  -> BEST ${busTypeCode} skipped (not in selection)`);
+                }
+            } else {
+                const operator = wetLeaseOperators.find(op => op.id === entry.operator_id);
+                if (operator) {
+                    // Only count if this bus type is in the Wet Lease selection
+                    const isBusTypeSelected = wetLeaseBusTypes.some(bt => bt.id === entry.bus_type_id);
+                    if (isBusTypeSelected) {
+                        const opCode = operator.short_code || operator.name.substring(0, 2).toUpperCase();
+                        if (!result.wetLease[opCode]) {
+                            result.wetLease[opCode] = 0;
+                        }
+                        result.wetLease[opCode] += maxCount;
+                        console.log(`  -> Wet Lease ${opCode}: +${maxCount} = ${result.wetLease[opCode]}`);
+                    } else {
+                        console.log(`  -> Wet Lease ${busTypeCode} skipped (not in selection)`);
+                    }
+                } else {
+                    // Fallback to BEST if operator not found
+                    const isBusTypeSelected = bestBusTypes.some(bt => bt.id === entry.bus_type_id);
+                    if (isBusTypeSelected) {
+                        if (!result.best[busTypeCode]) {
+                            result.best[busTypeCode] = 0;
+                        }
+                        result.best[busTypeCode] += maxCount;
+                        console.log(`  -> Defaulting to BEST ${busTypeCode}: +${maxCount} = ${result.best[busTypeCode]}`);
+                    }
                 }
             }
         });
@@ -315,7 +372,7 @@ export default function SummaryReport() {
         return result;
     };
 
-    const aggregateTimePeriod = (entries, timePeriod, busTypeCodes, bestOperator, wetLeaseOperators, busTypes, dayType) => {
+    const aggregateTimePeriod = (entries, timePeriod, busTypeCodes, bestOperator, wetLeaseOperators, busTypes, dayType, bestBusTypes, wetLeaseBusTypes) => {
         console.log('=== AGGREGATING TIME PERIOD ===');
         console.log('Time Period:', timePeriod);
         console.log('Day Type:', dayType);
@@ -327,8 +384,9 @@ export default function SummaryReport() {
             total: 0
         };
 
-        // Initialize bus type counts
-        busTypeCodes.forEach(code => {
+        // Initialize bus type counts for BEST (only selected bus types)
+        bestBusTypes.forEach(bt => {
+            const code = bt.short_name || bt.name.substring(0, 2).toUpperCase();
             result.best[code] = 0;
         });
 
@@ -384,30 +442,44 @@ export default function SummaryReport() {
                 entry.operator_id === undefined;
 
             if (isBEST) {
-                // BEST bus
-                if (!result.best[busTypeCode]) {
-                    result.best[busTypeCode] = 0;
-                }
-                result.best[busTypeCode] += count;
-                console.log(`  -> BEST ${busTypeCode}: +${count} = ${result.best[busTypeCode]}`);
-            } else {
-                // Wet Lease bus
-                const operator = wetLeaseOperators.find(op => op.id === entry.operator_id);
-                if (operator) {
-                    const opCode = operator.short_code || operator.name.substring(0, 2).toUpperCase();
-                    if (!result.wetLease[opCode]) {
-                        result.wetLease[opCode] = 0;
-                    }
-                    result.wetLease[opCode] += count;
-                    console.log(`  -> Wet Lease ${opCode}: +${count} = ${result.wetLease[opCode]}`);
-                } else {
-                    console.log(`  -> Operator not found for ID: ${entry.operator_id}`);
-                    // If operator not found, treat as BEST
+                // Only count if this bus type is in the BEST selection
+                const isBusTypeSelected = bestBusTypes.some(bt => bt.id === entry.bus_type_id);
+                if (isBusTypeSelected) {
                     if (!result.best[busTypeCode]) {
                         result.best[busTypeCode] = 0;
                     }
                     result.best[busTypeCode] += count;
-                    console.log(`  -> Defaulting to BEST ${busTypeCode}: +${count} = ${result.best[busTypeCode]}`);
+                    console.log(`  -> BEST ${busTypeCode}: +${count} = ${result.best[busTypeCode]}`);
+                } else {
+                    console.log(`  -> BEST ${busTypeCode} skipped (not in selection)`);
+                }
+            } else {
+                // Wet Lease bus
+                const operator = wetLeaseOperators.find(op => op.id === entry.operator_id);
+                if (operator) {
+                    // Only count if this bus type is in the Wet Lease selection
+                    const isBusTypeSelected = wetLeaseBusTypes.some(bt => bt.id === entry.bus_type_id);
+                    if (isBusTypeSelected) {
+                        const opCode = operator.short_code || operator.name.substring(0, 2).toUpperCase();
+                        if (!result.wetLease[opCode]) {
+                            result.wetLease[opCode] = 0;
+                        }
+                        result.wetLease[opCode] += count;
+                        console.log(`  -> Wet Lease ${opCode}: +${count} = ${result.wetLease[opCode]}`);
+                    } else {
+                        console.log(`  -> Wet Lease ${busTypeCode} skipped (not in selection)`);
+                    }
+                } else {
+                    console.log(`  -> Operator not found for ID: ${entry.operator_id}`);
+                    // If operator not found, treat as BEST
+                    const isBusTypeSelected = bestBusTypes.some(bt => bt.id === entry.bus_type_id);
+                    if (isBusTypeSelected) {
+                        if (!result.best[busTypeCode]) {
+                            result.best[busTypeCode] = 0;
+                        }
+                        result.best[busTypeCode] += count;
+                        console.log(`  -> Defaulting to BEST ${busTypeCode}: +${count} = ${result.best[busTypeCode]}`);
+                    }
                 }
             }
         });
@@ -429,7 +501,7 @@ export default function SummaryReport() {
         return result;
     };
 
-    const calculateGrandTotals = (depotData, busTypeCodes, wetLeaseOperators) => {
+    const calculateGrandTotals = (depotData, bestBusTypes, wetLeaseOperators) => {
         const totals = {
             fleetCategory: { best: {}, wetLease: {}, total: 0 },
             morning: { best: {}, wetLease: {}, total: 0 },
@@ -439,7 +511,8 @@ export default function SummaryReport() {
 
         // Initialize
         ['fleetCategory', 'morning', 'noon', 'evening'].forEach(period => {
-            busTypeCodes.forEach(code => {
+            bestBusTypes.forEach(bt => {
+                const code = bt.short_name || bt.name.substring(0, 2).toUpperCase();
                 totals[period].best[code] = 0;
             });
             totals[period].best.total = 0;
@@ -455,7 +528,8 @@ export default function SummaryReport() {
         depotData.forEach(depot => {
             ['fleetCategory', 'morning', 'noon', 'evening'].forEach(period => {
                 // BEST totals
-                busTypeCodes.forEach(code => {
+                bestBusTypes.forEach(bt => {
+                    const code = bt.short_name || bt.name.substring(0, 2).toUpperCase();
                     totals[period].best[code] += depot[period].best[code] || 0;
                 });
                 totals[period].best.total += depot[period].best.total || 0;
@@ -488,7 +562,7 @@ export default function SummaryReport() {
         // Headers
         csv += 'Depot,';
         ['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].forEach(period => {
-            csv += `${period} - BEST,`.repeat(reportData.busTypeCodes.length);
+            csv += `${period} - BEST,`.repeat(reportData.bestBusTypes.length);
             csv += 'BEST TOTAL,';
             csv += `${period} - Wet Lease,`.repeat(reportData.wetLeaseOperators.length);
             csv += 'Wet Lease TOTAL,';
@@ -498,7 +572,7 @@ export default function SummaryReport() {
         // Sub-headers
         csv += ',';
         ['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].forEach(() => {
-            reportData.busTypeCodes.forEach(code => csv += `${code},`);
+            reportData.bestBusTypes.forEach(bt => csv += `${bt.code},`);
             csv += 'TOTAL,';
             reportData.wetLeaseOperators.forEach(code => csv += `${code},`);
             csv += 'TOTAL,';
@@ -509,8 +583,8 @@ export default function SummaryReport() {
         reportData.depots.forEach(depot => {
             csv += `${depot.name},`;
             ['fleetCategory', 'morning', 'noon', 'evening'].forEach(period => {
-                reportData.busTypeCodes.forEach(code => {
-                    csv += `${depot[period].best[code] || 0},`;
+                reportData.bestBusTypes.forEach(bt => {
+                    csv += `${depot[period].best[bt.code] || 0},`;
                 });
                 csv += `${depot[period].best.total},`;
                 reportData.wetLeaseOperators.forEach(code => {
@@ -524,8 +598,8 @@ export default function SummaryReport() {
         // Total row
         csv += 'Total :-,';
         ['fleetCategory', 'morning', 'noon', 'evening'].forEach(period => {
-            reportData.busTypeCodes.forEach(code => {
-                csv += `${reportData.totals[period].best[code] || 0},`;
+            reportData.bestBusTypes.forEach(bt => {
+                csv += `${reportData.totals[period].best[bt.code] || 0},`;
             });
             csv += `${reportData.totals[period].best.total},`;
             reportData.wetLeaseOperators.forEach(code => {
@@ -742,7 +816,7 @@ export default function SummaryReport() {
                                     {['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].map((period) => (
                                         <th
                                             key={period}
-                                            colSpan={reportData.busTypeCodes.length + reportData.wetLeaseOperators.length + 2}
+                                            colSpan={reportData.bestBusTypes.length + reportData.wetLeaseOperators.length + 2}
                                             className="period-header"
                                         >
                                             {period}
@@ -755,7 +829,7 @@ export default function SummaryReport() {
                                     {['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].map((period) => (
                                         <React.Fragment key={`header2-${period}`}>
                                             <th
-                                                colSpan={reportData.busTypeCodes.length + 1}
+                                                colSpan={reportData.bestBusTypes.length + 1}
                                                 className="best-header"
                                             >
                                                 BEST

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import storageManager from '../lib/storage/storageManager';
 import DatabaseVersionChecker from './DatabaseVersionChecker';
 import DataBackupUtility from './DataBackupUtility';
+import SummaryBusTypeSelector from './SummaryBusTypeSelector';
 import '../styles/fleet.css';
 
 export default function FleetSchedule() {
@@ -402,6 +403,9 @@ export default function FleetSchedule() {
               </div>
             </div>
           )}
+
+          {/* Summary Bus Type Selection */}
+          <SummaryBusTypeSelector />
 
           {/* Data Backup Utility */}
           <DataBackupUtility />

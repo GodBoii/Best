@@ -1,0 +1,252 @@
+.summary-bus-type-selector {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 24px;
+  margin-top: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.selector-header {
+  margin-bottom: 24px;
+}
+
+.selector-header h3 {
+  color: #2c3e50;
+  font-size: 20px;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selector-description {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.selector-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .selector-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.selector-section {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.section-header h4 {
+  color: #495057;
+  font-size: 16px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-quick-action {
+  background: #ffffff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-quick-action:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.dropdown-container {
+  position: relative;
+}
+
+.dropdown-trigger {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.dropdown-trigger:hover {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+}
+
+.selected-count {
+  color: #495057;
+  font-weight: 500;
+}
+
+.dropdown-arrow {
+  color: #6c757d;
+  font-size: 12px;
+}
+
+.selected-preview {
+  margin-top: 8px;
+  padding: 8px;
+  background: #ffffff;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #6c757d;
+  min-height: 36px;
+  max-height: 80px;
+  overflow-y: auto;
+  line-height: 1.4;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 8px 0;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  gap: 8px;
+}
+
+.checkbox-item:hover {
+  background: #f8f9fa;
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.bus-type-name {
+  color: #212529;
+  font-size: 14px;
+  flex: 1;
+}
+
+.bus-type-code {
+  color: #6c757d;
+  font-size: 12px;
+  font-weight: 500;
+  background: #e9ecef;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.selector-actions {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+  border-top: 1px solid #e9ecef;
+}
+
+.btn-save-selections {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+}
+
+.btn-save-selections:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-save-selections:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-save-selections:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.selector-info {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e9ecef;
+}
+
+.info-note {
+  color: #6c757d;
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.info-note strong {
+  color: #495057;
+}
+
+/* Scrollbar styling for dropdown */
+.dropdown-menu::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dropdown-menu::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
