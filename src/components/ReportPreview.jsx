@@ -404,18 +404,156 @@ export default function ReportPreview({ reportData }) {
           </table>
         </div>
 
-        {/* Other Duties Section - Display without heading */}
-        {!otherDutiesLoading && otherDutiesData.length > 0 && (
+        {/* Bottom Section: Other Duties (left) and Summary Box (right) */}
+        <div className="report-bottom-section">
+          {/* Other Duties Section - Left Side */}
           <div className="other-duties-section">
-            <div className="other-duties-list">
-              {formatOtherDutiesForReport(otherDutiesData).map((line, index) => (
-                <div key={index} className="other-duty-line">
-                  {line}
-                </div>
-              ))}
-            </div>
+            {!otherDutiesLoading && otherDutiesData.length > 0 && (
+              <div className="other-duties-list">
+                {formatOtherDutiesForReport(otherDutiesData).map((line, index) => (
+                  <div key={index} className="other-duty-line">
+                    {line}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Summary Statistics Box - Right Side */}
+          <div className="summary-box-section">
+            {(() => {
+              // Calculate grand totals from all groups
+              const grandTotal = sortedGroups.reduce((acc, [, group]) => {
+                const mergedEntries = mergeEntriesByRoute(group.entries);
+                const totals = calculateGroupTotals(mergedEntries);
+                return {
+                  duties_driver_ms: acc.duties_driver_ms + totals.duties_driver_ms,
+                  duties_driver_sun: acc.duties_driver_sun + totals.duties_driver_sun,
+                  duties_cond_ms: acc.duties_cond_ms + totals.duties_cond_ms,
+                  duties_cond_sun: acc.duties_cond_sun + totals.duties_cond_sun
+                };
+              }, {
+                duties_driver_ms: 0,
+                duties_driver_sun: 0,
+                duties_cond_ms: 0,
+                duties_cond_sun: 0
+              });
+
+              // Calculate summary statistics
+              const calculateSummary = () => {
+                // Calculate averages
+                const driverAvg = ((grandTotal.duties_driver_ms * 6) + grandTotal.duties_driver_sun) / 7;
+                const conductorAvg = ((grandTotal.duties_cond_ms * 6) + grandTotal.duties_cond_sun) / 7;
+
+                // Extract platform duties from other duties data
+                const extractPlatformDuties = () => {
+                  const categories = {
+                    nonPlatformDriver: 0,
+                    nonPlatformConductor: 0,
+                    otherDutiesDriver: 0,
+                    otherDutiesConductor: 0
+                  };
+
+                  if (!otherDutiesData || otherDutiesData.length === 0) {
+                    return categories;
+                  }
+
+                  const normalizeText = (text) => {
+                    if (!text) return '';
+                    return text.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+                  };
+
+                  const categorizePlatform = (platformName) => {
+                    const normalized = normalizeText(platformName);
+                    if (normalized.includes('non') && normalized.includes('platform') && normalized.includes('driver')) {
+                      return 'nonPlatformDriver';
+                    }
+                    if (normalized.includes('non') && normalized.includes('platform') && normalized.includes('conductor')) {
+                      return 'nonPlatformConductor';
+                    }
+                    if (normalized.includes('other') && (normalized.includes('duties') || normalized.includes('duty')) && normalized.includes('driver')) {
+                      return 'otherDutiesDriver';
+                    }
+                    if (normalized.includes('other') && (normalized.includes('duties') || normalized.includes('duty')) && normalized.includes('conductor')) {
+                      return 'otherDutiesConductor';
+                    }
+                    return null;
+                  };
+
+                  otherDutiesData.forEach(entry => {
+                    const category = categorizePlatform(entry.platformName);
+                    if (category && categories.hasOwnProperty(category)) {
+                      categories[category] += entry.totalValue || 0;
+                    }
+                  });
+
+                  return categories;
+                };
+
+                const platformDuties = extractPlatformDuties();
+
+                // Calculate leave reserve
+                const driverLeaveReserve = (driverAvg + platformDuties.nonPlatformDriver) * 0.36;
+                const conductorLeaveReserve = (conductorAvg + platformDuties.nonPlatformConductor) * 0.36;
+
+                // Calculate grand totals
+                const driverGrandTotal = driverAvg + platformDuties.nonPlatformDriver + driverLeaveReserve + platformDuties.otherDutiesDriver;
+                const conductorGrandTotal = conductorAvg + platformDuties.nonPlatformConductor + conductorLeaveReserve + platformDuties.otherDutiesConductor;
+
+                return {
+                  driver: {
+                    average: Math.round(driverAvg),
+                    nonPlatform: platformDuties.nonPlatformDriver,
+                    leaveReserve: Math.round(driverLeaveReserve),
+                    others: platformDuties.otherDutiesDriver,
+                    grandTotal: Math.round(driverGrandTotal)
+                  },
+                  conductor: {
+                    average: Math.round(conductorAvg),
+                    nonPlatform: platformDuties.nonPlatformConductor,
+                    leaveReserve: Math.round(conductorLeaveReserve),
+                    others: platformDuties.otherDutiesConductor,
+                    grandTotal: Math.round(conductorGrandTotal)
+                  }
+                };
+              };
+
+              const summary = calculateSummary();
+
+              return (
+                <table className="summary-table">
+                  <tbody>
+                    <tr>
+                      <td className="summary-label">AVERAGE :-</td>
+                      <td>{summary.driver.average}</td>
+                      <td>{summary.conductor.average}</td>
+                    </tr>
+                    <tr>
+                      <td className="summary-label">Non Platform Duties :-</td>
+                      <td>{summary.driver.nonPlatform}</td>
+                      <td>{summary.conductor.nonPlatform}</td>
+                    </tr>
+                    <tr>
+                      <td className="summary-label">Leave Reserve :-</td>
+                      <td>{summary.driver.leaveReserve}</td>
+                      <td>{summary.conductor.leaveReserve}</td>
+                    </tr>
+                    <tr>
+                      <td className="summary-label">Others :-</td>
+                      <td>{summary.driver.others}</td>
+                      <td>{summary.conductor.others}</td>
+                    </tr>
+                    <tr className="summary-grand-total">
+                      <td className="summary-label">Grand Total :-</td>
+                      <td>{summary.driver.grandTotal}</td>
+                      <td>{summary.conductor.grandTotal}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              );
+            })()}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -634,63 +634,75 @@ export default function SummaryReport() {
 
             // Temporarily adjust styles for PDF capture
             const originalOverflow = reportContent.style.overflow;
+            const originalWidth = reportContent.style.width;
+            const originalMaxWidth = reportContent.style.maxWidth;
+            
             reportContent.style.overflow = 'visible';
+            reportContent.style.width = '297mm'; // A4 landscape width
+            reportContent.style.maxWidth = '297mm';
 
-            // Capture the content as canvas
+            // Capture the content as canvas with landscape dimensions
             const canvas = await html2canvas(reportContent, {
                 scale: 2, // Higher quality
                 useCORS: true,
                 logging: false,
-                backgroundColor: '#ffffff'
+                backgroundColor: '#ffffff',
+                width: reportContent.scrollWidth,
+                height: reportContent.scrollHeight,
+                windowWidth: 1122, // 297mm in pixels at 96 DPI
+                windowHeight: 794  // 210mm in pixels at 96 DPI
             });
 
             // Restore original styles
             reportContent.style.overflow = originalOverflow;
+            reportContent.style.width = originalWidth;
+            reportContent.style.maxWidth = originalMaxWidth;
 
             // A4 dimensions in landscape (mm)
             const pdfWidth = 297; // A4 landscape width
             const pdfHeight = 210; // A4 landscape height
 
             // Calculate dimensions to fit content
-            const imgWidth = pdfWidth - 20; // 10mm margin on each side
+            const imgWidth = pdfWidth - 10; // 5mm margin on each side
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
             // Create PDF in landscape orientation
             const pdf = new jsPDF({
                 orientation: 'landscape',
                 unit: 'mm',
-                format: 'a4'
+                format: 'a4',
+                compress: true
             });
 
             // If content is taller than one page, split into multiple pages
             let heightLeft = imgHeight;
-            let position = 10; // Top margin
+            let position = 5; // Top margin
 
             // Add first page
             pdf.addImage(
                 canvas.toDataURL('image/png'),
                 'PNG',
-                10, // Left margin
+                5, // Left margin
                 position,
                 imgWidth,
                 imgHeight
             );
 
-            heightLeft -= (pdfHeight - 20); // Subtract page height minus margins
+            heightLeft -= (pdfHeight - 10); // Subtract page height minus margins
 
             // Add additional pages if needed
             while (heightLeft > 0) {
-                position = heightLeft - imgHeight + 10;
+                position = heightLeft - imgHeight + 5;
                 pdf.addPage();
                 pdf.addImage(
                     canvas.toDataURL('image/png'),
                     'PNG',
-                    10,
+                    5,
                     position,
                     imgWidth,
                     imgHeight
                 );
-                heightLeft -= (pdfHeight - 20);
+                heightLeft -= (pdfHeight - 10);
             }
 
             // Save the PDF
@@ -711,8 +723,26 @@ export default function SummaryReport() {
             return;
         }
 
+        // Add a temporary class to body for print-specific styling
+        document.body.classList.add('printing-summary');
+        
+        // Dynamically inject landscape @page rule for summary report
+        const style = document.createElement('style');
+        style.id = 'summary-print-style';
+        style.textContent = '@media print { @page { size: A4 landscape; margin: 5mm; } }';
+        document.head.appendChild(style);
+        
         // Use browser's native print dialog
         window.print();
+        
+        // Remove the class and style after printing
+        setTimeout(() => {
+            document.body.classList.remove('printing-summary');
+            const styleElement = document.getElementById('summary-print-style');
+            if (styleElement) {
+                styleElement.remove();
+            }
+        }, 1000);
     };
 
     return (

@@ -249,6 +249,13 @@
 
 /* Print Styles */
 @media print {
+
+  /* Ensure depot reports are in portrait mode */
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
   .report-preview-header,
   .report-actions,
   .all-reports-header {
@@ -275,13 +282,22 @@
 }
 
 /* ============================================
-   OTHER DUTIES SECTION IN REPORT
+   BOTTOM SECTION: OTHER DUTIES & SUMMARY BOX
    ============================================ */
 
-.other-duties-section {
+.report-bottom-section {
+  display: flex;
+  gap: 2rem;
   margin-top: 1.5rem;
+  align-items: flex-start;
+}
+
+/* Other Duties Section - Left Side */
+.other-duties-section {
+  flex: 1;
   padding: 0;
-  max-width: 50%; /* Use only left half of the page */
+  min-width: 0;
+  /* Allow flex shrinking */
 }
 
 .other-duties-list {
@@ -297,18 +313,92 @@
   color: var(--dark);
   line-height: 1.6;
   border-bottom: 1px solid #f0f0f0;
-  word-wrap: break-word; /* Wrap long text */
-  overflow-wrap: break-word; /* Modern browsers */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .other-duty-line:last-child {
   border-bottom: none;
 }
 
-/* Print styles for Other Duties */
+/* Summary Box Section - Right Side */
+.summary-box-section {
+  flex: 0 0 auto;
+  min-width: 200px;
+  max-width: 280px;
+  margin-left: auto;
+  /* Push to the right */
+}
+
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px var(--shadow);
+  background: var(--white);
+}
+
+.summary-table td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.4rem;
+  text-align: center;
+}
+
+.summary-table tbody tr {
+  transition: all var(--transition-fast);
+}
+
+.summary-table tbody tr:nth-child(even) {
+  background: var(--light);
+}
+
+.summary-table tbody tr:hover {
+  background: var(--light-alt);
+}
+
+.summary-table .summary-label {
+  text-align: left;
+  padding-left: 0.75rem;
+  font-weight: 500;
+  color: var(--dark);
+  white-space: nowrap;
+}
+
+.summary-table .summary-grand-total {
+  background: var(--accent-light) !important;
+  font-weight: 700;
+  border-top: 2px solid var(--accent);
+}
+
+.summary-table .summary-grand-total td {
+  font-weight: 700;
+  color: var(--dark);
+  font-size: 0.85rem;
+}
+
+/* Responsive Layout */
+@media (max-width: 1024px) {
+  .report-bottom-section {
+    flex-direction: column;
+  }
+
+  .summary-box-section {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+/* Print styles for Bottom Section */
 @media print {
-  .other-duties-section {
+  .report-bottom-section {
+    display: flex;
+    gap: 1rem;
     page-break-inside: avoid;
+  }
+
+  .other-duties-section {
+    flex: 1;
     background: white;
     border: 1px solid #000;
   }
@@ -316,5 +406,20 @@
   .other-duty-line {
     background: white;
     border-left: 2px solid #000;
+  }
+
+  .summary-box-section {
+    flex: 0 0 auto;
+    min-width: 250px;
+    max-width: 300px;
+  }
+
+  .summary-table {
+    border: 2px solid #000;
+  }
+
+  .summary-table th,
+  .summary-table td {
+    border: 1px solid #000;
   }
 }

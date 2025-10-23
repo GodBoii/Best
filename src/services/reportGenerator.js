@@ -683,14 +683,15 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
     // Right border - continuous from header start to grand total end
     doc.line(tableRightX, headerStartY, tableRightX, tableEndY);
 
-    // Add Other Duties section if data exists
+    // Add Other Duties section and Summary Box
+    let otherDutiesData = [];
     if (reportData.depot_id && reportData.date) {
       try {
         // Import helper functions
         const { fetchOtherDutiesForReport, formatOtherDutiesForReport } = await import('../lib/otherDutiesHelper');
 
         // Fetch Other Duties data
-        const otherDutiesData = await fetchOtherDutiesForReport(reportData.depot_id, reportData.date);
+        otherDutiesData = await fetchOtherDutiesForReport(reportData.depot_id, reportData.date);
 
         if (otherDutiesData && otherDutiesData.length > 0) {
           // Format the data
@@ -734,6 +735,59 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
         console.error('Error adding Other Duties to PDF:', error);
         // Continue without Other Duties if there's an error
       }
+    }
+
+    // Add Summary Statistics Box (bottom-right)
+    try {
+      // Import summary calculation utilities
+      const { calculateSummaryStatistics, formatSummaryStatistics, generateSummaryTableData } = await import('../utils/summaryCalculations');
+
+      // Calculate summary statistics
+      const summaryStats = calculateSummaryStatistics(grandTotal, otherDutiesData);
+      const formattedSummary = formatSummaryStatistics(summaryStats, 0); // 0 decimal places for integers
+
+      // Generate table data
+      const summaryTableData = generateSummaryTableData(formattedSummary);
+
+      // Position summary box on the right side of the page
+      // Start at same Y position as Other Duties section
+      const summaryStartY = tableEndY + 5;
+      
+      // Calculate position to align table to the right
+      const summaryTableWidth = 65; // Total width: 35 + 15 + 15 = 65mm
+      const summaryLeftMargin = pageWidth - summaryTableWidth - 15; // 15mm right margin
+
+      // Add summary table
+      doc.autoTable({
+        startY: summaryStartY,
+        margin: { left: summaryLeftMargin, right: 15 },
+        body: summaryTableData,
+        theme: 'grid',
+        styles: {
+          font: 'times',
+          fontSize: 8,
+          cellPadding: 1.5,
+          lineColor: [0, 0, 0],
+          lineWidth: 0.1
+        },
+        columnStyles: {
+          0: { cellWidth: 35, halign: 'left', fontStyle: 'bold' },
+          1: { cellWidth: 15, halign: 'center' },
+          2: { cellWidth: 15, halign: 'center' }
+        },
+        didParseCell: function (data) {
+          // Make Grand Total row bold
+          if (data.row.index === summaryTableData.length - 1) {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fillColor = [240, 240, 240];
+          }
+        }
+      });
+
+      console.log('✅ Summary statistics added to PDF');
+    } catch (error) {
+      console.error('Error adding summary statistics to PDF:', error);
+      // Continue without summary if there's an error
     }
 
     // Only save/preview if this is not part of a combined report

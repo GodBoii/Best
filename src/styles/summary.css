@@ -213,20 +213,25 @@
   border: 2px solid black;
   border-bottom: 1px solid black;
   margin: 0;
+  page-break-after: avoid;
+  page-break-inside: avoid;
 }
 
 .report-title h3 {
-  margin: 0 0 3px 0;
+  margin: 0 0 2px 0;
   font-size: 16px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  line-height: 1.2;
 }
 
 .combined-date-type {
   margin: 0;
+  padding: 0;
   font-size: 12px;
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .effective-date,
@@ -581,8 +586,10 @@
   }
 }
 
-/* Print Styles */
+/* Print Styles - Only apply when printing summary report */
 @media print {
+
+  /* Note: @page rule is dynamically injected by handlePrintPreview() to avoid conflicts with depot report */
 
   /* Hide controls and navigation */
   .summary-header,
@@ -603,6 +610,7 @@
     margin: 0 !important;
     max-width: 100% !important;
     width: 100% !important;
+    overflow: visible !important;
   }
 
   .summary-content {
@@ -611,12 +619,15 @@
     margin: 0 !important;
     padding: 0 !important;
     width: 100%;
+    max-width: 100%;
+    overflow: visible !important;
   }
 
   /* Report title styling */
   .report-title {
-    padding: 4px 6px;
+    padding: 3px 6px;
     page-break-after: avoid;
+    page-break-inside: avoid;
     background: white !important;
     border: 2px solid black !important;
     border-bottom: 1px solid black !important;
@@ -626,15 +637,19 @@
   }
 
   .report-title h3 {
-    font-size: 13px;
-    margin: 0 0 2px 0;
+    font-size: 11px;
+    margin: 0 0 1px 0;
+    padding: 0;
     color: black !important;
+    line-height: 1.1;
   }
 
   .combined-date-type {
-    font-size: 9px;
+    font-size: 8px;
     color: black !important;
     margin: 0;
+    padding: 0;
+    line-height: 1.1;
   }
 
   .effective-date,
@@ -866,10 +881,10 @@
     font-size: 8px !important;
   }
 
-  /* Page setup */
-  @page {
-    size: A4 landscape;
-    margin: 0;
+  html,
+  body {
+    width: 297mm;
+    height: 210mm;
   }
 
   /* Ensure body has no margins */
