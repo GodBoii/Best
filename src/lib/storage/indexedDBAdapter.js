@@ -4,7 +4,7 @@
  */
 
 const DB_NAME = 'BusScheduleDB';
-const DB_VERSION = 5; // Updated for Other Duties feature
+const DB_VERSION = 6; // Updated for Summary Report Remarks feature
 
 class IndexedDBAdapter {
   constructor() {
@@ -167,6 +167,15 @@ class IndexedDBAdapter {
           otherDutiesItemsStore.createIndex('other_duties_entry_id', 'other_duties_entry_id', { unique: false });
           otherDutiesItemsStore.createIndex('platform_duty_id', 'platform_duty_id', { unique: false });
           console.log('Created other_duties_items store');
+        }
+
+        // Add summary_report_remarks store in version 6
+        if (!db.objectStoreNames.contains('summary_report_remarks')) {
+          const remarksStore = db.createObjectStore('summary_report_remarks', { keyPath: 'id' });
+          remarksStore.createIndex('remark_date', 'remark_date', { unique: false });
+          remarksStore.createIndex('day_type', 'day_type', { unique: false });
+          remarksStore.createIndex('date_type', ['remark_date', 'day_type'], { unique: true });
+          console.log('Created summary_report_remarks store');
         }
 
         console.log('Database upgrade complete - all data preserved');

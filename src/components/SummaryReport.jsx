@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import storageManager from '../lib/storage/storageManager';
+import { fetchRemarkForSummaryReport, formatRemarkForDisplay } from '../lib/summaryRemarkHelper';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import '../styles/summary.css';
@@ -13,6 +14,7 @@ export default function SummaryReport() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+    const [remarkText, setRemarkText] = useState(null);
     const reportRef = useRef(null);
 
     // Set default date to today
@@ -33,6 +35,10 @@ export default function SummaryReport() {
         try {
             const data = await fetchSummaryData(effectiveDate, dayType);
             setReportData(data);
+            
+            // Fetch remark for this date and day type (temporal logic)
+            const remark = await fetchRemarkForSummaryReport(effectiveDate, dayType);
+            setRemarkText(remark);
         } catch (err) {
             console.error('Error generating report:', err);
             setError(err.message);
@@ -634,75 +640,63 @@ export default function SummaryReport() {
 
             // Temporarily adjust styles for PDF capture
             const originalOverflow = reportContent.style.overflow;
-            const originalWidth = reportContent.style.width;
-            const originalMaxWidth = reportContent.style.maxWidth;
-            
             reportContent.style.overflow = 'visible';
-            reportContent.style.width = '297mm'; // A4 landscape width
-            reportContent.style.maxWidth = '297mm';
 
-            // Capture the content as canvas with landscape dimensions
+            // Capture the content as canvas
             const canvas = await html2canvas(reportContent, {
                 scale: 2, // Higher quality
                 useCORS: true,
                 logging: false,
-                backgroundColor: '#ffffff',
-                width: reportContent.scrollWidth,
-                height: reportContent.scrollHeight,
-                windowWidth: 1122, // 297mm in pixels at 96 DPI
-                windowHeight: 794  // 210mm in pixels at 96 DPI
+                backgroundColor: '#ffffff'
             });
 
             // Restore original styles
             reportContent.style.overflow = originalOverflow;
-            reportContent.style.width = originalWidth;
-            reportContent.style.maxWidth = originalMaxWidth;
 
             // A4 dimensions in landscape (mm)
             const pdfWidth = 297; // A4 landscape width
             const pdfHeight = 210; // A4 landscape height
 
             // Calculate dimensions to fit content
-            const imgWidth = pdfWidth - 10; // 5mm margin on each side
+            const imgWidth = pdfWidth - 20; // 10mm margin on each side
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
             // Create PDF in landscape orientation
             const pdf = new jsPDF({
                 orientation: 'landscape',
                 unit: 'mm',
-                format: 'a4',
-                compress: true
+                format: 'a4'
             });
 
             // If content is taller than one page, split into multiple pages
             let heightLeft = imgHeight;
-            let position = 5; // Top margin
+            let position = 10; // Top margin
 
             // Add first page
             pdf.addImage(
                 canvas.toDataURL('image/png'),
                 'PNG',
-                5, // Left margin
+                10, // Left margin
                 position,
                 imgWidth,
                 imgHeight
             );
 
-            heightLeft -= (pdfHeight - 10); // Subtract page height minus margins
+            heightLeft -= (pdfHeight - 20); // Subtract page height minus margins
 
             // Add additional pages if needed
             while (heightLeft > 0) {
-                position = heightLeft - imgHeight + 5;
+                position = heightLeft - imgHeight + 10;
                 pdf.addPage();
                 pdf.addImage(
                     canvas.toDataURL('image/png'),
                     'PNG',
-                    5,
+                    10,
                     position,
                     imgWidth,
                     imgHeight
                 );
-                heightLeft -= (pdfHeight - 10);
+                heightLeft -= (pdfHeight - 20);
             }
 
             // Save the PDF
@@ -723,26 +717,8 @@ export default function SummaryReport() {
             return;
         }
 
-        // Add a temporary class to body for print-specific styling
-        document.body.classList.add('printing-summary');
-        
-        // Dynamically inject landscape @page rule for summary report
-        const style = document.createElement('style');
-        style.id = 'summary-print-style';
-        style.textContent = '@media print { @page { size: A4 landscape; margin: 5mm; } }';
-        document.head.appendChild(style);
-        
         // Use browser's native print dialog
         window.print();
-        
-        // Remove the class and style after printing
-        setTimeout(() => {
-            document.body.classList.remove('printing-summary');
-            const styleElement = document.getElementById('summary-print-style');
-            if (styleElement) {
-                styleElement.remove();
-            }
-        }, 1000);
     };
 
     return (
@@ -1072,50 +1048,13 @@ export default function SummaryReport() {
                         )}
                     </div>
 
-                    {/* Summary Tables Section */}
-                    <div className="summary-tables-section">
-                        {/* Fleet Total - Always shown */}
-                        <div className="summary-table-box">
-                            <h4 className="summary-table-title">Total Fleet</h4>
-                            <table className="summary-totals-table">
-                                <tbody>
-                                    <tr>
-                                        <td className="summary-label">BEST</td>
-                                        <td className="summary-label">W.L.</td>
-                                        <td className="summary-label">TOTAL</td>
-                                    </tr>
-                                    <tr>
-                                        <td className="summary-value">{reportData.totals.fleetCategory.best.total}</td>
-                                        <td className="summary-value">{reportData.totals.fleetCategory.wetLease.total}</td>
-                                        <td className="summary-value">{reportData.totals.fleetCategory.best.total + reportData.totals.fleetCategory.wetLease.total}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Morning Total - Always shown */}
-                        <div className="summary-table-box">
-                            <h4 className="summary-table-title">Total T/out (AM)</h4>
-                            <table className="summary-totals-table">
-                                <tbody>
-                                    <tr>
-                                        <td className="summary-label">BEST</td>
-                                        <td className="summary-label">W.L.</td>
-                                        <td className="summary-label">TOTAL</td>
-                                    </tr>
-                                    <tr>
-                                        <td className="summary-value">{reportData.totals.morning.best.total}</td>
-                                        <td className="summary-value">{reportData.totals.morning.wetLease.total}</td>
-                                        <td className="summary-value">{reportData.totals.morning.best.total + reportData.totals.morning.wetLease.total}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Evening Total - Only for Sunday */}
-                        {reportData.dayType === 'SUNDAY' && (
+                    {/* Summary Tables and Remark Section */}
+                    <div className="summary-bottom-container">
+                        {/* Summary Tables Section */}
+                        <div className="summary-tables-section">
+                            {/* Fleet Total - Always shown */}
                             <div className="summary-table-box">
-                                <h4 className="summary-table-title">Total T/out (PM)</h4>
+                                <h4 className="summary-table-title">Total Fleet</h4>
                                 <table className="summary-totals-table">
                                     <tbody>
                                         <tr>
@@ -1124,12 +1063,59 @@ export default function SummaryReport() {
                                             <td className="summary-label">TOTAL</td>
                                         </tr>
                                         <tr>
-                                            <td className="summary-value">{reportData.totals.evening.best.total}</td>
-                                            <td className="summary-value">{reportData.totals.evening.wetLease.total}</td>
-                                            <td className="summary-value">{reportData.totals.evening.best.total + reportData.totals.evening.wetLease.total}</td>
+                                            <td className="summary-value">{reportData.totals.fleetCategory.best.total}</td>
+                                            <td className="summary-value">{reportData.totals.fleetCategory.wetLease.total}</td>
+                                            <td className="summary-value">{reportData.totals.fleetCategory.best.total + reportData.totals.fleetCategory.wetLease.total}</td>
                                         </tr>
                                     </tbody>
                                 </table>
+                            </div>
+
+                            {/* Morning Total - Always shown */}
+                            <div className="summary-table-box">
+                                <h4 className="summary-table-title">Total T/out (AM)</h4>
+                                <table className="summary-totals-table">
+                                    <tbody>
+                                        <tr>
+                                            <td className="summary-label">BEST</td>
+                                            <td className="summary-label">W.L.</td>
+                                            <td className="summary-label">TOTAL</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="summary-value">{reportData.totals.morning.best.total}</td>
+                                            <td className="summary-value">{reportData.totals.morning.wetLease.total}</td>
+                                            <td className="summary-value">{reportData.totals.morning.best.total + reportData.totals.morning.wetLease.total}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Evening Total - Only for Sunday */}
+                            {reportData.dayType === 'SUNDAY' && (
+                                <div className="summary-table-box">
+                                    <h4 className="summary-table-title">Total T/out (PM)</h4>
+                                    <table className="summary-totals-table">
+                                        <tbody>
+                                            <tr>
+                                                <td className="summary-label">BEST</td>
+                                                <td className="summary-label">W.L.</td>
+                                                <td className="summary-label">TOTAL</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="summary-value">{reportData.totals.evening.best.total}</td>
+                                                <td className="summary-value">{reportData.totals.evening.wetLease.total}</td>
+                                                <td className="summary-value">{reportData.totals.evening.best.total + reportData.totals.evening.wetLease.total}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Remark Box - Beside the tables */}
+                        {remarkText && (
+                            <div className="summary-remark-box">
+                                <p className="summary-remark-text">{formatRemarkForDisplay(remarkText)}</p>
                             </div>
                         )}
                     </div>

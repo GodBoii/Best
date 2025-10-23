@@ -175,7 +175,7 @@ class StorageManager {
       await this.indexedDBAdapter.initPromise;
     }
 
-    const stores = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'summary_settings', 'platform_master', 'platform_duty_master', 'other_duties_entries', 'other_duties_items'];
+    const stores = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'summary_settings', 'platform_master', 'platform_duty_master', 'other_duties_entries', 'other_duties_items', 'summary_report_remarks'];
     
     for (const store of stores) {
       await this.indexedDBAdapter._clearStore(store);
@@ -193,7 +193,7 @@ class StorageManager {
     }
 
     // Fetch all data from Supabase
-    const tables = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'summary_settings', 'platform_master', 'platform_duty_master', 'other_duties_entries', 'other_duties_items'];
+    const tables = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'summary_settings', 'platform_master', 'platform_duty_master', 'other_duties_entries', 'other_duties_items', 'summary_report_remarks'];
     const exportData = {};
 
     for (const table of tables) {
@@ -228,7 +228,7 @@ class StorageManager {
     await this.switchMode('online');
 
     // Import data to Supabase
-    const tables = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'summary_settings', 'platform_master', 'platform_duty_master', 'other_duties_entries', 'other_duties_items'];
+    const tables = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'summary_settings', 'platform_master', 'platform_duty_master', 'other_duties_entries', 'other_duties_items', 'summary_report_remarks'];
     
     for (const table of tables) {
       if (exportData[table] && exportData[table].length > 0) {

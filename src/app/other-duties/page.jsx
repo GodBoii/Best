@@ -5,6 +5,7 @@ import Link from 'next/link';
 import OtherDutiesManager from '../../components/OtherDutiesManager';
 import PlatformMasterManager from '../../components/PlatformMasterManager';
 import PlatformDutyMasterManager from '../../components/PlatformDutyMasterManager';
+import SummaryRemarkManager from '../../components/SummaryRemarkManager';
 import StorageToggle from '../../components/StorageToggle';
 import '../../styles/globals.css';
 import '../../styles/other-duties.css';
@@ -47,6 +48,11 @@ export default function OtherDutiesPage() {
 
         {/* Other Duties Entry Section */}
         <OtherDutiesManager />
+
+        {/* Summary Report Remarks Section */}
+        <div style={{ marginTop: '40px', borderTop: '2px solid #e0e0e0', paddingTop: '30px' }}>
+          <SummaryRemarkManager />
+        </div>
       </main>
 
       <footer className="app-footer">

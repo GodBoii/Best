@@ -213,25 +213,20 @@
   border: 2px solid black;
   border-bottom: 1px solid black;
   margin: 0;
-  page-break-after: avoid;
-  page-break-inside: avoid;
 }
 
 .report-title h3 {
-  margin: 0 0 2px 0;
+  margin: 0 0 3px 0;
   font-size: 16px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  line-height: 1.2;
 }
 
 .combined-date-type {
   margin: 0;
-  padding: 0;
   font-size: 12px;
   font-weight: 700;
-  line-height: 1.2;
 }
 
 .effective-date,
@@ -489,8 +484,8 @@
   font-weight: 700;
 }
 
-/* Summary Tables Section */
-.summary-tables-section {
+/* Summary Bottom Container - Holds tables and remark side by side */
+.summary-bottom-container {
   display: flex;
   gap: 20px;
   padding: 10px 15px;
@@ -498,8 +493,17 @@
   border-left: 2px solid black;
   border-right: 2px solid black;
   border-bottom: 2px solid black;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* Summary Tables Section */
+.summary-tables-section {
+  display: flex;
+  gap: 20px;
   flex-wrap: wrap;
   justify-content: flex-start;
+  flex: 0 0 auto;
 }
 
 .summary-table-box {
@@ -586,10 +590,8 @@
   }
 }
 
-/* Print Styles - Only apply when printing summary report */
+/* Print Styles */
 @media print {
-
-  /* Note: @page rule is dynamically injected by handlePrintPreview() to avoid conflicts with depot report */
 
   /* Hide controls and navigation */
   .summary-header,
@@ -610,7 +612,6 @@
     margin: 0 !important;
     max-width: 100% !important;
     width: 100% !important;
-    overflow: visible !important;
   }
 
   .summary-content {
@@ -619,15 +620,12 @@
     margin: 0 !important;
     padding: 0 !important;
     width: 100%;
-    max-width: 100%;
-    overflow: visible !important;
   }
 
   /* Report title styling */
   .report-title {
-    padding: 3px 6px;
+    padding: 4px 6px;
     page-break-after: avoid;
-    page-break-inside: avoid;
     background: white !important;
     border: 2px solid black !important;
     border-bottom: 1px solid black !important;
@@ -637,19 +635,15 @@
   }
 
   .report-title h3 {
-    font-size: 11px;
-    margin: 0 0 1px 0;
-    padding: 0;
+    font-size: 13px;
+    margin: 0 0 2px 0;
     color: black !important;
-    line-height: 1.1;
   }
 
   .combined-date-type {
-    font-size: 8px;
+    font-size: 9px;
     color: black !important;
     margin: 0;
-    padding: 0;
-    line-height: 1.1;
   }
 
   .effective-date,
@@ -831,8 +825,8 @@
     font-weight: 700 !important;
   }
 
-  /* Summary Tables Section */
-  .summary-tables-section {
+  /* Summary Bottom Container */
+  .summary-bottom-container {
     display: flex;
     gap: 10px;
     padding: 4px 8px;
@@ -844,6 +838,15 @@
     page-break-inside: avoid;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    align-items: flex-start;
+  }
+
+  /* Summary Tables Section */
+  .summary-tables-section {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex: 0 0 auto;
   }
 
   .summary-table-box {
@@ -881,10 +884,10 @@
     font-size: 8px !important;
   }
 
-  html,
-  body {
-    width: 297mm;
-    height: 210mm;
+  /* Page setup */
+  @page {
+    size: A4 landscape;
+    margin: 0;
   }
 
   /* Ensure body has no margins */
@@ -926,4 +929,49 @@
 
 .table-wrapper::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+/* Summary Remark Box - Beside the tables */
+.summary-remark-box {
+  flex: 0 1 auto;
+  min-width: 250px;
+  max-width: 400px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  margin-left: 0;
+}
+
+.summary-remark-text {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #d32f2f;
+  text-align: left;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  width: 100%;
+}
+
+/* Print styles for remark */
+@media print {
+  .summary-remark-box {
+    flex: 1 1 auto;
+    min-width: 150px;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .summary-remark-text {
+    font-size: 8px !important;
+    padding: 3px 6px;
+    border: none !important;
+    background: transparent !important;
+    color: #d32f2f !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    width: 100%;
+  }
 }
