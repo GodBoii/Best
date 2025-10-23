@@ -4,7 +4,7 @@
  */
 
 const DB_NAME = 'BusScheduleDB';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 class IndexedDBAdapter {
   constructor() {
@@ -136,6 +136,26 @@ class IndexedDBAdapter {
           const settingsStore = db.createObjectStore('summary_settings', { keyPath: 'id' });
           settingsStore.createIndex('setting_key', 'setting_key', { unique: true });
           console.log('Created summary_settings store');
+        }
+
+        // Add other duties stores in version 4
+        if (!db.objectStoreNames.contains('platform_duty_master')) {
+          const masterStore = db.createObjectStore('platform_duty_master', { keyPath: 'id' });
+          masterStore.createIndex('duty_name', 'duty_name', { unique: true });
+          console.log('Created platform_duty_master store');
+        }
+
+        if (!db.objectStoreNames.contains('other_duties_platforms')) {
+          const platformStore = db.createObjectStore('other_duties_platforms', { keyPath: 'id' });
+          platformStore.createIndex('depot_date', ['depot_id', 'duty_date'], { unique: false });
+          platformStore.createIndex('depot_id', 'depot_id', { unique: false });
+          console.log('Created other_duties_platforms store');
+        }
+
+        if (!db.objectStoreNames.contains('other_duties_items')) {
+          const itemsStore = db.createObjectStore('other_duties_items', { keyPath: 'id' });
+          itemsStore.createIndex('platform_id', 'platform_id', { unique: false });
+          console.log('Created other_duties_items store');
         }
 
         console.log('Database upgrade complete - all data preserved');

@@ -175,7 +175,7 @@ class StorageManager {
       await this.indexedDBAdapter.initPromise;
     }
 
-    const stores = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'summary_settings'];
+    const stores = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'summary_settings', 'platform_duty_master', 'other_duties_platforms', 'other_duties_items'];
     
     for (const store of stores) {
       await this.indexedDBAdapter._clearStore(store);
@@ -193,7 +193,7 @@ class StorageManager {
     }
 
     // Fetch all data from Supabase
-    const tables = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'summary_settings'];
+    const tables = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'summary_settings', 'platform_duty_master', 'other_duties_platforms', 'other_duties_items'];
     const exportData = {};
 
     for (const table of tables) {
