@@ -196,8 +196,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .report-title {
@@ -263,11 +268,11 @@
 .header-row-1 th {
   background: white;
   color: black;
-  padding: 5px 2px;
+  padding: 7px 3px;
   font-weight: 700;
   text-align: center;
   border: 1px solid black;
-  font-size: 9px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.2px;
 }
@@ -275,11 +280,11 @@
 .header-row-2 th {
   background: white;
   color: black;
-  padding: 4px 2px;
+  padding: 6px 3px;
   font-weight: 700;
   text-align: center;
   border: 1px solid black;
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .best-header {
@@ -290,16 +295,18 @@
 .wetlease-header {
   background: white !important;
   color: black !important;
+  min-width: 22px;
+  max-width: 22px;
 }
 
 .header-row-3 th {
   background: white;
   color: black;
-  padding: 3px 2px;
+  padding: 5px 2px;
   font-weight: 700;
   text-align: center;
   border: 1px solid black;
-  font-size: 7px;
+  font-size: 8px;
 }
 
 .depot-header {
@@ -308,28 +315,59 @@
   position: sticky;
   left: 0;
   z-index: 11;
-  min-width: 70px;
-  max-width: 70px;
-  width: 70px;
+  min-width: 75px;
+  max-width: 75px;
+  width: 75px;
   font-weight: 700;
 }
 
 .bustype-header,
 .operator-header {
-  min-width: 25px;
-  max-width: 25px;
+  min-width: 28px;
+  max-width: 28px;
   font-weight: 700;
-  padding: 3px 1px;
+  padding: 5px 2px;
 }
 
 .total-header {
   background: white !important;
   color: black !important;
   font-weight: 700 !important;
-  min-width: 30px;
-  max-width: 30px;
-  font-size: 6px;
-  padding: 3px 1px;
+  min-width: 32px;
+  max-width: 32px;
+  font-size: 7px;
+  padding: 5px 2px;
+}
+
+.grand-total-header {
+  background: white !important;
+  color: black !important;
+  font-weight: 700 !important;
+  min-width: 32px;
+  max-width: 32px;
+  font-size: 7px;
+  padding: 4px 2px;
+  border: 1px solid black;
+  vertical-align: middle;
+}
+
+.grand-total-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.gr-text {
+  font-size: 7px;
+  font-weight: 700;
+  margin-bottom: 1px;
+}
+
+.tot-text {
+  font-size: 7px;
+  font-weight: 700;
 }
 
 /* Body Styles */
@@ -344,31 +382,31 @@
 .depot-cell {
   background: white;
   font-weight: 700;
-  padding: 4px 3px;
+  padding: 6px 4px;
   text-align: left;
   border: 1px solid black;
   position: sticky;
   left: 0;
   z-index: 5;
-  min-width: 70px;
-  max-width: 70px;
-  width: 70px;
-  font-size: 8px;
+  min-width: 75px;
+  max-width: 75px;
+  width: 75px;
+  font-size: 9px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .data-cell {
-  padding: 3px 1px;
+  padding: 5px 2px;
   text-align: center;
   border: 1px solid black;
   color: black;
   background: white;
-  font-size: 7px;
+  font-size: 8px;
   font-weight: 700;
-  min-width: 25px;
-  max-width: 25px;
+  min-width: 28px;
+  max-width: 28px;
 }
 
 .data-cell:hover {
@@ -376,15 +414,15 @@
 }
 
 .total-cell {
-  padding: 3px 1px;
+  padding: 5px 2px;
   text-align: center;
   border: 1px solid black;
   background: white;
   font-weight: 700;
   color: black;
-  font-size: 7px;
-  min-width: 30px;
-  max-width: 30px;
+  font-size: 8px;
+  min-width: 32px;
+  max-width: 32px;
 }
 
 /* Total Row */
@@ -396,45 +434,46 @@
 .total-row .depot-cell {
   background: white;
   color: black;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   border: 1px solid black;
 }
 
 .grand-total-cell {
-  padding: 4px 1px;
+  padding: 5px 2px;
   text-align: center;
   border: 1px solid black;
   background: white;
   font-weight: 700;
   color: black;
   font-size: 8px;
-  min-width: 25px;
-  max-width: 25px;
+  min-width: 28px;
+  max-width: 28px;
 }
 
-/* Footer */
-.report-footer {
-  padding: 10px 15px;
+/* Note Section - Above Summary Tables */
+.report-note-section {
+  padding: 8px 15px 5px 15px;
   background: white;
-  border: 2px solid black;
+  border-left: 2px solid black;
+  border-right: 2px solid black;
   border-top: 1px solid black;
 }
 
-.note {
+.report-note-section .note {
   margin: 0 0 8px 0;
   font-size: 10px;
   color: black;
   font-weight: 700;
 }
 
-.operator-details {
+.report-note-section .operator-details {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.operator-detail {
+.report-note-section .operator-detail {
   display: inline-block;
   padding: 3px 8px;
   background: white;
@@ -444,6 +483,59 @@
   color: black;
   font-weight: 700;
 }
+
+/* Summary Tables Section */
+.summary-tables-section {
+  display: flex;
+  gap: 20px;
+  padding: 10px 15px;
+  background: white;
+  border-left: 2px solid black;
+  border-right: 2px solid black;
+  border-bottom: 2px solid black;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.summary-table-box {
+  flex: 0 0 auto;
+  min-width: 250px;
+}
+
+.summary-table-title {
+  margin: 0 0 8px 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: black;
+  text-align: center;
+}
+
+.summary-totals-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 2px solid black;
+}
+
+.summary-totals-table td {
+  padding: 6px 10px;
+  text-align: center;
+  border: 1px solid black;
+  font-weight: 700;
+}
+
+.summary-label {
+  background: white;
+  color: black;
+  font-size: 10px;
+}
+
+.summary-value {
+  background: white;
+  color: black;
+  font-size: 11px;
+}
+
+
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -491,6 +583,7 @@
 
 /* Print Styles */
 @media print {
+
   /* Hide controls and navigation */
   .summary-header,
   .btn-generate,
@@ -629,6 +722,22 @@
     font-size: 5px !important;
   }
 
+  .grand-total-header {
+    min-width: 25px !important;
+    max-width: 25px !important;
+    font-size: 5px !important;
+    padding: 1px 1px;
+  }
+
+  .gr-text {
+    font-size: 5px;
+    margin-bottom: 0px;
+  }
+
+  .tot-text {
+    font-size: 5px;
+  }
+
   /* Body styles */
   .depot-cell {
     font-weight: 700;
@@ -674,34 +783,87 @@
     max-width: 20px !important;
   }
 
-  /* Footer */
-  .report-footer {
-    padding: 4px 6px;
+  /* Note Section */
+  .report-note-section {
+    padding: 4px 6px 2px 6px;
     background: white !important;
-    page-break-before: avoid;
-    border: 2px solid black !important;
+    border-left: 2px solid black !important;
+    border-right: 2px solid black !important;
     border-top: 1px solid black !important;
-    margin: 0 !important;
+    page-break-before: avoid;
+    page-break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
-  .note {
+  .report-note-section .note {
     font-size: 8px;
     margin-bottom: 5px;
     color: black !important;
     font-weight: 700 !important;
   }
 
-  .operator-details {
+  .report-note-section .operator-details {
     gap: 4px;
   }
 
-  .operator-detail {
+  .report-note-section .operator-detail {
     padding: 2px 5px;
     font-size: 7px;
     background: white !important;
     border: 1px solid black !important;
     color: black !important;
     font-weight: 700 !important;
+  }
+
+  /* Summary Tables Section */
+  .summary-tables-section {
+    display: flex;
+    gap: 10px;
+    padding: 4px 8px;
+    background: white !important;
+    border-left: 2px solid black !important;
+    border-right: 2px solid black !important;
+    border-bottom: 2px solid black !important;
+    page-break-before: avoid;
+    page-break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .summary-table-box {
+    flex: 0 0 auto;
+    min-width: 180px;
+  }
+
+  .summary-table-title {
+    font-size: 8px;
+    margin: 0 0 4px 0;
+    font-weight: 700 !important;
+    color: black !important;
+    text-align: center !important;
+  }
+
+  .summary-totals-table {
+    border: 1px solid black !important;
+  }
+
+  .summary-totals-table td {
+    padding: 3px 6px;
+    border: 1px solid black !important;
+    background: white !important;
+    color: black !important;
+    font-weight: 700 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .summary-label {
+    font-size: 7px !important;
+  }
+
+  .summary-value {
+    font-size: 8px !important;
   }
 
   /* Page setup */
