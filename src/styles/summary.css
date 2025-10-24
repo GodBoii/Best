@@ -617,9 +617,9 @@
   .summary-content {
     box-shadow: none;
     border-radius: 0;
-    margin: 0 10px !important;
+    margin: 0 5px !important;
     padding: 0 !important;
-    width: calc(100% - 20px) !important;
+    width: calc(100% - 10px) !important;
   }
 
   /* Report title styling */
@@ -627,33 +627,33 @@
     padding: 4px 6px;
     page-break-after: avoid;
     background: white !important;
-    border: 2px solid black !important;
-    border-bottom: 1px solid black !important;
+    border: 0.5px solid black !important;
+    border-bottom: 0.5px solid black !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     margin: 0 !important;
   }
 
   .report-title h3 {
-    font-size: 15px;
+    font-size: 16px;
     margin: 0 0 2px 0;
     color: black !important;
   }
 
   .combined-date-type {
-    font-size: 11px;
+    font-size: 12px;
     color: black !important;
     margin: 0;
   }
 
   .effective-date,
   .day-type {
-    font-size: 11px;
+    font-size: 12px;
     color: black !important;
   }
 
   .data-note {
-    font-size: 9px;
+    font-size: 10px;
     color: black !important;
   }
 
@@ -670,10 +670,10 @@
 
   /* Table styling */
   .summary-table {
-    font-size: 8px;
+    font-size: 9px;
     width: 100%;
     border-collapse: collapse;
-    border: 2px solid black !important;
+    border: 0.5px solid black !important;
     border-top: none !important;
     margin: 0 !important;
     table-layout: fixed;
@@ -682,7 +682,7 @@
   .summary-table th,
   .summary-table td {
     padding: 1px 1px;
-    border: 1px solid black !important;
+    border: 0.5px solid black !important;
     background: white !important;
     color: black !important;
     -webkit-print-color-adjust: exact;
@@ -691,19 +691,19 @@
 
   /* Header styles */
   .header-row-1 th {
-    font-size: 9px;
+    font-size: 10px;
     padding: 2px 1px;
     font-weight: 700;
   }
 
   .header-row-2 th {
-    font-size: 8px;
+    font-size: 9px;
     padding: 2px 1px;
     font-weight: 700;
   }
 
   .header-row-3 th {
-    font-size: 7px;
+    font-size: 8px;
     padding: 2px 1px;
     font-weight: 700;
   }
@@ -731,29 +731,29 @@
   .total-header {
     min-width: 25px !important;
     max-width: 25px !important;
-    font-size: 7px !important;
+    font-size: 8px !important;
   }
 
   .grand-total-header {
     min-width: 25px !important;
     max-width: 25px !important;
-    font-size: 7px !important;
+    font-size: 8px !important;
     padding: 1px 1px;
   }
 
   .gr-text {
-    font-size: 7px;
+    font-size: 8px;
     margin-bottom: 0px;
   }
 
   .tot-text {
-    font-size: 7px;
+    font-size: 8px;
   }
 
   /* Body styles */
   .depot-cell {
     font-weight: 700;
-    font-size: 8px;
+    font-size: 9px;
     padding: 2px 2px;
     min-width: 45px !important;
     max-width: 45px !important;
@@ -764,7 +764,7 @@
   }
 
   .data-cell {
-    font-size: 7px;
+    font-size: 8px;
     padding: 1px 1px;
     min-width: 20px !important;
     max-width: 20px !important;
@@ -773,7 +773,7 @@
 
   .total-cell {
     font-weight: 700;
-    font-size: 7px;
+    font-size: 8px;
     padding: 1px 1px;
     min-width: 25px !important;
     max-width: 25px !important;
@@ -781,16 +781,16 @@
 
   /* Total row */
   .total-row .depot-cell {
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
-    border: 1px solid black !important;
+    border: 0.5px solid black !important;
   }
 
   .grand-total-cell {
     font-weight: 700;
-    font-size: 8px;
+    font-size: 9px;
     padding: 2px 1px;
-    border: 1px solid black !important;
+    border: 0.5px solid black !important;
     min-width: 20px !important;
     max-width: 20px !important;
   }
@@ -799,9 +799,9 @@
   .report-note-section {
     padding: 4px 6px 2px 6px;
     background: white !important;
-    border-left: 2px solid black !important;
-    border-right: 2px solid black !important;
-    border-top: 1px solid black !important;
+    border-left: 0.5px solid black !important;
+    border-right: 0.5px solid black !important;
+    border-top: 0.5px solid black !important;
     page-break-before: avoid;
     page-break-inside: avoid;
     -webkit-print-color-adjust: exact;
@@ -809,7 +809,7 @@
   }
 
   .report-note-section .note {
-    font-size: 10px;
+    font-size: 11px;
     margin-bottom: 5px;
     color: black !important;
     font-weight: 700 !important;
@@ -821,9 +821,9 @@
 
   .report-note-section .operator-detail {
     padding: 2px 5px;
-    font-size: 9px;
+    font-size: 10px;
     background: white !important;
-    border: 1px solid black !important;
+    border: 0.5px solid black !important;
     color: black !important;
     font-weight: 700 !important;
   }
@@ -834,9 +834,9 @@
     gap: 10px;
     padding: 4px 8px;
     background: white !important;
-    border-left: 2px solid black !important;
-    border-right: 2px solid black !important;
-    border-bottom: 2px solid black !important;
+    border-left: 0.5px solid black !important;
+    border-right: 0.5px solid black !important;
+    border-bottom: 0.5px solid black !important;
     page-break-before: avoid;
     page-break-inside: avoid;
     -webkit-print-color-adjust: exact;
@@ -858,7 +858,7 @@
   }
 
   .summary-table-title {
-    font-size: 10px;
+    font-size: 11px;
     margin: 0 0 4px 0;
     font-weight: 700 !important;
     color: black !important;
@@ -866,12 +866,12 @@
   }
 
   .summary-totals-table {
-    border: 1px solid black !important;
+    border: 0.5px solid black !important;
   }
 
   .summary-totals-table td {
     padding: 3px 6px;
-    border: 1px solid black !important;
+    border: 0.5px solid black !important;
     background: white !important;
     color: black !important;
     font-weight: 700 !important;
@@ -880,17 +880,17 @@
   }
 
   .summary-label {
-    font-size: 9px !important;
+    font-size: 10px !important;
   }
 
   .summary-value {
-    font-size: 10px !important;
+    font-size: 11px !important;
   }
 
   /* Page setup */
   @page {
     size: A4 landscape;
-    margin: 5mm 10mm;
+    margin: 5mm 5mm;
   }
 
   /* Ensure body has minimal margins for print */
@@ -972,7 +972,7 @@
   }
 
   .summary-remark-text {
-    font-size: 10px !important;
+    font-size: 11px !important;
     padding: 3px 6px;
     border: none !important;
     background: transparent !important;
