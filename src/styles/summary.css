@@ -624,36 +624,36 @@
 
   /* Report title styling */
   .report-title {
-    padding: 4px 6px;
+    padding: 2px 6px;
     page-break-after: avoid;
     background: white !important;
-    border: 0.5px solid black !important;
-    border-bottom: 0.5px solid black !important;
+    border: 0.25px solid black !important;
+    border-bottom: none !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     margin: 0 !important;
   }
 
   .report-title h3 {
-    font-size: 16px;
-    margin: 0 0 2px 0;
+    font-size: 14px;
+    margin: 0 0 1px 0;
     color: black !important;
   }
 
   .combined-date-type {
-    font-size: 12px;
+    font-size: 10px;
     color: black !important;
     margin: 0;
   }
 
   .effective-date,
   .day-type {
-    font-size: 12px;
+    font-size: 10px;
     color: black !important;
   }
 
   .data-note {
-    font-size: 10px;
+    font-size: 8px;
     color: black !important;
   }
 
@@ -673,7 +673,7 @@
     font-size: 9px;
     width: 100%;
     border-collapse: collapse;
-    border: 0.5px solid black !important;
+    border: 0.25px solid black !important;
     border-top: none !important;
     margin: 0 !important;
     table-layout: fixed;
@@ -682,7 +682,7 @@
   .summary-table th,
   .summary-table td {
     padding: 1px 1px;
-    border: 0.5px solid black !important;
+    border: 0.25px solid black !important;
     background: white !important;
     color: black !important;
     -webkit-print-color-adjust: exact;
@@ -764,7 +764,7 @@
   }
 
   .data-cell {
-    font-size: 10px;
+    font-size: 9px;
     padding: 1px 1px;
     min-width: 20px !important;
     max-width: 20px !important;
@@ -773,7 +773,7 @@
 
   .total-cell {
     font-weight: 700;
-    font-size: 10px;
+    font-size: 9px;
     padding: 1px 1px;
     min-width: 25px !important;
     max-width: 25px !important;
@@ -783,14 +783,14 @@
   .total-row .depot-cell {
     font-size: 10px;
     font-weight: 700;
-    border: 0.5px solid black !important;
+    border: 0.25px solid black !important;
   }
 
   .grand-total-cell {
     font-weight: 700;
-    font-size: 11px;
+    font-size: 9px;
     padding: 2px 1px;
-    border: 0.5px solid black !important;
+    border: 0.25px solid black !important;
     min-width: 20px !important;
     max-width: 20px !important;
   }
@@ -799,9 +799,9 @@
   .report-note-section {
     padding: 4px 6px 2px 6px;
     background: white !important;
-    border-left: 0.5px solid black !important;
-    border-right: 0.5px solid black !important;
-    border-top: 0.5px solid black !important;
+    border-left: 0.25px solid black !important;
+    border-right: 0.25px solid black !important;
+    border-top: none !important;
     page-break-before: avoid;
     page-break-inside: avoid;
     -webkit-print-color-adjust: exact;
@@ -816,14 +816,14 @@
   }
 
   .report-note-section .operator-details {
-    gap: 4px;
+    gap: 3px;
   }
 
   .report-note-section .operator-detail {
     padding: 2px 5px;
     font-size: 10px;
     background: white !important;
-    border: 0.5px solid black !important;
+    border: 0.25px solid black !important;
     color: black !important;
     font-weight: 700 !important;
   }
@@ -831,12 +831,12 @@
   /* Summary Bottom Container */
   .summary-bottom-container {
     display: flex;
-    gap: 10px;
+    gap: 5px;
     padding: 4px 8px;
     background: white !important;
-    border-left: 0.5px solid black !important;
-    border-right: 0.5px solid black !important;
-    border-bottom: 0.5px solid black !important;
+    border-left: 0.25px solid black !important;
+    border-right: 0.25px solid black !important;
+    border-bottom: 0.25px solid black !important;
     page-break-before: avoid;
     page-break-inside: avoid;
     -webkit-print-color-adjust: exact;
@@ -847,7 +847,7 @@
   /* Summary Tables Section */
   .summary-tables-section {
     display: flex;
-    gap: 10px;
+    gap: 5px;
     flex-wrap: wrap;
     flex: 0 0 auto;
   }
@@ -858,7 +858,7 @@
   }
 
   .summary-table-title {
-    font-size: 11px;
+    font-size: 10px;
     margin: 0 0 4px 0;
     font-weight: 700 !important;
     color: black !important;
@@ -866,12 +866,12 @@
   }
 
   .summary-totals-table {
-    border: 0.5px solid black !important;
+    border: 0.25px solid black !important;
   }
 
   .summary-totals-table td {
     padding: 3px 6px;
-    border: 0.5px solid black !important;
+    border: 0.25px solid black !important;
     background: white !important;
     color: black !important;
     font-weight: 700 !important;
@@ -880,17 +880,27 @@
   }
 
   .summary-label {
-    font-size: 10px !important;
+    font-size: 9px !important;
   }
 
   .summary-value {
-    font-size: 11px !important;
+    font-size: 10px !important;
   }
 
   /* Page setup */
   @page {
     size: A4 landscape;
     margin: 15mm 5mm 5mm 5mm;
+  }
+
+  /* Hide browser default print headers and footers */
+  @page {
+    margin-top: 15mm;
+    margin-bottom: 5mm;
+  }
+
+  @page :first {
+    margin-top: 15mm;
   }
 
   /* Ensure body has minimal margins for print */
