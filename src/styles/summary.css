@@ -664,7 +664,7 @@
     margin: 0 !important;
     page-break-inside: avoid;
     width: 100%;
-    transform: scale(0.95);
+    transform: scale(1);
     transform-origin: top left;
   }
 
@@ -715,9 +715,9 @@
   }
 
   .depot-header {
-    min-width: 45px !important;
-    max-width: 45px !important;
-    width: 45px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+    width: 70px !important;
     font-weight: 700 !important;
   }
 
@@ -755,16 +755,16 @@
     font-weight: 700;
     font-size: 9px;
     padding: 2px 2px;
-    min-width: 45px !important;
-    max-width: 45px !important;
-    width: 45px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+    width: 70px !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
   .data-cell {
-    font-size: 8px;
+    font-size: 10px;
     padding: 1px 1px;
     min-width: 20px !important;
     max-width: 20px !important;
@@ -773,7 +773,7 @@
 
   .total-cell {
     font-weight: 700;
-    font-size: 8px;
+    font-size: 10px;
     padding: 1px 1px;
     min-width: 25px !important;
     max-width: 25px !important;
@@ -788,7 +788,7 @@
 
   .grand-total-cell {
     font-weight: 700;
-    font-size: 9px;
+    font-size: 11px;
     padding: 2px 1px;
     border: 0.5px solid black !important;
     min-width: 20px !important;
@@ -890,7 +890,7 @@
   /* Page setup */
   @page {
     size: A4 landscape;
-    margin: 5mm 5mm;
+    margin: 15mm 5mm 5mm 5mm;
   }
 
   /* Ensure body has minimal margins for print */
