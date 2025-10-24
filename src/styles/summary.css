@@ -768,11 +768,11 @@
     padding: 1px 1px;
     min-width: 20px !important;
     max-width: 20px !important;
-    font-weight: 700 !important;
+    font-weight: 650 !important;
   }
 
   .total-cell {
-    font-weight: 700;
+    font-weight: 900;
     font-size: 9px;
     padding: 1px 1px;
     min-width: 25px !important;
@@ -782,12 +782,13 @@
   /* Total row */
   .total-row .depot-cell {
     font-size: 10px;
-    font-weight: 700;
-    border: 0.25px solid black !important;
+    font-weight: 900;
+    border: 0.45px solid black !important;
+    text-align: right !important;
   }
 
   .grand-total-cell {
-    font-weight: 700;
+    font-weight: 900;
     font-size: 9px;
     padding: 2px 1px;
     border: 0.25px solid black !important;
@@ -854,12 +855,12 @@
 
   .summary-table-box {
     flex: 0 0 auto;
-    min-width: 180px;
+    min-width: 150px;
   }
 
   .summary-table-title {
     font-size: 10px;
-    margin: 0 0 4px 0;
+    margin: 0 0 2px 0;
     font-weight: 700 !important;
     color: black !important;
     text-align: center !important;
@@ -870,11 +871,12 @@
   }
 
   .summary-totals-table td {
-    padding: 3px 6px;
+    padding: 1px 4px;
     border: 0.25px solid black !important;
     background: white !important;
     color: black !important;
     font-weight: 700 !important;
+    line-height: 1.2;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
