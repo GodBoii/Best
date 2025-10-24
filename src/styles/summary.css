@@ -632,6 +632,7 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     margin: 0 !important;
+    font-family: 'Times New Roman', Times, serif !important;
   }
 
   .report-title h3 {
@@ -677,6 +678,7 @@
     border-top: none !important;
     margin: 0 !important;
     table-layout: fixed;
+    font-family: 'Times New Roman', Times, serif !important;
   }
 
   .summary-table th,
@@ -807,6 +809,7 @@
     page-break-inside: avoid;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    font-family: 'Times New Roman', Times, serif !important;
   }
 
   .report-note-section .note {
@@ -843,6 +846,7 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     align-items: flex-start;
+    font-family: 'Times New Roman', Times, serif !important;
   }
 
   /* Summary Tables Section */

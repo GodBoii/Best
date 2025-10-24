@@ -35,7 +35,7 @@ export default function SummaryReport() {
         try {
             const data = await fetchSummaryData(effectiveDate, dayType);
             setReportData(data);
-            
+
             // Fetch remark for this date and day type (temporal logic)
             const remark = await fetchRemarkForSummaryReport(effectiveDate, dayType);
             setRemarkText(remark);
@@ -849,7 +849,7 @@ export default function SummaryReport() {
                                     >
                                         Wet Lease
                                     </th>
-                                    
+
                                     {/* Morning, Noon, Evening - BEST has no total, grand total at end */}
                                     {['MORNING', 'NOON', 'EVENING'].map((period) => (
                                         <React.Fragment key={`header2-${period}`}>
@@ -892,7 +892,7 @@ export default function SummaryReport() {
                                             {code}
                                         </th>
                                     ))}
-                                    
+
                                     {/* Morning, Noon, Evening - no BEST total */}
                                     {['MORNING', 'NOON', 'EVENING'].map((period) => (
                                         <React.Fragment key={`header3-${period}`}>
@@ -919,54 +919,54 @@ export default function SummaryReport() {
                                         {/* Fleet Category data - has BEST total, no grand total */}
                                         {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
                                             <td key={`${depot.name}-fleet-best-${bt.code}`} className="data-cell">
-                                                {depot.fleetCategory.best[bt.code] || 0}
+                                                {depot.fleetCategory.best[bt.code] || ''}
                                             </td>
                                         ))}
-                                        <td className="total-cell">{depot.fleetCategory.best.total}</td>
+                                        <td className="total-cell">{depot.fleetCategory.best.total || ''}</td>
                                         {reportData.wetLeaseOperators.map(code => (
                                             <td key={`${depot.name}-fleet-wl-${code}`} className="data-cell">
-                                                {depot.fleetCategory.wetLease[code] || 0}
+                                                {depot.fleetCategory.wetLease[code] || ''}
                                             </td>
                                         ))}
 
                                         {/* Morning data - no BEST total, has grand total */}
                                         {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
                                             <td key={`${depot.name}-morning-best-${bt.code}`} className="data-cell">
-                                                {depot.morning.best[bt.code] || 0}
+                                                {depot.morning.best[bt.code] || ''}
                                             </td>
                                         ))}
                                         {reportData.wetLeaseOperators.map(code => (
                                             <td key={`${depot.name}-morning-wl-${code}`} className="data-cell">
-                                                {depot.morning.wetLease[code] || 0}
+                                                {depot.morning.wetLease[code] || ''}
                                             </td>
                                         ))}
-                                        <td className="grand-total-cell">{depot.morning.best.total + depot.morning.wetLease.total}</td>
+                                        <td className="grand-total-cell">{(depot.morning.best.total + depot.morning.wetLease.total) || ''}</td>
 
                                         {/* Noon data - no BEST total, has grand total */}
                                         {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
                                             <td key={`${depot.name}-noon-best-${bt.code}`} className="data-cell">
-                                                {depot.noon.best[bt.code] || 0}
+                                                {depot.noon.best[bt.code] || ''}
                                             </td>
                                         ))}
                                         {reportData.wetLeaseOperators.map(code => (
                                             <td key={`${depot.name}-noon-wl-${code}`} className="data-cell">
-                                                {depot.noon.wetLease[code] || 0}
+                                                {depot.noon.wetLease[code] || ''}
                                             </td>
                                         ))}
-                                        <td className="grand-total-cell">{depot.noon.best.total + depot.noon.wetLease.total}</td>
+                                        <td className="grand-total-cell">{(depot.noon.best.total + depot.noon.wetLease.total) || ''}</td>
 
                                         {/* Evening data - no BEST total, has grand total */}
                                         {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
                                             <td key={`${depot.name}-evening-best-${bt.code}`} className="data-cell">
-                                                {depot.evening.best[bt.code] || 0}
+                                                {depot.evening.best[bt.code] || ''}
                                             </td>
                                         ))}
                                         {reportData.wetLeaseOperators.map(code => (
                                             <td key={`${depot.name}-evening-wl-${code}`} className="data-cell">
-                                                {depot.evening.wetLease[code] || 0}
+                                                {depot.evening.wetLease[code] || ''}
                                             </td>
                                         ))}
-                                        <td className="grand-total-cell">{depot.evening.best.total + depot.evening.wetLease.total}</td>
+                                        <td className="grand-total-cell">{(depot.evening.best.total + depot.evening.wetLease.total) || ''}</td>
                                     </tr>
                                 ))}
 
@@ -977,54 +977,54 @@ export default function SummaryReport() {
                                     {/* Fleet Category totals - has BEST total, no grand total */}
                                     {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
                                         <td key={`total-fleet-best-${bt.code}`} className="grand-total-cell">
-                                            {reportData.totals.fleetCategory.best[bt.code] || 0}
+                                            {reportData.totals.fleetCategory.best[bt.code] || ''}
                                         </td>
                                     ))}
-                                    <td className="grand-total-cell">{reportData.totals.fleetCategory.best.total}</td>
+                                    <td className="grand-total-cell">{reportData.totals.fleetCategory.best.total || ''}</td>
                                     {reportData.wetLeaseOperators.map(code => (
                                         <td key={`total-fleet-wl-${code}`} className="grand-total-cell">
-                                            {reportData.totals.fleetCategory.wetLease[code] || 0}
+                                            {reportData.totals.fleetCategory.wetLease[code] || ''}
                                         </td>
                                     ))}
 
                                     {/* Morning totals - no BEST total, has grand total */}
                                     {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
                                         <td key={`total-morning-best-${bt.code}`} className="grand-total-cell">
-                                            {reportData.totals.morning.best[bt.code] || 0}
+                                            {reportData.totals.morning.best[bt.code] || ''}
                                         </td>
                                     ))}
                                     {reportData.wetLeaseOperators.map(code => (
                                         <td key={`total-morning-wl-${code}`} className="grand-total-cell">
-                                            {reportData.totals.morning.wetLease[code] || 0}
+                                            {reportData.totals.morning.wetLease[code] || ''}
                                         </td>
                                     ))}
-                                    <td className="grand-total-cell">{reportData.totals.morning.best.total + reportData.totals.morning.wetLease.total}</td>
+                                    <td className="grand-total-cell">{(reportData.totals.morning.best.total + reportData.totals.morning.wetLease.total) || ''}</td>
 
                                     {/* Noon totals - no BEST total, has grand total */}
                                     {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
                                         <td key={`total-noon-best-${bt.code}`} className="grand-total-cell">
-                                            {reportData.totals.noon.best[bt.code] || 0}
+                                            {reportData.totals.noon.best[bt.code] || ''}
                                         </td>
                                     ))}
                                     {reportData.wetLeaseOperators.map(code => (
                                         <td key={`total-noon-wl-${code}`} className="grand-total-cell">
-                                            {reportData.totals.noon.wetLease[code] || 0}
+                                            {reportData.totals.noon.wetLease[code] || ''}
                                         </td>
                                     ))}
-                                    <td className="grand-total-cell">{reportData.totals.noon.best.total + reportData.totals.noon.wetLease.total}</td>
+                                    <td className="grand-total-cell">{(reportData.totals.noon.best.total + reportData.totals.noon.wetLease.total) || ''}</td>
 
                                     {/* Evening totals - no BEST total, has grand total */}
                                     {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
                                         <td key={`total-evening-best-${bt.code}`} className="grand-total-cell">
-                                            {reportData.totals.evening.best[bt.code] || 0}
+                                            {reportData.totals.evening.best[bt.code] || ''}
                                         </td>
                                     ))}
                                     {reportData.wetLeaseOperators.map(code => (
                                         <td key={`total-evening-wl-${code}`} className="grand-total-cell">
-                                            {reportData.totals.evening.wetLease[code] || 0}
+                                            {reportData.totals.evening.wetLease[code] || ''}
                                         </td>
                                     ))}
-                                    <td className="grand-total-cell">{reportData.totals.evening.best.total + reportData.totals.evening.wetLease.total}</td>
+                                    <td className="grand-total-cell">{(reportData.totals.evening.best.total + reportData.totals.evening.wetLease.total) || ''}</td>
                                 </tr>
                             </tbody>
                         </table>
