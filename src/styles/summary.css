@@ -617,9 +617,9 @@
   .summary-content {
     box-shadow: none;
     border-radius: 0;
-    margin: 0 !important;
+    margin: 0 10px !important;
     padding: 0 !important;
-    width: 100%;
+    width: calc(100% - 20px) !important;
   }
 
   /* Report title styling */
@@ -635,25 +635,25 @@
   }
 
   .report-title h3 {
-    font-size: 13px;
+    font-size: 15px;
     margin: 0 0 2px 0;
     color: black !important;
   }
 
   .combined-date-type {
-    font-size: 9px;
+    font-size: 11px;
     color: black !important;
     margin: 0;
   }
 
   .effective-date,
   .day-type {
-    font-size: 9px;
+    font-size: 11px;
     color: black !important;
   }
 
   .data-note {
-    font-size: 7px;
+    font-size: 9px;
     color: black !important;
   }
 
@@ -664,16 +664,19 @@
     margin: 0 !important;
     page-break-inside: avoid;
     width: 100%;
+    transform: scale(0.95);
+    transform-origin: top left;
   }
 
   /* Table styling */
   .summary-table {
-    font-size: 6px;
+    font-size: 8px;
     width: 100%;
     border-collapse: collapse;
     border: 2px solid black !important;
     border-top: none !important;
     margin: 0 !important;
+    table-layout: fixed;
   }
 
   .summary-table th,
@@ -688,19 +691,19 @@
 
   /* Header styles */
   .header-row-1 th {
-    font-size: 7px;
+    font-size: 9px;
     padding: 2px 1px;
     font-weight: 700;
   }
 
   .header-row-2 th {
-    font-size: 6px;
+    font-size: 8px;
     padding: 2px 1px;
     font-weight: 700;
   }
 
   .header-row-3 th {
-    font-size: 5px;
+    font-size: 7px;
     padding: 2px 1px;
     font-weight: 700;
   }
@@ -728,29 +731,29 @@
   .total-header {
     min-width: 25px !important;
     max-width: 25px !important;
-    font-size: 5px !important;
+    font-size: 7px !important;
   }
 
   .grand-total-header {
     min-width: 25px !important;
     max-width: 25px !important;
-    font-size: 5px !important;
+    font-size: 7px !important;
     padding: 1px 1px;
   }
 
   .gr-text {
-    font-size: 5px;
+    font-size: 7px;
     margin-bottom: 0px;
   }
 
   .tot-text {
-    font-size: 5px;
+    font-size: 7px;
   }
 
   /* Body styles */
   .depot-cell {
     font-weight: 700;
-    font-size: 6px;
+    font-size: 8px;
     padding: 2px 2px;
     min-width: 45px !important;
     max-width: 45px !important;
@@ -761,7 +764,7 @@
   }
 
   .data-cell {
-    font-size: 5px;
+    font-size: 7px;
     padding: 1px 1px;
     min-width: 20px !important;
     max-width: 20px !important;
@@ -770,7 +773,7 @@
 
   .total-cell {
     font-weight: 700;
-    font-size: 5px;
+    font-size: 7px;
     padding: 1px 1px;
     min-width: 25px !important;
     max-width: 25px !important;
@@ -778,14 +781,14 @@
 
   /* Total row */
   .total-row .depot-cell {
-    font-size: 7px;
+    font-size: 9px;
     font-weight: 700;
     border: 1px solid black !important;
   }
 
   .grand-total-cell {
     font-weight: 700;
-    font-size: 6px;
+    font-size: 8px;
     padding: 2px 1px;
     border: 1px solid black !important;
     min-width: 20px !important;
@@ -806,7 +809,7 @@
   }
 
   .report-note-section .note {
-    font-size: 8px;
+    font-size: 10px;
     margin-bottom: 5px;
     color: black !important;
     font-weight: 700 !important;
@@ -818,7 +821,7 @@
 
   .report-note-section .operator-detail {
     padding: 2px 5px;
-    font-size: 7px;
+    font-size: 9px;
     background: white !important;
     border: 1px solid black !important;
     color: black !important;
@@ -855,7 +858,7 @@
   }
 
   .summary-table-title {
-    font-size: 8px;
+    font-size: 10px;
     margin: 0 0 4px 0;
     font-weight: 700 !important;
     color: black !important;
@@ -877,21 +880,26 @@
   }
 
   .summary-label {
-    font-size: 7px !important;
+    font-size: 9px !important;
   }
 
   .summary-value {
-    font-size: 8px !important;
+    font-size: 10px !important;
   }
 
   /* Page setup */
   @page {
     size: A4 landscape;
-    margin: 0;
+    margin: 5mm 10mm;
   }
 
-  /* Ensure body has no margins */
+  /* Ensure body has minimal margins for print */
   body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  html {
     margin: 0 !important;
     padding: 0 !important;
   }
@@ -930,6 +938,7 @@
 .table-wrapper::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
 /* Summary Remark Box - Beside the tables */
 .summary-remark-box {
   flex: 0 1 auto;
@@ -963,7 +972,7 @@
   }
 
   .summary-remark-text {
-    font-size: 8px !important;
+    font-size: 10px !important;
     padding: 3px 6px;
     border: none !important;
     background: transparent !important;
