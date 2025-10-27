@@ -26,6 +26,7 @@ export default function DepotScheduleModifications() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingEntry, setDeletingEntry] = useState(null);
+  const [showScrollHint, setShowScrollHint] = useState(false);
 
   // Form state for editing
   const [editForm, setEditForm] = useState({
@@ -40,6 +41,21 @@ export default function DepotScheduleModifications() {
     duties_driver_sun: '',
     duties_cond_sun: ''
   });
+
+  // Check if table needs scrolling and show hint
+  useEffect(() => {
+    if (entries.length > 0) {
+      const timer = setTimeout(() => {
+        const wrapper = document.querySelector('.entries-table-wrapper');
+        if (wrapper && wrapper.scrollWidth > wrapper.clientWidth) {
+          setShowScrollHint(true);
+          // Hide hint after 3 seconds
+          setTimeout(() => setShowScrollHint(false), 3000);
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [entries]);
 
   const loadEntries = async () => {
     if (!selectedDepot || !scheduleDate || !selectedOperator || !selectedBusType) {
@@ -413,29 +429,35 @@ export default function DepotScheduleModifications() {
         {/* Entries Table */}
         {entries.length > 0 && (
           <div className="entries-table-container">
-            <h3>Schedule Entries ({entries.length})</h3>
-            <div className="entries-table-wrapper">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', flexWrap: 'wrap', gap: '10px' }}>
+              <h3 style={{ margin: 0 }}>Schedule Entries ({entries.length})</h3>
+              <div className="table-info-hint">
+                <span>💡</span>
+                <span>Route & Actions columns stay visible while scrolling</span>
+              </div>
+            </div>
+            <div className={`entries-table-wrapper ${showScrollHint ? 'show-scroll-hint' : ''}`}>
               <table className="entries-table">
                 <thead>
                   <tr>
                     <th rowSpan="2">Route</th>
                     <th rowSpan="2">Code</th>
                     <th rowSpan="2">Date</th>
-                    <th colSpan="5">Mon-Sat Schedule</th>
-                    <th colSpan="5">Sunday Schedule</th>
+                    <th colSpan="5">Mon-Sat</th>
+                    <th colSpan="5">Sunday</th>
                     <th rowSpan="2">Actions</th>
                   </tr>
                   <tr>
                     <th>AM</th>
-                    <th>NOON</th>
+                    <th>Noon</th>
                     <th>PM</th>
-                    <th>Drivers</th>
-                    <th>Cond.</th>
+                    <th>Drv</th>
+                    <th>Cnd</th>
                     <th>AM</th>
-                    <th>NOON</th>
+                    <th>Noon</th>
                     <th>PM</th>
-                    <th>Drivers</th>
-                    <th>Cond.</th>
+                    <th>Drv</th>
+                    <th>Cnd</th>
                   </tr>
                 </thead>
                 <tbody>
