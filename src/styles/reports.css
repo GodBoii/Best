@@ -66,6 +66,7 @@
 
 .report-preview-content {
   overflow-x: auto;
+  padding-top: 5mm;
 }
 
 .report-header-info {
