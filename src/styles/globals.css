@@ -159,3 +159,88 @@ html {
     opacity: 1;
   }
 }
+
+/* Reports Page Tabs */
+.reports-container {
+  width: 100%;
+}
+
+.reports-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: var(--spacing-lg);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.tab-button {
+  flex: 1;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.tab-button:hover {
+  color: var(--primary);
+  background: var(--bg-secondary);
+}
+
+.tab-button.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  background: var(--bg-secondary);
+}
+
+.reports-content {
+  width: 100%;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hide tabs when printing */
+@media print {
+  .reports-tabs {
+    display: none !important;
+  }
+  
+  .reports-container {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Page break for printing */
+@media print {
+  .page-break {
+    page-break-before: always;
+    break-before: page;
+    display: block;
+    height: 0;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+@media screen {
+  .page-break {
+    margin: 40px 0;
+    border-top: 2px dashed #ccc;
+    padding-top: 40px;
+  }
+}

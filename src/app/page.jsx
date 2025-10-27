@@ -87,11 +87,8 @@ export default function Home() {
         <Link href="/modifications">
           <button>Schedule Modifications</button>
         </Link>
-        <Link href="/report">
-          <button>Depot Report</button>
-        </Link>
-        <Link href="/summary">
-          <button>Summary Report</button>
+        <Link href="/reports">
+          <button>Reports</button>
         </Link>
         <Link href="/fleet">
           <button>FLEET Schedule</button>

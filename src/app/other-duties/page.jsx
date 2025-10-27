@@ -22,17 +22,20 @@ export default function OtherDutiesPage() {
         <Link href="/">
           <button>Schedule Entry</button>
         </Link>
-        <Link href="/report">
-          <button>Depot Report</button>
+        <Link href="/modifications">
+          <button>Schedule Modifications</button>
         </Link>
-        <Link href="/summary">
-          <button>Summary Report</button>
+        <Link href="/reports">
+          <button>Reports</button>
         </Link>
         <Link href="/fleet">
           <button>FLEET Schedule</button>
         </Link>
         <Link href="/other-duties">
           <button className="active">Other Duties</button>
+        </Link>
+        <Link href="/settings">
+          <button>⚙️ Settings</button>
         </Link>
       </nav>
 

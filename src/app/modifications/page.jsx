@@ -24,14 +24,14 @@ export default function ModificationsPage() {
                 <Link href="/modifications">
                     <button className="active">Schedule Modifications</button>
                 </Link>
-                <Link href="/report">
-                    <button>Depot Report</button>
-                </Link>
-                <Link href="/summary">
-                    <button>Summary Report</button>
+                <Link href="/reports">
+                    <button>Reports</button>
                 </Link>
                 <Link href="/fleet">
                     <button>FLEET Schedule</button>
+                </Link>
+                <Link href="/other-duties">
+                    <button>Other Duties</button>
                 </Link>
                 <Link href="/settings">
                     <button>⚙️ Settings</button>

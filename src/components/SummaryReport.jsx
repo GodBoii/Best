@@ -2,20 +2,23 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import storageManager from '../lib/storage/storageManager';
-import { fetchRemarkForSummaryReport, formatRemarkForDisplay } from '../lib/summaryRemarkHelper';
+import { fetchRemarkForSummaryReport } from '../lib/summaryRemarkHelper';
+import SummaryReportDisplay from './SummaryReportDisplay';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import '../styles/summary.css';
 
 export default function SummaryReport() {
     const [effectiveDate, setEffectiveDate] = useState('');
-    const [dayType, setDayType] = useState('MON_SAT');
-    const [reportData, setReportData] = useState(null);
+    const [reportDataMonSat, setReportDataMonSat] = useState(null);
+    const [reportDataSunday, setReportDataSunday] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-    const [remarkText, setRemarkText] = useState(null);
-    const reportRef = useRef(null);
+    const [remarkTextMonSat, setRemarkTextMonSat] = useState(null);
+    const [remarkTextSunday, setRemarkTextSunday] = useState(null);
+    const reportRefMonSat = useRef(null);
+    const reportRefSunday = useRef(null);
 
     // Set default date to today
     useEffect(() => {
@@ -33,12 +36,19 @@ export default function SummaryReport() {
         setError(null);
 
         try {
-            const data = await fetchSummaryData(effectiveDate, dayType);
-            setReportData(data);
+            // Generate both Mon-Sat and Sunday reports
+            const dataMonSat = await fetchSummaryData(effectiveDate, 'MON_SAT');
+            const dataSunday = await fetchSummaryData(effectiveDate, 'SUNDAY');
 
-            // Fetch remark for this date and day type (temporal logic)
-            const remark = await fetchRemarkForSummaryReport(effectiveDate, dayType);
-            setRemarkText(remark);
+            setReportDataMonSat(dataMonSat);
+            setReportDataSunday(dataSunday);
+
+            // Fetch remarks for both day types
+            const remarkMonSat = await fetchRemarkForSummaryReport(effectiveDate, 'MON_SAT');
+            const remarkSunday = await fetchRemarkForSummaryReport(effectiveDate, 'SUNDAY');
+
+            setRemarkTextMonSat(remarkMonSat);
+            setRemarkTextSunday(remarkSunday);
         } catch (err) {
             console.error('Error generating report:', err);
             setError(err.message);
@@ -555,71 +565,84 @@ export default function SummaryReport() {
     };
 
     const exportToCSV = () => {
-        if (!reportData) {
+        if (!reportDataMonSat || !reportDataSunday) {
             alert('Please generate a report first');
             return;
         }
 
-        // Create CSV content
+        // Create CSV content for both reports
         let csv = `SUMMARY OF SERVICE ALLOCATION OF ALL DEPOTS\n`;
-        csv += `W. E. F. :- ${reportData.effectiveDate}\n`;
-        csv += `${reportData.dayType === 'MON_SAT' ? 'MONDAY TO SATURDAY' : 'ONLY SUNDAY'}\n\n`;
+        csv += `W. E. F. :- ${reportDataMonSat.effectiveDate}\n\n`;
 
-        // Headers
-        csv += 'Depot,';
-        ['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].forEach(period => {
-            csv += `${period} - BEST,`.repeat(reportData.bestBusTypes.length);
-            csv += 'BEST TOTAL,';
-            csv += `${period} - Wet Lease,`.repeat(reportData.wetLeaseOperators.length);
-            csv += 'Wet Lease TOTAL,';
-        });
-        csv += '\n';
+        // Monday to Saturday section
+        csv += `MONDAY TO SATURDAY\n\n`;
 
-        // Sub-headers
-        csv += ',';
-        ['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].forEach(() => {
-            reportData.bestBusTypes.forEach(bt => csv += `${bt.code},`);
-            csv += 'TOTAL,';
-            reportData.wetLeaseOperators.forEach(code => csv += `${code},`);
-            csv += 'TOTAL,';
-        });
-        csv += '\n';
-
-        // Data rows
-        reportData.depots.forEach(depot => {
-            csv += `${depot.name},`;
-            ['fleetCategory', 'morning', 'noon', 'evening'].forEach(period => {
-                reportData.bestBusTypes.forEach(bt => {
-                    csv += `${depot[period].best[bt.code] || 0},`;
-                });
-                csv += `${depot[period].best.total},`;
-                reportData.wetLeaseOperators.forEach(code => {
-                    csv += `${depot[period].wetLease[code] || 0},`;
-                });
-                csv += `${depot[period].wetLease.total},`;
+        // Helper function to add report data to CSV
+        const addReportToCSV = (reportData) => {
+            // Headers
+            csv += 'Depot,';
+            ['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].forEach(period => {
+                csv += `${period} - BEST,`.repeat(reportData.bestBusTypes.length);
+                csv += 'BEST TOTAL,';
+                csv += `${period} - Wet Lease,`.repeat(reportData.wetLeaseOperators.length);
+                csv += 'Wet Lease TOTAL,';
             });
             csv += '\n';
-        });
 
-        // Total row
-        csv += 'Total :-,';
-        ['fleetCategory', 'morning', 'noon', 'evening'].forEach(period => {
-            reportData.bestBusTypes.forEach(bt => {
-                csv += `${reportData.totals[period].best[bt.code] || 0},`;
+            // Sub-headers
+            csv += ',';
+            ['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].forEach(() => {
+                reportData.bestBusTypes.forEach(bt => csv += `${bt.code},`);
+                csv += 'TOTAL,';
+                reportData.wetLeaseOperators.forEach(code => csv += `${code},`);
+                csv += 'TOTAL,';
             });
-            csv += `${reportData.totals[period].best.total},`;
-            reportData.wetLeaseOperators.forEach(code => {
-                csv += `${reportData.totals[period].wetLease[code] || 0},`;
+            csv += '\n';
+
+            // Data rows
+            reportData.depots.forEach(depot => {
+                csv += `${depot.name},`;
+                ['fleetCategory', 'morning', 'noon', 'evening'].forEach(period => {
+                    reportData.bestBusTypes.forEach(bt => {
+                        csv += `${depot[period].best[bt.code] || 0},`;
+                    });
+                    csv += `${depot[period].best.total},`;
+                    reportData.wetLeaseOperators.forEach(code => {
+                        csv += `${depot[period].wetLease[code] || 0},`;
+                    });
+                    csv += `${depot[period].wetLease.total},`;
+                });
+                csv += '\n';
             });
-            csv += `${reportData.totals[period].wetLease.total},`;
-        });
+
+            // Total row
+            csv += 'Total :-,';
+            ['fleetCategory', 'morning', 'noon', 'evening'].forEach(period => {
+                reportData.bestBusTypes.forEach(bt => {
+                    csv += `${reportData.totals[period].best[bt.code] || 0},`;
+                });
+                csv += `${reportData.totals[period].best.total},`;
+                reportData.wetLeaseOperators.forEach(code => {
+                    csv += `${reportData.totals[period].wetLease[code] || 0},`;
+                });
+                csv += `${reportData.totals[period].wetLease.total},`;
+            });
+            csv += '\n\n';
+        };
+
+        // Add Mon-Sat data
+        addReportToCSV(reportDataMonSat);
+
+        // Add Sunday section
+        csv += `ONLY SUNDAY\n\n`;
+        addReportToCSV(reportDataSunday);
 
         // Download
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `summary-report-${reportData.effectiveDate}-${reportData.dayType}.csv`;
+        link.download = `summary-report-${reportDataMonSat.effectiveDate}.csv`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -627,7 +650,7 @@ export default function SummaryReport() {
     };
 
     const exportToPDF = async () => {
-        if (!reportData || !reportRef.current) {
+        if (!reportDataMonSat || !reportDataSunday || !reportRefMonSat.current || !reportRefSunday.current) {
             alert('Please generate a report first');
             return;
         }
@@ -635,32 +658,6 @@ export default function SummaryReport() {
         setIsGeneratingPDF(true);
 
         try {
-            // Get the report content element
-            const reportContent = reportRef.current;
-
-            // Temporarily adjust styles for PDF capture
-            const originalOverflow = reportContent.style.overflow;
-            reportContent.style.overflow = 'visible';
-
-            // Capture the content as canvas
-            const canvas = await html2canvas(reportContent, {
-                scale: 2, // Higher quality
-                useCORS: true,
-                logging: false,
-                backgroundColor: '#ffffff'
-            });
-
-            // Restore original styles
-            reportContent.style.overflow = originalOverflow;
-
-            // A4 dimensions in landscape (mm)
-            const pdfWidth = 297; // A4 landscape width
-            const pdfHeight = 210; // A4 landscape height
-
-            // Calculate dimensions to fit content
-            const imgWidth = pdfWidth - 20; // 10mm margin on each side
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
             // Create PDF in landscape orientation
             const pdf = new jsPDF({
                 orientation: 'landscape',
@@ -668,26 +665,34 @@ export default function SummaryReport() {
                 format: 'a4'
             });
 
-            // If content is taller than one page, split into multiple pages
-            let heightLeft = imgHeight;
-            let position = 10; // Top margin
+            // A4 dimensions in landscape (mm)
+            const pdfWidth = 297;
+            const pdfHeight = 210;
+            const imgWidth = pdfWidth - 20;
 
-            // Add first page
-            pdf.addImage(
-                canvas.toDataURL('image/png'),
-                'PNG',
-                10, // Left margin
-                position,
-                imgWidth,
-                imgHeight
-            );
+            // Helper function to capture and add page
+            const addPageToPDF = async (reportContent, isFirstPage) => {
+                const originalOverflow = reportContent.style.overflow;
+                reportContent.style.overflow = 'visible';
 
-            heightLeft -= (pdfHeight - 20); // Subtract page height minus margins
+                const canvas = await html2canvas(reportContent, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                });
 
-            // Add additional pages if needed
-            while (heightLeft > 0) {
-                position = heightLeft - imgHeight + 10;
-                pdf.addPage();
+                reportContent.style.overflow = originalOverflow;
+
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                if (!isFirstPage) {
+                    pdf.addPage();
+                }
+
+                let heightLeft = imgHeight;
+                let position = 10;
+
                 pdf.addImage(
                     canvas.toDataURL('image/png'),
                     'PNG',
@@ -696,11 +701,32 @@ export default function SummaryReport() {
                     imgWidth,
                     imgHeight
                 );
+
                 heightLeft -= (pdfHeight - 20);
-            }
+
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight + 10;
+                    pdf.addPage();
+                    pdf.addImage(
+                        canvas.toDataURL('image/png'),
+                        'PNG',
+                        10,
+                        position,
+                        imgWidth,
+                        imgHeight
+                    );
+                    heightLeft -= (pdfHeight - 20);
+                }
+            };
+
+            // Add Mon-Sat report (Page 1)
+            await addPageToPDF(reportRefMonSat.current, true);
+
+            // Add Sunday report (Page 2)
+            await addPageToPDF(reportRefSunday.current, false);
 
             // Save the PDF
-            const fileName = `summary-report-${reportData.effectiveDate}-${reportData.dayType}.pdf`;
+            const fileName = `summary-report-${reportDataMonSat.effectiveDate}.pdf`;
             pdf.save(fileName);
 
         } catch (error) {
@@ -712,7 +738,7 @@ export default function SummaryReport() {
     };
 
     const handlePrintPreview = () => {
-        if (!reportData) {
+        if (!reportDataMonSat || !reportDataSunday) {
             alert('Please generate a report first');
             return;
         }
@@ -746,18 +772,6 @@ export default function SummaryReport() {
                         />
                     </div>
 
-                    <div className="control-group">
-                        <label>Day Type:</label>
-                        <select
-                            value={dayType}
-                            onChange={(e) => setDayType(e.target.value)}
-                            className="day-type-select"
-                        >
-                            <option value="MON_SAT">Monday to Saturday</option>
-                            <option value="SUNDAY">Sunday Only</option>
-                        </select>
-                    </div>
-
                     <button
                         onClick={generateReport}
                         disabled={isLoading}
@@ -766,7 +780,7 @@ export default function SummaryReport() {
                         {isLoading ? 'Generating...' : 'Generate Report'}
                     </button>
 
-                    {reportData && (
+                    {reportDataMonSat && reportDataSunday && (
                         <>
                             <button
                                 onClick={exportToPDF}
@@ -800,326 +814,22 @@ export default function SummaryReport() {
                 </div>
             )}
 
-            {reportData && (
-                <div className="summary-content" ref={reportRef}>
-                    <div className="report-title">
-                        <h3>SUMMARY OF SERVICE ALLOCATION OF ALL DEPOTS</h3>
-                        <p className="combined-date-type">
-                            {reportData.dayType === 'MON_SAT' ? 'MONDAY TO SATURDAY' : 'ONLY SUNDAY'}  W. E. F.:- {reportData.effectiveDate}
-                        </p>
-                    </div>
+            {reportDataMonSat && reportDataSunday && (
+                <>
+                    <SummaryReportDisplay
+                        reportData={reportDataMonSat}
+                        remarkText={remarkTextMonSat}
+                        reportRef={reportRefMonSat}
+                    />
 
-                    <div className="table-wrapper">
-                        <table className="summary-table">
-                            <thead>
-                                {/* Main header row */}
-                                <tr className="header-row-1">
-                                    <th rowSpan="3" className="depot-header">Depot</th>
-                                    {/* Fleet Category - has BEST total, no grand total */}
-                                    <th
-                                        colSpan={reportData.bestBusTypes.length + reportData.wetLeaseOperators.length + 1}
-                                        className="period-header"
-                                    >
-                                        FLEET CATEGORY
-                                    </th>
-                                    {/* Morning, Noon, Evening - no BEST total, has grand total */}
-                                    {['MORNING', 'NOON', 'EVENING'].map((period) => (
-                                        <th
-                                            key={period}
-                                            colSpan={reportData.bestBusTypes.length + reportData.wetLeaseOperators.length + 1}
-                                            className="period-header"
-                                        >
-                                            {period}
-                                        </th>
-                                    ))}
-                                </tr>
+                    <div className="page-break"></div>
 
-                                {/* Sub-header row (BEST / Wet Lease) */}
-                                <tr className="header-row-2">
-                                    {/* Fleet Category - BEST has total column */}
-                                    <th
-                                        colSpan={reportData.bestBusTypes.length + 1}
-                                        className="best-header"
-                                    >
-                                        BEST
-                                    </th>
-                                    <th
-                                        colSpan={reportData.wetLeaseOperators.length}
-                                        className="wetlease-header"
-                                    >
-                                        Wet Lease
-                                    </th>
-
-                                    {/* Morning, Noon, Evening - BEST has no total, grand total at end */}
-                                    {['MORNING', 'NOON', 'EVENING'].map((period) => (
-                                        <React.Fragment key={`header2-${period}`}>
-                                            <th
-                                                colSpan={reportData.bestBusTypes.length}
-                                                className="best-header"
-                                            >
-                                                BEST
-                                            </th>
-                                            <th
-                                                colSpan={reportData.wetLeaseOperators.length}
-                                                className="wetlease-header"
-                                            >
-                                                Wet Lease
-                                            </th>
-                                            <th
-                                                rowSpan="2"
-                                                className="grand-total-header"
-                                            >
-                                                <div className="grand-total-text">
-                                                    <div className="gr-text">GR</div>
-                                                    <div className="tot-text">TOT</div>
-                                                </div>
-                                            </th>
-                                        </React.Fragment>
-                                    ))}
-                                </tr>
-
-                                {/* Bus type / Operator row */}
-                                <tr className="header-row-3">
-                                    {/* Fleet Category - has BEST total */}
-                                    {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
-                                        <th key={`fleet-best-${bt.code}`} className="bustype-header">
-                                            {bt.code}
-                                        </th>
-                                    ))}
-                                    <th key="fleet-best-total" className="total-header">TOT</th>
-                                    {reportData.wetLeaseOperators.map(code => (
-                                        <th key={`fleet-wl-${code}`} className="operator-header">
-                                            {code}
-                                        </th>
-                                    ))}
-
-                                    {/* Morning, Noon, Evening - no BEST total */}
-                                    {['MORNING', 'NOON', 'EVENING'].map((period) => (
-                                        <React.Fragment key={`header3-${period}`}>
-                                            {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
-                                                <th key={`${period}-best-${bt.code}`} className="bustype-header">
-                                                    {bt.code}
-                                                </th>
-                                            ))}
-                                            {reportData.wetLeaseOperators.map(code => (
-                                                <th key={`${period}-wl-${code}`} className="operator-header">
-                                                    {code}
-                                                </th>
-                                            ))}
-                                        </React.Fragment>
-                                    ))}
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {reportData.depots.map((depot, idx) => (
-                                    <tr key={depot.name} className="data-row">
-                                        <td className="depot-cell">{depot.name}</td>
-
-                                        {/* Fleet Category data - has BEST total, no grand total */}
-                                        {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
-                                            <td key={`${depot.name}-fleet-best-${bt.code}`} className="data-cell">
-                                                {depot.fleetCategory.best[bt.code] || ''}
-                                            </td>
-                                        ))}
-                                        <td className="total-cell">{depot.fleetCategory.best.total || ''}</td>
-                                        {reportData.wetLeaseOperators.map(code => (
-                                            <td key={`${depot.name}-fleet-wl-${code}`} className="data-cell">
-                                                {depot.fleetCategory.wetLease[code] || ''}
-                                            </td>
-                                        ))}
-
-                                        {/* Morning data - no BEST total, has grand total */}
-                                        {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
-                                            <td key={`${depot.name}-morning-best-${bt.code}`} className="data-cell">
-                                                {depot.morning.best[bt.code] || ''}
-                                            </td>
-                                        ))}
-                                        {reportData.wetLeaseOperators.map(code => (
-                                            <td key={`${depot.name}-morning-wl-${code}`} className="data-cell">
-                                                {depot.morning.wetLease[code] || ''}
-                                            </td>
-                                        ))}
-                                        <td className="grand-total-cell">{(depot.morning.best.total + depot.morning.wetLease.total) || ''}</td>
-
-                                        {/* Noon data - no BEST total, has grand total */}
-                                        {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
-                                            <td key={`${depot.name}-noon-best-${bt.code}`} className="data-cell">
-                                                {depot.noon.best[bt.code] || ''}
-                                            </td>
-                                        ))}
-                                        {reportData.wetLeaseOperators.map(code => (
-                                            <td key={`${depot.name}-noon-wl-${code}`} className="data-cell">
-                                                {depot.noon.wetLease[code] || ''}
-                                            </td>
-                                        ))}
-                                        <td className="grand-total-cell">{(depot.noon.best.total + depot.noon.wetLease.total) || ''}</td>
-
-                                        {/* Evening data - no BEST total, has grand total */}
-                                        {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
-                                            <td key={`${depot.name}-evening-best-${bt.code}`} className="data-cell">
-                                                {depot.evening.best[bt.code] || ''}
-                                            </td>
-                                        ))}
-                                        {reportData.wetLeaseOperators.map(code => (
-                                            <td key={`${depot.name}-evening-wl-${code}`} className="data-cell">
-                                                {depot.evening.wetLease[code] || ''}
-                                            </td>
-                                        ))}
-                                        <td className="grand-total-cell">{(depot.evening.best.total + depot.evening.wetLease.total) || ''}</td>
-                                    </tr>
-                                ))}
-
-                                {/* Grand Total Row */}
-                                <tr className="total-row">
-                                    <td className="depot-cell">Total :-</td>
-
-                                    {/* Fleet Category totals - has BEST total, no grand total */}
-                                    {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
-                                        <td key={`total-fleet-best-${bt.code}`} className="grand-total-cell">
-                                            {reportData.totals.fleetCategory.best[bt.code] || ''}
-                                        </td>
-                                    ))}
-                                    <td className="grand-total-cell">{reportData.totals.fleetCategory.best.total || ''}</td>
-                                    {reportData.wetLeaseOperators.map(code => (
-                                        <td key={`total-fleet-wl-${code}`} className="grand-total-cell">
-                                            {reportData.totals.fleetCategory.wetLease[code] || ''}
-                                        </td>
-                                    ))}
-
-                                    {/* Morning totals - no BEST total, has grand total */}
-                                    {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
-                                        <td key={`total-morning-best-${bt.code}`} className="grand-total-cell">
-                                            {reportData.totals.morning.best[bt.code] || ''}
-                                        </td>
-                                    ))}
-                                    {reportData.wetLeaseOperators.map(code => (
-                                        <td key={`total-morning-wl-${code}`} className="grand-total-cell">
-                                            {reportData.totals.morning.wetLease[code] || ''}
-                                        </td>
-                                    ))}
-                                    <td className="grand-total-cell">{(reportData.totals.morning.best.total + reportData.totals.morning.wetLease.total) || ''}</td>
-
-                                    {/* Noon totals - no BEST total, has grand total */}
-                                    {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
-                                        <td key={`total-noon-best-${bt.code}`} className="grand-total-cell">
-                                            {reportData.totals.noon.best[bt.code] || ''}
-                                        </td>
-                                    ))}
-                                    {reportData.wetLeaseOperators.map(code => (
-                                        <td key={`total-noon-wl-${code}`} className="grand-total-cell">
-                                            {reportData.totals.noon.wetLease[code] || ''}
-                                        </td>
-                                    ))}
-                                    <td className="grand-total-cell">{(reportData.totals.noon.best.total + reportData.totals.noon.wetLease.total) || ''}</td>
-
-                                    {/* Evening totals - no BEST total, has grand total */}
-                                    {reportData.bestBusTypes && reportData.bestBusTypes.map(bt => (
-                                        <td key={`total-evening-best-${bt.code}`} className="grand-total-cell">
-                                            {reportData.totals.evening.best[bt.code] || ''}
-                                        </td>
-                                    ))}
-                                    {reportData.wetLeaseOperators.map(code => (
-                                        <td key={`total-evening-wl-${code}`} className="grand-total-cell">
-                                            {reportData.totals.evening.wetLease[code] || ''}
-                                        </td>
-                                    ))}
-                                    <td className="grand-total-cell">{(reportData.totals.evening.best.total + reportData.totals.evening.wetLease.total) || ''}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Note Section - Above Summary Tables */}
-                    <div className="report-note-section">
-                        <p className="note">
-                            <strong>*Note:-</strong> Wet Lease Buses - All operators except BEST
-                        </p>
-                        {reportData.operatorDetails && (
-                            <div className="operator-details">
-                                {reportData.operatorDetails
-                                    .filter(op => op.name !== 'BEST')
-                                    .map(op => (
-                                        <span key={op.id} className="operator-detail">
-                                            {op.short_code || op.name.substring(0, 2).toUpperCase()} - {op.name}
-                                        </span>
-                                    ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Summary Tables and Remark Section */}
-                    <div className="summary-bottom-container">
-                        {/* Summary Tables Section */}
-                        <div className="summary-tables-section">
-                            {/* Fleet Total - Always shown */}
-                            <div className="summary-table-box">
-                                <h4 className="summary-table-title">Total Fleet</h4>
-                                <table className="summary-totals-table">
-                                    <tbody>
-                                        <tr>
-                                            <td className="summary-label">BEST</td>
-                                            <td className="summary-label">W.L.</td>
-                                            <td className="summary-label">TOTAL</td>
-                                        </tr>
-                                        <tr>
-                                            <td className="summary-value">{reportData.totals.fleetCategory.best.total}</td>
-                                            <td className="summary-value">{reportData.totals.fleetCategory.wetLease.total}</td>
-                                            <td className="summary-value">{reportData.totals.fleetCategory.best.total + reportData.totals.fleetCategory.wetLease.total}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {/* Morning Total - Always shown */}
-                            <div className="summary-table-box">
-                                <h4 className="summary-table-title">Total T/out (AM)</h4>
-                                <table className="summary-totals-table">
-                                    <tbody>
-                                        <tr>
-                                            <td className="summary-label">BEST</td>
-                                            <td className="summary-label">W.L.</td>
-                                            <td className="summary-label">TOTAL</td>
-                                        </tr>
-                                        <tr>
-                                            <td className="summary-value">{reportData.totals.morning.best.total}</td>
-                                            <td className="summary-value">{reportData.totals.morning.wetLease.total}</td>
-                                            <td className="summary-value">{reportData.totals.morning.best.total + reportData.totals.morning.wetLease.total}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {/* Evening Total - Only for Sunday */}
-                            {reportData.dayType === 'SUNDAY' && (
-                                <div className="summary-table-box">
-                                    <h4 className="summary-table-title">Total T/out (PM)</h4>
-                                    <table className="summary-totals-table">
-                                        <tbody>
-                                            <tr>
-                                                <td className="summary-label">BEST</td>
-                                                <td className="summary-label">W.L.</td>
-                                                <td className="summary-label">TOTAL</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="summary-value">{reportData.totals.evening.best.total}</td>
-                                                <td className="summary-value">{reportData.totals.evening.wetLease.total}</td>
-                                                <td className="summary-value">{reportData.totals.evening.best.total + reportData.totals.evening.wetLease.total}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Remark Box - Beside the tables */}
-                        {remarkText && (
-                            <div className="summary-remark-box">
-                                <p className="summary-remark-text">{formatRemarkForDisplay(remarkText)}</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                    <SummaryReportDisplay
+                        reportData={reportDataSunday}
+                        remarkText={remarkTextSunday}
+                        reportRef={reportRefSunday}
+                    />
+                </>
             )}
         </div>
     );

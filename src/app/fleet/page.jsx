@@ -17,17 +17,20 @@ export default function FleetPage() {
         <Link href="/">
           <button>Schedule Entry</button>
         </Link>
-        <Link href="/report">
-          <button>Depot Report</button>
+        <Link href="/modifications">
+          <button>Schedule Modifications</button>
         </Link>
-        <Link href="/summary">
-          <button>Summary Report</button>
+        <Link href="/reports">
+          <button>Reports</button>
         </Link>
         <Link href="/fleet">
           <button className="active">FLEET Schedule</button>
         </Link>
         <Link href="/other-duties">
           <button>Other Duties</button>
+        </Link>
+        <Link href="/settings">
+          <button>⚙️ Settings</button>
         </Link>
       </nav>
 
