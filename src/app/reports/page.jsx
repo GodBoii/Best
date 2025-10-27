@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import StorageToggle from '../../components/StorageToggle';
 import DepotReportSection from '../../components/DepotReportSection';
 import SummaryReportSection from '../../components/SummaryReportSection';
+import RequirementReportSection from '../../components/RequirementReportSection';
 import '../../styles/globals.css';
 
 export default function ReportsPage() {
@@ -17,6 +18,8 @@ export default function ReportsPage() {
     const tab = searchParams.get('tab');
     if (tab === 'summary') {
       setActiveTab('summary');
+    } else if (tab === 'requirement') {
+      setActiveTab('requirement');
     }
   }, [searchParams]);
 
@@ -63,11 +66,18 @@ export default function ReportsPage() {
             >
               Summary Report
             </button>
+            <button
+              className={`tab-button ${activeTab === 'requirement' ? 'active' : ''}`}
+              onClick={() => setActiveTab('requirement')}
+            >
+              Requirement Report
+            </button>
           </div>
 
           <div className="reports-content">
             {activeTab === 'depot' && <DepotReportSection />}
             {activeTab === 'summary' && <SummaryReportSection />}
+            {activeTab === 'requirement' && <RequirementReportSection />}
           </div>
         </div>
       </main>

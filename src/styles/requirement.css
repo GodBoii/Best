@@ -1,0 +1,156 @@
+/* Requirement Report Styles */
+
+.requirement-report-container {
+  padding: 15px;
+  max-width: 100%;
+}
+
+.requirement-reports-preview {
+  margin-top: 15px;
+}
+
+.requirement-reports-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  justify-content: flex-end;
+}
+
+.requirement-report-display {
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 15px;
+}
+
+.requirement-report-header {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.requirement-report-header h3 {
+  font-size: 14px;
+  font-weight: bold;
+  margin: 0;
+  color: #333;
+}
+
+.requirement-table-wrapper {
+  overflow-x: auto;
+  margin-top: 8px;
+}
+
+.requirement-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  background: white;
+}
+
+.requirement-table th,
+.requirement-table td {
+  border: 1px solid #ddd;
+  padding: 4px 6px;
+  text-align: center;
+}
+
+.requirement-table th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+  color: #333;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  line-height: 1.2;
+}
+
+.requirement-table thead tr:first-child th {
+  background-color: #e9ecef;
+}
+
+.requirement-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.requirement-table tbody tr.total-row {
+  background-color: #e9ecef;
+  font-weight: bold;
+}
+
+.requirement-table tbody tr.total-row td {
+  font-weight: bold;
+  color: #000;
+}
+
+.requirement-table td:first-child {
+  text-align: left;
+  font-weight: 500;
+}
+
+.requirement-table tbody td {
+  line-height: 1.3;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .requirement-table {
+    font-size: 10px;
+  }
+
+  .requirement-table th,
+  .requirement-table td {
+    padding: 3px 5px;
+  }
+}
+
+@media (max-width: 768px) {
+  .requirement-report-container {
+    padding: 8px;
+  }
+
+  .requirement-table {
+    font-size: 9px;
+  }
+
+  .requirement-table th,
+  .requirement-table td {
+    padding: 3px 4px;
+  }
+
+  .requirement-reports-actions {
+    flex-direction: column;
+  }
+
+  .requirement-reports-actions button {
+    width: 100%;
+  }
+}
+
+/* Print styles */
+@media print {
+  .requirement-reports-actions,
+  .report-form-section {
+    display: none !important;
+  }
+
+  .requirement-report-display {
+    box-shadow: none;
+    page-break-after: always;
+    padding: 8px;
+  }
+
+  .requirement-report-display:last-child {
+    page-break-after: auto;
+  }
+
+  .requirement-table {
+    font-size: 9px;
+  }
+
+  .requirement-table th,
+  .requirement-table td {
+    padding: 3px 4px;
+    line-height: 1.2;
+  }
+}
