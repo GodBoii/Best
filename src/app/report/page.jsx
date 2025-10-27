@@ -129,7 +129,33 @@ export default function ReportPage() {
           routeMap.set(routeId, existing);
         }
       });
-      return Array.from(routeMap.values());
+      
+      // Convert to array and sort by route code (numeric ascending order)
+      const mergedEntries = Array.from(routeMap.values());
+      
+      mergedEntries.sort((a, b) => {
+        const codeA = a.routes?.code;
+        const codeB = b.routes?.code;
+        
+        // Handle missing codes - put them at the end
+        if (!codeA && !codeB) return 0;
+        if (!codeA) return 1;
+        if (!codeB) return -1;
+        
+        // Parse codes as integers for numeric comparison
+        const numA = parseInt(codeA, 10);
+        const numB = parseInt(codeB, 10);
+        
+        // Handle invalid numbers
+        if (isNaN(numA) && isNaN(numB)) return 0;
+        if (isNaN(numA)) return 1;
+        if (isNaN(numB)) return -1;
+        
+        // Numeric comparison (ascending order)
+        return numA - numB;
+      });
+      
+      return mergedEntries;
     };
 
     const calculateGroupTotals = (entries) => {

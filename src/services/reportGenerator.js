@@ -50,7 +50,7 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
     const headerPageWidth = doc.internal.pageSize.getWidth();
     const textWidth = doc.getTextWidth(headerText);
     const xPosition = (headerPageWidth - textWidth) / 2;
-    doc.text(headerText, xPosition, 7);
+    doc.text(headerText, xPosition, 15);
 
     // Define consistent margins and column widths for portrait orientation
     // Fixed column widths optimized for A4 portrait (210mm width)
@@ -81,7 +81,7 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
     // Add unified column headers at the top (only once)
     // Using body instead of head to ensure consistent width calculation with data tables
     doc.autoTable({
-      startY: 10,
+      startY: 20,
       margin: { left: leftMargin, right: rightMargin },
       body: [
         [
@@ -282,6 +282,7 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
     /**
      * Merge entries with the same route into a single entry
      * Combines Mon-Sat and Sunday data from separate entries
+     * Then sorts by route code in ascending numeric order
      */
     const mergeEntriesByRoute = (entries) => {
       const routeMap = new Map();
@@ -326,7 +327,32 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
         }
       });
 
-      return Array.from(routeMap.values());
+      // Convert to array and sort by route code (numeric ascending order)
+      const mergedEntries = Array.from(routeMap.values());
+      
+      mergedEntries.sort((a, b) => {
+        const codeA = a.routes?.code;
+        const codeB = b.routes?.code;
+        
+        // Handle missing codes - put them at the end
+        if (!codeA && !codeB) return 0;
+        if (!codeA) return 1;
+        if (!codeB) return -1;
+        
+        // Parse codes as integers for numeric comparison
+        const numA = parseInt(codeA, 10);
+        const numB = parseInt(codeB, 10);
+        
+        // Handle invalid numbers
+        if (isNaN(numA) && isNaN(numB)) return 0;
+        if (isNaN(numA)) return 1;
+        if (isNaN(numB)) return -1;
+        
+        // Numeric comparison (ascending order)
+        return numA - numB;
+      });
+
+      return mergedEntries;
     };
 
     /**
@@ -355,7 +381,7 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
 
     // Track Y position for next table and table boundaries for outer border
     let startY = doc.lastAutoTable.finalY;
-    const headerStartY = 10; // Header starts at Y=10
+    const headerStartY = 20; // Header starts at Y=20
     let tableLeftX = leftMargin; // Left edge of tables
     let tableRightX = leftMargin + tableWidth; // Right edge of tables
 
