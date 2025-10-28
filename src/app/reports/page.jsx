@@ -1,28 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import StorageToggle from '../../components/StorageToggle';
-import DepotReportSection from '../../components/DepotReportSection';
-import SummaryReportSection from '../../components/SummaryReportSection';
-import RequirementReportSection from '../../components/RequirementReportSection';
+import ReportsContent from '../../components/ReportsContent';
 import '../../styles/globals.css';
 
 export default function ReportsPage() {
-  const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState('depot');
-
-  useEffect(() => {
-    // Check if tab parameter is in URL
-    const tab = searchParams.get('tab');
-    if (tab === 'summary') {
-      setActiveTab('summary');
-    } else if (tab === 'requirement') {
-      setActiveTab('requirement');
-    }
-  }, [searchParams]);
-
   return (
     <div className="app-container">
       <header className="app-header">
@@ -52,34 +36,15 @@ export default function ReportsPage() {
       </nav>
 
       <main className="app-main">
-        <div className="reports-container">
-          <div className="reports-tabs">
-            <button
-              className={`tab-button ${activeTab === 'depot' ? 'active' : ''}`}
-              onClick={() => setActiveTab('depot')}
-            >
-              Depot Report
-            </button>
-            <button
-              className={`tab-button ${activeTab === 'summary' ? 'active' : ''}`}
-              onClick={() => setActiveTab('summary')}
-            >
-              Summary Report
-            </button>
-            <button
-              className={`tab-button ${activeTab === 'requirement' ? 'active' : ''}`}
-              onClick={() => setActiveTab('requirement')}
-            >
-              Requirement Report
-            </button>
+        <Suspense fallback={
+          <div className="reports-container">
+            <div style={{ padding: '40px', textAlign: 'center' }}>
+              <p>Loading reports...</p>
+            </div>
           </div>
-
-          <div className="reports-content">
-            {activeTab === 'depot' && <DepotReportSection />}
-            {activeTab === 'summary' && <SummaryReportSection />}
-            {activeTab === 'requirement' && <RequirementReportSection />}
-          </div>
-        </div>
+        }>
+          <ReportsContent />
+        </Suspense>
       </main>
 
       <footer className="app-footer">
