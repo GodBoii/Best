@@ -20,19 +20,54 @@ export default function RequirementReportDisplay({ reportData, type }) {
               <th rowSpan="2">Depot</th>
               <th rowSpan="2">Mon - Sat</th>
               <th rowSpan="2">Sun</th>
-              <th rowSpan="2">Avg Duty</th>
-              <th rowSpan="2">Non PF. Duty</th>
+              <th rowSpan="2">
+                <div className="header-two-line">
+                  <div>Avg</div>
+                  <div>Duty</div>
+                </div>
+              </th>
+              <th rowSpan="2">
+                <div className="header-two-line">
+                  <div>Non PF.</div>
+                  <div>Duty</div>
+                </div>
+              </th>
               <th rowSpan="2">Total</th>
               <th colSpan="4">Leave Reserve</th>
               <th rowSpan="2">Total</th>
               <th rowSpan="2">Other</th>
-              <th rowSpan="2">Grand Total</th>
+              <th rowSpan="2">
+                <div className="header-two-line">
+                  <div>Grand</div>
+                  <div>Total</div>
+                </div>
+              </th>
             </tr>
             <tr>
-              <th>W/Off 20%</th>
-              <th>PL 10%</th>
-              <th>CL 4%</th>
-              <th>SL 4%</th>
+              <th>
+                <div className="header-two-line">
+                  <div>W/Off</div>
+                  <div>20%</div>
+                </div>
+              </th>
+              <th>
+                <div className="header-two-line">
+                  <div>PL</div>
+                  <div>10%</div>
+                </div>
+              </th>
+              <th>
+                <div className="header-two-line">
+                  <div>CL</div>
+                  <div>4%</div>
+                </div>
+              </th>
+              <th>
+                <div className="header-two-line">
+                  <div>SL</div>
+                  <div>4%</div>
+                </div>
+              </th>
             </tr>
           </thead>
           <tbody>

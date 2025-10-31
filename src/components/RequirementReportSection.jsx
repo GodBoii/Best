@@ -315,7 +315,7 @@ export default function RequirementReportSection() {
     const pageWidth = doc.internal.pageSize.getWidth();
     const textWidth = doc.getTextWidth(headerText);
     const xPosition = (pageWidth - textWidth) / 2;
-    doc.text(headerText, xPosition, 12);
+    doc.text(headerText, xPosition, 20);
 
     // Prepare table data
     const tableData = reportData.depots.map(depot => [
@@ -351,38 +351,47 @@ export default function RequirementReportSection() {
       reportData.totals.grandTotal
     ]);
 
+    // Calculate table width and center position
+    const depotWidth = 26;
+    const monSatWidth = 22;
+    const otherColWidth = 14;
+    const totalTableWidth = depotWidth + monSatWidth + (otherColWidth * 11);
+    const tableStartX = (doc.internal.pageSize.getWidth() - totalTableWidth) / 2;
+
     // Generate table
     doc.autoTable({
-      startY: 17,
+      startY: 23,
+      margin: { left: tableStartX },
       head: [
         [
           { content: 'Depot', rowSpan: 2 },
           { content: 'Mon - Sat', rowSpan: 2 },
           { content: 'Sun', rowSpan: 2 },
-          { content: 'Avg Duty', rowSpan: 2 },
-          { content: 'Non PF. Duty', rowSpan: 2 },
+          { content: 'Avg\nDuty', rowSpan: 2 },
+          { content: 'Non PF.\nDuty', rowSpan: 2 },
           { content: 'Total', rowSpan: 2 },
           { content: 'Leave Reserve', colSpan: 4 },
           { content: 'Total', rowSpan: 2 },
           { content: 'Other', rowSpan: 2 },
-          { content: 'Grand Total', rowSpan: 2 }
+          { content: 'Grand\nTotal', rowSpan: 2 }
         ],
         [
-          { content: 'W/Off 20%' },
-          { content: 'PL 10%' },
-          { content: 'CL 4%' },
-          { content: 'SL 4%' }
+          { content: 'W/Off\n20%' },
+          { content: 'PL\n10%' },
+          { content: 'CL\n4%' },
+          { content: 'SL\n4%' }
         ]
       ],
       body: tableData,
       theme: 'grid',
       styles: {
         font: 'times',
-        fontSize: 7,
-        cellPadding: 1.5,
+        fontSize: 11,
+        cellPadding: 0.5,
         halign: 'center',
         valign: 'middle',
-        lineWidth: 0.1
+        lineWidth: 0.1,
+        minCellHeight: 5
       },
       headStyles: {
         fillColor: [255, 255, 255],
@@ -390,28 +399,31 @@ export default function RequirementReportSection() {
         fontStyle: 'bold',
         lineWidth: 0.1,
         lineColor: [0, 0, 0],
-        cellPadding: 1.5
+        cellPadding: 0.5,
+        minCellHeight: 6
       },
       columnStyles: {
-        0: { halign: 'left', cellWidth: 24 },
-        1: { cellWidth: 17 },
-        2: { cellWidth: 14 },
-        3: { cellWidth: 17 },
-        4: { cellWidth: 19 },
-        5: { cellWidth: 14 },
-        6: { cellWidth: 17 },
-        7: { cellWidth: 14 },
-        8: { cellWidth: 14 },
-        9: { cellWidth: 14 },
-        10: { cellWidth: 14 },
-        11: { cellWidth: 14 },
-        12: { cellWidth: 19 }
+        0: { halign: 'left', cellWidth: depotWidth },
+        1: { cellWidth: monSatWidth },
+        2: { cellWidth: otherColWidth },
+        3: { cellWidth: otherColWidth },
+        4: { cellWidth: otherColWidth },
+        5: { cellWidth: otherColWidth },
+        6: { cellWidth: otherColWidth },
+        7: { cellWidth: otherColWidth },
+        8: { cellWidth: otherColWidth },
+        9: { cellWidth: otherColWidth },
+        10: { cellWidth: otherColWidth },
+        11: { cellWidth: otherColWidth },
+        12: { cellWidth: otherColWidth }
       },
       didParseCell: function (data) {
-        // Make total row bold
+        // Make total row bold without background and with bold borders
         if (data.row.index === tableData.length - 1) {
           data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fillColor = [240, 240, 240];
+          data.cell.styles.fillColor = [255, 255, 255];
+          data.cell.styles.lineWidth = { top: 0.5, bottom: 0.5, left: 0.1, right: 0.1 };
+          data.cell.styles.lineColor = { top: [0, 0, 0], bottom: [0, 0, 0], left: [221, 221, 221], right: [221, 221, 221] };
         }
       }
     });
