@@ -805,7 +805,6 @@ export const generateReportPDF = async (reportData, preview = false, existingDoc
           // Make Grand Total row bold
           if (data.row.index === summaryTableData.length - 1) {
             data.cell.styles.fontStyle = 'bold';
-            data.cell.styles.fillColor = [240, 240, 240];
           }
         }
       });

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import storageManager from '../lib/storage/storageManager';
 import DepotSection from './DepotSection';
 import OperatorSection from './OperatorSection';
-import ScheduleTypeSection from './ScheduleTypeSection';
 import BusTypeSection from './BusTypeSection';
 import RouteSection from './RouteSection';
 
@@ -21,7 +20,6 @@ export default function SimpleForm() {
   const [selectedDepot, setSelectedDepot] = useState(null);
   const [scheduleDate, setScheduleDate] = useState(getCurrentDate());
   const [selectedOperator, setSelectedOperator] = useState(null);
-  const [selectedScheduleType, setSelectedScheduleType] = useState(null);
   const [selectedBusType, setSelectedBusType] = useState(null);
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -44,11 +42,6 @@ export default function SimpleForm() {
       return;
     }
 
-    if (!selectedScheduleType) {
-      alert('Please enter schedule data');
-      return;
-    }
-
     if (!selectedBusType) {
       alert('Please select a bus type');
       return;
@@ -62,28 +55,23 @@ export default function SimpleForm() {
     setLoading(true);
 
     try {
-      // Helper function to convert empty/null values to dash
-      const formatValue = (value) => {
-        return (value === '' || value === null || value === undefined) ? '-' : value;
-      };
-
-      // Prepare schedule entry data with both Mon-Sat and Sunday values
+      // Prepare schedule entry data with default dash values
+      // Schedule modifications will handle the actual schedule data
       const scheduleEntryData = {
         route_id: selectedRoute.id,
         bus_type_id: selectedBusType.id,
         operator_id: selectedOperator.id,
-        // Mon-Sat columns
-        mon_sat_am: formatValue(selectedScheduleType.monSat.buses.am),
-        mon_sat_noon: formatValue(selectedScheduleType.monSat.buses.noon),
-        mon_sat_pm: formatValue(selectedScheduleType.monSat.buses.pm),
-        duties_driver_ms: formatValue(selectedScheduleType.monSat.duties.drivers),
-        duties_cond_ms: formatValue(selectedScheduleType.monSat.duties.conductors),
-        // Sunday columns
-        sun_am: formatValue(selectedScheduleType.sunday.buses.am),
-        sun_noon: formatValue(selectedScheduleType.sunday.buses.noon),
-        sun_pm: formatValue(selectedScheduleType.sunday.buses.pm),
-        duties_driver_sun: formatValue(selectedScheduleType.sunday.duties.drivers),
-        duties_cond_sun: formatValue(selectedScheduleType.sunday.duties.conductors)
+        // Default values - to be modified in Schedule Modifications
+        mon_sat_am: '-',
+        mon_sat_noon: '-',
+        mon_sat_pm: '-',
+        duties_driver_ms: '-',
+        duties_cond_ms: '-',
+        sun_am: '-',
+        sun_noon: '-',
+        sun_pm: '-',
+        duties_driver_sun: '-',
+        duties_cond_sun: '-'
       };
 
       // First, check if a schedule exists for this depot and date
@@ -135,7 +123,7 @@ export default function SimpleForm() {
       if (entryError) throw entryError;
 
       alert('Schedule entry saved successfully!');
-      
+
       // Keep form values for next entry - user can modify as needed
 
     } catch (error) {
@@ -149,10 +137,13 @@ export default function SimpleForm() {
   return (
     <div className="simple-form-container">
       <h2>Schedule Entry Form</h2>
+      <p className="form-description" style={{ marginBottom: '20px', color: '#666' }}>
+        Create a new schedule entry. Schedule data (buses and duties) will be added in Schedule Modifications.
+      </p>
 
       <form onSubmit={handleSubmit} className="simple-form">
         {/* Depot Section */}
-        <DepotSection 
+        <DepotSection
           onDepotSelect={setSelectedDepot}
           selectedDepot={selectedDepot}
         />
@@ -170,27 +161,21 @@ export default function SimpleForm() {
         </div>
 
         {/* Operator Section */}
-        <OperatorSection 
+        <OperatorSection
           onOperatorSelect={setSelectedOperator}
           selectedOperator={selectedOperator}
         />
 
         {/* Bus Type Section */}
-        <BusTypeSection 
+        <BusTypeSection
           onBusTypeSelect={setSelectedBusType}
           selectedBusType={selectedBusType}
         />
 
         {/* Route Section */}
-        <RouteSection 
+        <RouteSection
           onRouteSelect={setSelectedRoute}
           selectedRoute={selectedRoute}
-        />
-
-        {/* Schedule Type Section */}
-        <ScheduleTypeSection 
-          onScheduleTypeSelect={setSelectedScheduleType}
-          selectedScheduleType={selectedScheduleType}
         />
 
         {/* Submit Button */}

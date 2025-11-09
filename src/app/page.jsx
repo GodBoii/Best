@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import SimpleForm from '../components/SimpleForm';
-import SimpleFormMulti from '../components/SimpleFormMulti';
 import StorageToggle from '../components/StorageToggle';
 import BackupReminder from '../components/BackupReminder';
 import MigrationRunner from '../components/MigrationRunner';
@@ -12,7 +11,6 @@ import backupManager from '../lib/storage/backupManager';
 import '../styles/globals.css';
 
 export default function Home() {
-  const [isMultiMode, setIsMultiMode] = useState(false);
   const [showDataLossWarning, setShowDataLossWarning] = useState(false);
 
   useEffect(() => {
@@ -101,24 +99,8 @@ export default function Home() {
         </Link>
       </nav>
 
-      {/* Mode Toggle */}
-      <div className="mode-toggle-container">
-        <button
-          onClick={() => setIsMultiMode(false)}
-          className={`mode-toggle-btn ${!isMultiMode ? 'active' : ''}`}
-        >
-          Single Entry Mode
-        </button>
-        <button
-          onClick={() => setIsMultiMode(true)}
-          className={`mode-toggle-btn ${isMultiMode ? 'active' : ''}`}
-        >
-          Multi-Input Mode
-        </button>
-      </div>
-
       <main className="app-main">
-        {isMultiMode ? <SimpleFormMulti /> : <SimpleForm />}
+        <SimpleForm />
       </main>
 
       <footer className="app-footer">
