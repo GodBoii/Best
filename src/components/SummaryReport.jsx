@@ -150,11 +150,57 @@ export default function SummaryReport() {
         if (entriesError) throw new Error('Error fetching schedule entries: ' + entriesError.message);
         console.log('All Entries fetched:', entries?.length);
 
-        // Filter entries by schedule IDs and exclude deleted entries
-        const filteredEntries = entries.filter(e =>
-            scheduleIds.includes(e.schedule_id) && !e.is_deleted
-        );
-        console.log('Filtered Entries:', filteredEntries.length);
+        // Filter entries by schedule IDs
+        const entriesForSchedules = entries.filter(e => scheduleIds.includes(e.schedule_id));
+        console.log('Entries for selected schedules:', entriesForSchedules.length);
+
+        // CRITICAL FIX: Deduplicate entries by route+operator+bustype combination
+        // Keep only the LATEST version based on modified_at/created_at timestamp
+        const routeMap = new Map();
+
+        for (const entry of entriesForSchedules) {
+            // Create unique key for each route+operator+bustype combination
+            const key = `${entry.route_id}_${entry.operator_id || 'null'}_${entry.bus_type_id}`;
+
+            // Check if entry is deleted
+            if (entry.is_deleted && entry.deleted_at) {
+                const deletedDate = new Date(entry.deleted_at);
+                const selectedDate = new Date(date);
+
+                // If deleted on or before selected date, mark as deleted
+                if (deletedDate <= selectedDate) {
+                    routeMap.set(key, { deleted: true });
+                    console.log(`🗑️ Route ${entry.route_id} marked as deleted on ${entry.deleted_at}`);
+                    continue;
+                }
+            }
+
+            const existing = routeMap.get(key);
+
+            // Skip if already marked as deleted
+            if (existing?.deleted) {
+                console.log(`⏭️ Skipping route ${entry.route_id} - already deleted`);
+                continue;
+            }
+
+            // Get timestamps for comparison
+            const entryTimestamp = entry.modified_at || entry.created_at;
+            const existingTimestamp = existing ? (existing.modified_at || existing.created_at) : null;
+
+            // Keep the entry with the latest timestamp
+            if (!existing || (entryTimestamp && existingTimestamp && new Date(entryTimestamp) > new Date(existingTimestamp))) {
+                routeMap.set(key, entry);
+                console.log(`✅ Using route ${entry.route_id} from ${entryTimestamp}`);
+            } else {
+                console.log(`⏭️ Skipping older version of route ${entry.route_id}`);
+            }
+        }
+
+        // Get only active (non-deleted) entries
+        const filteredEntries = Array.from(routeMap.values())
+            .filter(entry => !entry.deleted);
+
+        console.log('Filtered Entries (after deduplication):', filteredEntries.length);
         console.log('Sample Entry:', filteredEntries[0]);
 
         // 6. Separate BEST and Wet Lease operators
@@ -183,6 +229,33 @@ export default function SummaryReport() {
         console.log('BEST Bus Types:', bestBusTypes);
         console.log('Wet Lease Bus Types:', wetLeaseBusTypes);
 
+        // 7.5. Fetch fleet entries for all depots up to the selected date
+        console.log('=== FETCHING FLEET ENTRIES ===');
+        const { data: allFleetEntries, error: fleetError } = await client
+            .from('fleet_entries')
+            .select('*')
+            .lte('schedule_date', date);
+
+        if (fleetError) {
+            console.error('Error fetching fleet entries:', fleetError);
+        }
+        console.log('Fleet Entries fetched:', allFleetEntries?.length || 0);
+
+        // Get the latest fleet entry for each depot+operator+bustype combination
+        const fleetMap = new Map();
+        if (allFleetEntries && allFleetEntries.length > 0) {
+            allFleetEntries.forEach(entry => {
+                const key = `${entry.depot_id}_${entry.operator_id || 'null'}_${entry.bus_type_id}`;
+                const existing = fleetMap.get(key);
+                
+                // Keep the entry with the latest schedule_date
+                if (!existing || entry.schedule_date > existing.schedule_date) {
+                    fleetMap.set(key, entry);
+                }
+            });
+        }
+        console.log('Unique fleet entries after deduplication:', fleetMap.size);
+
         // 8. Aggregate data by depot and time period
         const depotData = depots.map(depot => {
             console.log(`\n=== Processing Depot: ${depot.name} ===`);
@@ -197,10 +270,14 @@ export default function SummaryReport() {
             const depotEntries = filteredEntries.filter(e => e.schedule_id === depotSchedule.id);
             console.log(`Entries for ${depot.name}:`, depotEntries.length);
 
+            // Get fleet entries for this depot
+            const depotFleetEntries = Array.from(fleetMap.values()).filter(e => e.depot_id === depot.id);
+            console.log(`Fleet entries for ${depot.name}:`, depotFleetEntries.length);
+
             return {
                 name: depot.name,
                 scheduleDate: depotSchedule.schedule_date,
-                fleetCategory: aggregateFleetCategory(depotEntries, busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type, bestBusTypes, wetLeaseBusTypes),
+                fleetCategory: aggregateFleetCategory(depotFleetEntries, busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type, bestBusTypes, wetLeaseBusTypes),
                 morning: aggregateTimePeriod(depotEntries, 'morning', busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type, bestBusTypes, wetLeaseBusTypes),
                 noon: aggregateTimePeriod(depotEntries, 'noon', busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type, bestBusTypes, wetLeaseBusTypes),
                 evening: aggregateTimePeriod(depotEntries, 'evening', busTypeCodes, bestOperator, wetLeaseOperators, busTypes, type, bestBusTypes, wetLeaseBusTypes)
@@ -267,10 +344,10 @@ export default function SummaryReport() {
         };
     };
 
-    const aggregateFleetCategory = (entries, busTypeCodes, bestOperator, wetLeaseOperators, busTypes, dayType, bestBusTypes, wetLeaseBusTypes) => {
+    const aggregateFleetCategory = (fleetEntries, busTypeCodes, bestOperator, wetLeaseOperators, busTypes, dayType, bestBusTypes, wetLeaseBusTypes) => {
         console.log('=== AGGREGATING FLEET CATEGORY ===');
         console.log('Day Type:', dayType);
-        console.log('Total Entries:', entries.length);
+        console.log('Total Fleet Entries:', fleetEntries.length);
 
         const result = {
             best: {},
@@ -290,42 +367,24 @@ export default function SummaryReport() {
             result.wetLease[code] = 0;
         });
 
-        // Determine which columns to check based on day type
-        let columns;
-        if (dayType === 'MON_SAT') {
-            columns = ['mon_sat_am', 'mon_sat_noon', 'mon_sat_pm'];
-        } else {
-            columns = ['sun_am', 'sun_noon', 'sun_pm'];
-        }
+        // CRITICAL: Fleet entries are stored separately in fleet_entries table
+        // Each entry has: depot_id, operator_id, bus_type_id, fleet_number
+        fleetEntries.forEach(entry => {
+            const fleetCount = entry.fleet_number || 0;
 
-        console.log('Columns to check:', columns);
-
-        // Count buses across all time periods (take maximum value)
-        entries.forEach(entry => {
-            // Get the maximum count across all time periods for this entry
-            const counts = columns.map(col => {
-                const val = entry[col];
-                if (!val || val === '-' || val === '0') return 0;
-                const num = parseInt(val, 10);
-                return isNaN(num) ? 0 : num;
-            });
-            const maxCount = Math.max(...counts);
-
-            if (maxCount <= 0) return;
+            if (fleetCount <= 0) return;
 
             const busType = busTypes.find(bt => bt.id === entry.bus_type_id);
             const busTypeCode = busType ? (busType.short_name || busType.name.substring(0, 2).toUpperCase()) : 'XX';
 
-            console.log('Processing Entry for Fleet Category:', {
-                id: entry.id,
+            console.log('Processing Fleet Entry:', {
                 operator_id: entry.operator_id,
                 bus_type_id: entry.bus_type_id,
                 busTypeCode: busTypeCode,
-                maxCount: maxCount,
-                counts: counts
+                fleetCount: fleetCount
             });
 
-            // Check if BEST
+            // Check if BEST (operator_id is null or matches BEST operator)
             const isBEST = entry.operator_id === null ||
                 entry.operator_id === bestOperator?.id ||
                 entry.operator_id === undefined;
@@ -337,12 +396,13 @@ export default function SummaryReport() {
                     if (!result.best[busTypeCode]) {
                         result.best[busTypeCode] = 0;
                     }
-                    result.best[busTypeCode] += maxCount;
-                    console.log(`  -> BEST ${busTypeCode}: +${maxCount} = ${result.best[busTypeCode]}`);
+                    result.best[busTypeCode] += fleetCount;
+                    console.log(`  -> BEST ${busTypeCode}: +${fleetCount} = ${result.best[busTypeCode]}`);
                 } else {
                     console.log(`  -> BEST ${busTypeCode} skipped (not in selection)`);
                 }
             } else {
+                // Wet Lease
                 const operator = wetLeaseOperators.find(op => op.id === entry.operator_id);
                 if (operator) {
                     // Only count if this bus type is in the Wet Lease selection
@@ -352,20 +412,21 @@ export default function SummaryReport() {
                         if (!result.wetLease[opCode]) {
                             result.wetLease[opCode] = 0;
                         }
-                        result.wetLease[opCode] += maxCount;
-                        console.log(`  -> Wet Lease ${opCode}: +${maxCount} = ${result.wetLease[opCode]}`);
+                        result.wetLease[opCode] += fleetCount;
+                        console.log(`  -> Wet Lease ${opCode}: +${fleetCount} = ${result.wetLease[opCode]}`);
                     } else {
                         console.log(`  -> Wet Lease ${busTypeCode} skipped (not in selection)`);
                     }
                 } else {
+                    console.log(`  -> Operator not found for ID: ${entry.operator_id}`);
                     // Fallback to BEST if operator not found
                     const isBusTypeSelected = bestBusTypes.some(bt => bt.id === entry.bus_type_id);
                     if (isBusTypeSelected) {
                         if (!result.best[busTypeCode]) {
                             result.best[busTypeCode] = 0;
                         }
-                        result.best[busTypeCode] += maxCount;
-                        console.log(`  -> Defaulting to BEST ${busTypeCode}: +${maxCount} = ${result.best[busTypeCode]}`);
+                        result.best[busTypeCode] += fleetCount;
+                        console.log(`  -> Defaulting to BEST ${busTypeCode}: +${fleetCount} = ${result.best[busTypeCode]}`);
                     }
                 }
             }
