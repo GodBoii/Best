@@ -143,24 +143,46 @@ export default function SummaryReport() {
         const scheduleIds = schedules.map(s => s.id);
         console.log('Schedule IDs:', scheduleIds);
 
-        const { data: entries, error: entriesError } = await client
+        // Fetch schedule entries (without joins for IndexedDB compatibility)
+        const { data: allEntries, error: entriesError } = await client
             .from('schedule_entries')
             .select('*');
 
         if (entriesError) throw new Error('Error fetching schedule entries: ' + entriesError.message);
-        console.log('All Entries fetched:', entries?.length);
+        console.log('All Entries fetched:', allEntries?.length);
 
         // Filter entries by schedule IDs
-        const entriesForSchedules = entries.filter(e => scheduleIds.includes(e.schedule_id));
+        const entriesForSchedules = (allEntries || []).filter(e => scheduleIds.includes(e.schedule_id));
         console.log('Entries for selected schedules:', entriesForSchedules.length);
 
-        // CRITICAL FIX: Deduplicate entries by route+operator+bustype combination
+        // Enrich entries with related data (operators, bus_types, routes)
+        const entries = entriesForSchedules.map(entry => {
+            const operator = operators.find(op => op.id === entry.operator_id);
+            const busType = busTypes.find(bt => bt.id === entry.bus_type_id);
+            const route = entry.route_id ? { id: entry.route_id } : null; // We don't need full route data here
+
+            return {
+                ...entry,
+                operators: operator || null,
+                bus_types: busType || null,
+                routes: route
+            };
+        });
+        console.log('Enriched entries:', entries.length);
+
+        // CRITICAL FIX: Deduplicate entries by depot+route+operator+bustype combination
         // Keep only the LATEST version based on modified_at/created_at timestamp
+        // IMPORTANT: Include depot_id (via schedule) to prevent cross-depot collisions
         const routeMap = new Map();
 
-        for (const entry of entriesForSchedules) {
-            // Create unique key for each route+operator+bustype combination
-            const key = `${entry.route_id}_${entry.operator_id || 'null'}_${entry.bus_type_id}`;
+        for (const entry of entries) {
+            // Get the depot_id from the schedule
+            const schedule = schedules.find(s => s.id === entry.schedule_id);
+            const depotId = schedule ? schedule.depot_id : 'unknown';
+
+            // Create unique key for each DEPOT+route+operator+bustype combination
+            // This ensures routes with same number in different depots are treated independently
+            const key = `${depotId}_${entry.route_id}_${entry.operator_id || 'null'}_${entry.bus_type_id}`;
 
             // Check if entry is deleted
             if (entry.is_deleted && entry.deleted_at) {
@@ -170,7 +192,7 @@ export default function SummaryReport() {
                 // If deleted on or before selected date, mark as deleted
                 if (deletedDate <= selectedDate) {
                     routeMap.set(key, { deleted: true });
-                    console.log(`🗑️ Route ${entry.route_id} marked as deleted on ${entry.deleted_at}`);
+                    console.log(`🗑️ Depot ${depotId} - Route ${entry.route_id} marked as deleted on ${entry.deleted_at}`);
                     continue;
                 }
             }
@@ -179,7 +201,7 @@ export default function SummaryReport() {
 
             // Skip if already marked as deleted
             if (existing?.deleted) {
-                console.log(`⏭️ Skipping route ${entry.route_id} - already deleted`);
+                console.log(`⏭️ Depot ${depotId} - Skipping route ${entry.route_id} - already deleted`);
                 continue;
             }
 
@@ -190,9 +212,9 @@ export default function SummaryReport() {
             // Keep the entry with the latest timestamp
             if (!existing || (entryTimestamp && existingTimestamp && new Date(entryTimestamp) > new Date(existingTimestamp))) {
                 routeMap.set(key, entry);
-                console.log(`✅ Using route ${entry.route_id} from ${entryTimestamp}`);
+                console.log(`✅ Depot ${depotId} - Using route ${entry.route_id} from ${entryTimestamp}`);
             } else {
-                console.log(`⏭️ Skipping older version of route ${entry.route_id}`);
+                console.log(`⏭️ Depot ${depotId} - Skipping older version of route ${entry.route_id}`);
             }
         }
 
