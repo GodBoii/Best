@@ -519,8 +519,8 @@ export default function ReportPreview({ reportData }) {
                 const platformDuties = extractPlatformDuties();
 
                 // Calculate leave reserve
-                const driverLeaveReserve = (driverAvg + platformDuties.nonPlatformDriver) * 0.36;
-                const conductorLeaveReserve = (conductorAvg + platformDuties.nonPlatformConductor) * 0.36;
+                const driverLeaveReserve = (driverAvg + platformDuties.nonPlatformDriver) * 0.38;
+                const conductorLeaveReserve = (conductorAvg + platformDuties.nonPlatformConductor) * 0.38;
 
                 // Calculate grand totals
                 const driverGrandTotal = driverAvg + platformDuties.nonPlatformDriver + driverLeaveReserve + platformDuties.otherDutiesDriver;
