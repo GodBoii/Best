@@ -653,75 +653,170 @@ export default function SummaryReport() {
             return;
         }
 
-        // Create CSV content for both reports
+        // Create CSV content for both reports with proper structure matching print preview
         let csv = `SUMMARY OF SERVICE ALLOCATION OF ALL DEPOTS\n`;
         csv += `W. E. F. :- ${reportDataMonSat.effectiveDate}\n\n`;
 
-        // Monday to Saturday section
-        csv += `MONDAY TO SATURDAY\n\n`;
-
-        // Helper function to add report data to CSV
-        const addReportToCSV = (reportData) => {
-            // Headers
+        // Helper function to add report data to CSV with proper structure
+        const addReportToCSV = (reportData, dayType) => {
+            csv += `${dayType}\n\n`;
+            
+            // Header Row 1: Main categories
             csv += 'Depot,';
-            ['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].forEach(period => {
-                csv += `${period} - BEST,`.repeat(reportData.bestBusTypes.length);
-                csv += 'BEST TOTAL,';
-                csv += `${period} - Wet Lease,`.repeat(reportData.wetLeaseOperators.length);
-                csv += 'Wet Lease TOTAL,';
+            csv += 'FLEET CATEGORY,'.repeat(reportData.bestBusTypes.length + reportData.wetLeaseOperators.length + 1);
+            csv += 'MORNING,'.repeat(reportData.bestBusTypes.length + reportData.wetLeaseOperators.length + 1);
+            csv += 'NOON,'.repeat(reportData.bestBusTypes.length + reportData.wetLeaseOperators.length + 1);
+            csv += 'EVENING,'.repeat(reportData.bestBusTypes.length + reportData.wetLeaseOperators.length + 1);
+            csv += '\n';
+
+            // Header Row 2: BEST and Wet Lease sections
+            csv += ',';
+            ['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].forEach(() => {
+                csv += 'BEST,'.repeat(reportData.bestBusTypes.length + 1);
+                csv += 'Wet Lease,'.repeat(reportData.wetLeaseOperators.length);
             });
             csv += '\n';
 
-            // Sub-headers
+            // Header Row 3: Bus type codes and operator codes
             csv += ',';
-            ['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].forEach(() => {
+            ['FLEET CATEGORY', 'MORNING', 'NOON', 'EVENING'].forEach((period) => {
                 reportData.bestBusTypes.forEach(bt => csv += `${bt.code},`);
-                csv += 'TOTAL,';
+                csv += 'TOT,';
                 reportData.wetLeaseOperators.forEach(code => csv += `${code},`);
-                csv += 'TOTAL,';
+                if (period !== 'FLEET CATEGORY') {
+                    csv += 'GR TOT,';
+                }
             });
             csv += '\n';
 
             // Data rows
             reportData.depots.forEach(depot => {
                 csv += `${depot.name},`;
-                ['fleetCategory', 'morning', 'noon', 'evening'].forEach(period => {
-                    reportData.bestBusTypes.forEach(bt => {
-                        csv += `${depot[period].best[bt.code] || 0},`;
-                    });
-                    csv += `${depot[period].best.total},`;
-                    reportData.wetLeaseOperators.forEach(code => {
-                        csv += `${depot[period].wetLease[code] || 0},`;
-                    });
-                    csv += `${depot[period].wetLease.total},`;
+                
+                // Fleet Category
+                reportData.bestBusTypes.forEach(bt => {
+                    csv += `${depot.fleetCategory.best[bt.code] || ''},`;
                 });
+                csv += `${depot.fleetCategory.best.total || ''},`;
+                reportData.wetLeaseOperators.forEach(code => {
+                    csv += `${depot.fleetCategory.wetLease[code] || ''},`;
+                });
+                
+                // Morning
+                reportData.bestBusTypes.forEach(bt => {
+                    csv += `${depot.morning.best[bt.code] || ''},`;
+                });
+                reportData.wetLeaseOperators.forEach(code => {
+                    csv += `${depot.morning.wetLease[code] || ''},`;
+                });
+                csv += `${(depot.morning.best.total + depot.morning.wetLease.total) || ''},`;
+                
+                // Noon
+                reportData.bestBusTypes.forEach(bt => {
+                    csv += `${depot.noon.best[bt.code] || ''},`;
+                });
+                reportData.wetLeaseOperators.forEach(code => {
+                    csv += `${depot.noon.wetLease[code] || ''},`;
+                });
+                csv += `${(depot.noon.best.total + depot.noon.wetLease.total) || ''},`;
+                
+                // Evening
+                reportData.bestBusTypes.forEach(bt => {
+                    csv += `${depot.evening.best[bt.code] || ''},`;
+                });
+                reportData.wetLeaseOperators.forEach(code => {
+                    csv += `${depot.evening.wetLease[code] || ''},`;
+                });
+                csv += `${(depot.evening.best.total + depot.evening.wetLease.total) || ''}`;
+                
                 csv += '\n';
             });
 
             // Total row
             csv += 'Total :-,';
-            ['fleetCategory', 'morning', 'noon', 'evening'].forEach(period => {
-                reportData.bestBusTypes.forEach(bt => {
-                    csv += `${reportData.totals[period].best[bt.code] || 0},`;
-                });
-                csv += `${reportData.totals[period].best.total},`;
-                reportData.wetLeaseOperators.forEach(code => {
-                    csv += `${reportData.totals[period].wetLease[code] || 0},`;
-                });
-                csv += `${reportData.totals[period].wetLease.total},`;
+            
+            // Fleet Category totals
+            reportData.bestBusTypes.forEach(bt => {
+                csv += `${reportData.totals.fleetCategory.best[bt.code] || ''},`;
             });
+            csv += `${reportData.totals.fleetCategory.best.total || ''},`;
+            reportData.wetLeaseOperators.forEach(code => {
+                csv += `${reportData.totals.fleetCategory.wetLease[code] || ''},`;
+            });
+            
+            // Morning totals
+            reportData.bestBusTypes.forEach(bt => {
+                csv += `${reportData.totals.morning.best[bt.code] || ''},`;
+            });
+            reportData.wetLeaseOperators.forEach(code => {
+                csv += `${reportData.totals.morning.wetLease[code] || ''},`;
+            });
+            csv += `${(reportData.totals.morning.best.total + reportData.totals.morning.wetLease.total) || ''},`;
+            
+            // Noon totals
+            reportData.bestBusTypes.forEach(bt => {
+                csv += `${reportData.totals.noon.best[bt.code] || ''},`;
+            });
+            reportData.wetLeaseOperators.forEach(code => {
+                csv += `${reportData.totals.noon.wetLease[code] || ''},`;
+            });
+            csv += `${(reportData.totals.noon.best.total + reportData.totals.noon.wetLease.total) || ''},`;
+            
+            // Evening totals
+            reportData.bestBusTypes.forEach(bt => {
+                csv += `${reportData.totals.evening.best[bt.code] || ''},`;
+            });
+            reportData.wetLeaseOperators.forEach(code => {
+                csv += `${reportData.totals.evening.wetLease[code] || ''},`;
+            });
+            csv += `${(reportData.totals.evening.best.total + reportData.totals.evening.wetLease.total) || ''}`;
+            
             csv += '\n\n';
+            
+            // Add summary statistics
+            csv += `Total Fleet:\n`;
+            csv += `BEST,W.L.,TOTAL\n`;
+            csv += `${reportData.totals.fleetCategory.best.total},${reportData.totals.fleetCategory.wetLease.total},${reportData.totals.fleetCategory.best.total + reportData.totals.fleetCategory.wetLease.total}\n\n`;
+            
+            csv += `Total T/out (AM):\n`;
+            csv += `BEST,W.L.,TOTAL\n`;
+            csv += `${reportData.totals.morning.best.total},${reportData.totals.morning.wetLease.total},${reportData.totals.morning.best.total + reportData.totals.morning.wetLease.total}\n\n`;
+            
+            if (dayType === 'ONLY SUNDAY') {
+                csv += `Total T/out (PM):\n`;
+                csv += `BEST,W.L.,TOTAL\n`;
+                csv += `${reportData.totals.evening.best.total},${reportData.totals.evening.wetLease.total},${reportData.totals.evening.best.total + reportData.totals.evening.wetLease.total}\n\n`;
+            }
+            
+            // Add operator details note
+            csv += `*Note:- Wet Lease Buses - All operators except BEST\n`;
+            if (reportData.operatorDetails) {
+                reportData.operatorDetails
+                    .filter(op => op.name !== 'BEST')
+                    .forEach(op => {
+                        csv += `${op.short_code || op.name.substring(0, 2).toUpperCase()} - ${op.name}\n`;
+                    });
+            }
+            csv += '\n';
         };
 
         // Add Mon-Sat data
-        addReportToCSV(reportDataMonSat);
+        addReportToCSV(reportDataMonSat, 'MONDAY TO SATURDAY');
 
         // Add Sunday section
-        csv += `ONLY SUNDAY\n\n`;
-        addReportToCSV(reportDataSunday);
+        addReportToCSV(reportDataSunday, 'ONLY SUNDAY');
 
-        // Download
-        const blob = new Blob([csv], { type: 'text/csv' });
+        // Add remarks if available
+        if (remarkTextMonSat) {
+            csv += `\nRemarks (Monday to Saturday):\n${remarkTextMonSat}\n\n`;
+        }
+        if (remarkTextSunday) {
+            csv += `Remarks (Sunday):\n${remarkTextSunday}\n`;
+        }
+
+        // Download with UTF-8 BOM for better Excel compatibility
+        const BOM = '\uFEFF';
+        const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;

@@ -99,6 +99,250 @@ export default function ReportPreview({ reportData }) {
   };
 
   /**
+   * Handle CSV export
+   * Generates and downloads a CSV file with the same structure as the print preview
+   */
+  const handleExportCSV = () => {
+    try {
+      // Create CSV content with proper structure matching print preview
+      let csv = '';
+      
+      // Add header
+      const formattedDate = new Date(reportData.date).toLocaleDateString('en-GB');
+      csv += `${reportData.depot} Depot w.e.f.:- ${formattedDate}\n\n`;
+      
+      // Add column headers (3 rows to match print preview structure)
+      csv += 'Route,Code No.,Schedule Turnout Position,,,,,,Allocation of Duties,,,\n';
+      csv += ',,Mon To Sat,,,Sunday,,,DRIVERS,,CONDUCTORS,\n';
+      csv += ',,AM,NOON,PM,AM,NOON,PM,Mon To Sat,Sunday,Mon To Sat,Sunday\n';
+      
+      // Process each group
+      sortedGroups.forEach(([groupKey, group]) => {
+        const { category, operator, busType, entries } = group;
+        
+        // Merge entries with the same route
+        const mergedEntries = mergeEntriesByRoute(entries);
+        const totals = calculateGroupTotals(mergedEntries);
+        
+        // Build category name
+        let categoryName;
+        if (category === 'BEST') {
+          categoryName = busType?.name || 'Unknown Bus Type';
+        } else {
+          const busTypeName = busType?.name || 'Unknown Bus Type';
+          let operatorName = operator?.name;
+          if (!operatorName) {
+            const entryWithOperator = entries.find(e => e.operators?.name);
+            operatorName = entryWithOperator?.operators?.name || 'Unknown Operator';
+          }
+          categoryName = `${operatorName} - ${busTypeName}`;
+        }
+        
+        // Add category header
+        csv += `\n${categoryName}\n`;
+        
+        // Add entries
+        mergedEntries.forEach(entry => {
+          csv += `${entry.routes?.name || '-'},`;
+          csv += `${entry.routes?.code || '-'},`;
+          csv += `${formatValue(entry.mon_sat_am)},`;
+          csv += `${formatValue(entry.mon_sat_noon)},`;
+          csv += `${formatValue(entry.mon_sat_pm)},`;
+          csv += `${formatValue(entry.sun_am)},`;
+          csv += `${formatValue(entry.sun_noon)},`;
+          csv += `${formatValue(entry.sun_pm)},`;
+          csv += `${formatValue(entry.duties_driver_ms)},`;
+          csv += `${formatValue(entry.duties_driver_sun)},`;
+          csv += `${formatValue(entry.duties_cond_ms)},`;
+          csv += `${formatValue(entry.duties_cond_sun)}\n`;
+        });
+        
+        // Add total row
+        csv += `Total :-,,`;
+        csv += `${totals.mon_sat_am || 0},`;
+        csv += `${totals.mon_sat_noon || 0},`;
+        csv += `${totals.mon_sat_pm || 0},`;
+        csv += `${totals.sun_am || 0},`;
+        csv += `${totals.sun_noon || 0},`;
+        csv += `${totals.sun_pm || 0},`;
+        csv += `${totals.duties_driver_ms || 0},`;
+        csv += `${totals.duties_driver_sun || 0},`;
+        csv += `${totals.duties_cond_ms || 0},`;
+        csv += `${totals.duties_cond_sun || 0}\n`;
+      });
+      
+      // Calculate grand totals
+      const grandTotal = sortedGroups.reduce((acc, [, group]) => {
+        const mergedEntries = mergeEntriesByRoute(group.entries);
+        const totals = calculateGroupTotals(mergedEntries);
+        return {
+          mon_sat_am: acc.mon_sat_am + totals.mon_sat_am,
+          mon_sat_noon: acc.mon_sat_noon + totals.mon_sat_noon,
+          mon_sat_pm: acc.mon_sat_pm + totals.mon_sat_pm,
+          sun_am: acc.sun_am + totals.sun_am,
+          sun_noon: acc.sun_noon + totals.sun_noon,
+          sun_pm: acc.sun_pm + totals.sun_pm,
+          duties_driver_ms: acc.duties_driver_ms + totals.duties_driver_ms,
+          duties_cond_ms: acc.duties_cond_ms + totals.duties_cond_ms,
+          duties_driver_sun: acc.duties_driver_sun + totals.duties_driver_sun,
+          duties_cond_sun: acc.duties_cond_sun + totals.duties_cond_sun
+        };
+      }, {
+        mon_sat_am: 0, mon_sat_noon: 0, mon_sat_pm: 0,
+        sun_am: 0, sun_noon: 0, sun_pm: 0,
+        duties_driver_ms: 0, duties_cond_ms: 0,
+        duties_driver_sun: 0, duties_cond_sun: 0
+      });
+      
+      // Check if there are BEST entries
+      const hasBestEntries = sortedGroups.some(([, g]) => g.category === 'BEST');
+      
+      // Add BEST Total if applicable
+      if (hasBestEntries) {
+        const bestTotal = sortedGroups
+          .filter(([, g]) => g.category === 'BEST')
+          .reduce((acc, [, group]) => {
+            const mergedEntries = mergeEntriesByRoute(group.entries);
+            const totals = calculateGroupTotals(mergedEntries);
+            return {
+              mon_sat_am: acc.mon_sat_am + totals.mon_sat_am,
+              mon_sat_noon: acc.mon_sat_noon + totals.mon_sat_noon,
+              mon_sat_pm: acc.mon_sat_pm + totals.mon_sat_pm,
+              sun_am: acc.sun_am + totals.sun_am,
+              sun_noon: acc.sun_noon + totals.sun_noon,
+              sun_pm: acc.sun_pm + totals.sun_pm,
+              duties_driver_ms: acc.duties_driver_ms + totals.duties_driver_ms,
+              duties_cond_ms: acc.duties_cond_ms + totals.duties_cond_ms,
+              duties_driver_sun: acc.duties_driver_sun + totals.duties_driver_sun,
+              duties_cond_sun: acc.duties_cond_sun + totals.duties_cond_sun
+            };
+          }, {
+            mon_sat_am: 0, mon_sat_noon: 0, mon_sat_pm: 0,
+            sun_am: 0, sun_noon: 0, sun_pm: 0,
+            duties_driver_ms: 0, duties_cond_ms: 0,
+            duties_driver_sun: 0, duties_cond_sun: 0
+          });
+        
+        csv += `\nBEST Total :-,,`;
+        csv += `${bestTotal.mon_sat_am || 0},`;
+        csv += `${bestTotal.mon_sat_noon || 0},`;
+        csv += `${bestTotal.mon_sat_pm || 0},`;
+        csv += `${bestTotal.sun_am || 0},`;
+        csv += `${bestTotal.sun_noon || 0},`;
+        csv += `${bestTotal.sun_pm || 0},`;
+        csv += `${bestTotal.duties_driver_ms || 0},`;
+        csv += `${bestTotal.duties_driver_sun || 0},`;
+        csv += `${bestTotal.duties_cond_ms || 0},`;
+        csv += `${bestTotal.duties_cond_sun || 0}\n`;
+      }
+      
+      // Add Grand Total
+      csv += `\nGrand Total,,`;
+      csv += `${grandTotal.mon_sat_am || 0},`;
+      csv += `${grandTotal.mon_sat_noon || 0},`;
+      csv += `${grandTotal.mon_sat_pm || 0},`;
+      csv += `${grandTotal.sun_am || 0},`;
+      csv += `${grandTotal.sun_noon || 0},`;
+      csv += `${grandTotal.sun_pm || 0},`;
+      csv += `${grandTotal.duties_driver_ms || 0},`;
+      csv += `${grandTotal.duties_driver_sun || 0},`;
+      csv += `${grandTotal.duties_cond_ms || 0},`;
+      csv += `${grandTotal.duties_cond_sun || 0}\n`;
+      
+      // Add Other Duties section if available
+      if (otherDutiesData && otherDutiesData.length > 0) {
+        csv += `\n\nOther Duties:\n`;
+        const formattedDuties = formatOtherDutiesForReport(otherDutiesData);
+        formattedDuties.forEach(line => {
+          csv += `${line}\n`;
+        });
+      }
+      
+      // Add Summary Statistics
+      const driverAvg = ((grandTotal.duties_driver_ms * 6) + grandTotal.duties_driver_sun) / 7;
+      const conductorAvg = ((grandTotal.duties_cond_ms * 6) + grandTotal.duties_cond_sun) / 7;
+      
+      // Extract platform duties
+      const extractPlatformDuties = () => {
+        const categories = {
+          nonPlatformDriver: 0,
+          nonPlatformConductor: 0,
+          otherDutiesDriver: 0,
+          otherDutiesConductor: 0
+        };
+        
+        if (!otherDutiesData || otherDutiesData.length === 0) {
+          return categories;
+        }
+        
+        const normalizeText = (text) => {
+          if (!text) return '';
+          return text.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+        };
+        
+        const categorizePlatform = (platformName) => {
+          const normalized = normalizeText(platformName);
+          if (normalized.includes('non') && normalized.includes('platform') && normalized.includes('driver')) {
+            return 'nonPlatformDriver';
+          }
+          if (normalized.includes('non') && normalized.includes('platform') && normalized.includes('conductor')) {
+            return 'nonPlatformConductor';
+          }
+          if (normalized.includes('other') && (normalized.includes('duties') || normalized.includes('duty')) && normalized.includes('driver')) {
+            return 'otherDutiesDriver';
+          }
+          if (normalized.includes('other') && (normalized.includes('duties') || normalized.includes('duty')) && normalized.includes('conductor')) {
+            return 'otherDutiesConductor';
+          }
+          return null;
+        };
+        
+        otherDutiesData.forEach(entry => {
+          const category = categorizePlatform(entry.platformName);
+          if (category && categories.hasOwnProperty(category)) {
+            categories[category] += entry.totalValue || 0;
+          }
+        });
+        
+        return categories;
+      };
+      
+      const platformDuties = extractPlatformDuties();
+      const driverLeaveReserve = (driverAvg + platformDuties.nonPlatformDriver) * 0.38;
+      const conductorLeaveReserve = (conductorAvg + platformDuties.nonPlatformConductor) * 0.38;
+      const driverGrandTotal = driverAvg + platformDuties.nonPlatformDriver + driverLeaveReserve + platformDuties.otherDutiesDriver;
+      const conductorGrandTotal = conductorAvg + platformDuties.nonPlatformConductor + conductorLeaveReserve + platformDuties.otherDutiesConductor;
+      
+      csv += `\n\nSummary Statistics:\n`;
+      csv += `,Driver,Conductor\n`;
+      csv += `AVERAGE :-,${Math.round(driverAvg)},${Math.round(conductorAvg)}\n`;
+      csv += `Non Platform Duties :-,${platformDuties.nonPlatformDriver},${platformDuties.nonPlatformConductor}\n`;
+      csv += `Leave Reserve :-,${Math.round(driverLeaveReserve)},${Math.round(conductorLeaveReserve)}\n`;
+      csv += `Others :-,${platformDuties.otherDutiesDriver},${platformDuties.otherDutiesConductor}\n`;
+      csv += `Grand Total :-,${Math.round(driverGrandTotal)},${Math.round(conductorGrandTotal)}\n`;
+      
+      // Create and download the file with UTF-8 BOM for better Excel compatibility
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const cleanDepotName = reportData.depot.replace(/[^a-zA-Z0-9]/g, '-');
+      const cleanDate = formattedDate.replace(/\//g, '-');
+      link.download = `Depot-Report-${cleanDepotName}-${cleanDate}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      console.log('CSV export completed');
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      alert('Error exporting CSV. Check console for details.');
+    }
+  };
+
+  /**
    * Group entries by category, operator, and bus type
    * - BEST entries: grouped by bus_type only (no operator)
    * - WET_LEASE entries: grouped by BOTH operator AND bus_type (each combination gets its own section)
@@ -312,6 +556,13 @@ export default function ReportPreview({ reportData }) {
             disabled={generating}
           >
             {generating ? 'Generating...' : 'Download PDF'}
+          </button>
+          <button
+            onClick={handleExportCSV}
+            className="btn-csv"
+            disabled={generating}
+          >
+            📊 Export CSV
           </button>
         </div>
       </div>
