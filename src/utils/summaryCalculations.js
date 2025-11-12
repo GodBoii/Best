@@ -30,27 +30,27 @@ function normalizeText(text) {
  */
 function categorizePlatformEntry(platformName) {
   const normalized = normalizeText(platformName);
-  
+
   // Check for "non platform" + "driver"
   if (normalized.includes('non') && normalized.includes('platform') && normalized.includes('driver')) {
     return 'nonPlatformDriver';
   }
-  
+
   // Check for "non platform" + "conductor"
   if (normalized.includes('non') && normalized.includes('platform') && normalized.includes('conductor')) {
     return 'nonPlatformConductor';
   }
-  
+
   // Check for "other" + ("duties" or "duty") + "driver"
   if (normalized.includes('other') && (normalized.includes('duties') || normalized.includes('duty')) && normalized.includes('driver')) {
     return 'otherDutiesDriver';
   }
-  
+
   // Check for "other" + ("duties" or "duty") + "conductor"
   if (normalized.includes('other') && (normalized.includes('duties') || normalized.includes('duty')) && normalized.includes('conductor')) {
     return 'otherDutiesConductor';
   }
-  
+
   return null;
 }
 
@@ -66,21 +66,21 @@ function extractPlatformDuties(otherDutiesData) {
     otherDutiesDriver: 0,
     otherDutiesConductor: 0
   };
-  
+
   if (!otherDutiesData || otherDutiesData.length === 0) {
     return categories;
   }
-  
+
   // Process each platform entry
   otherDutiesData.forEach(entry => {
     const category = categorizePlatformEntry(entry.platformName);
-    
+
     if (category && categories.hasOwnProperty(category)) {
       // Add the total value to the appropriate category
       categories[category] += entry.totalValue || 0;
     }
   });
-  
+
   return categories;
 }
 
@@ -112,46 +112,46 @@ export function calculateSummaryStatistics(grandTotals, otherDutiesData) {
       grandTotal: 0
     }
   };
-  
+
   // Extract platform duties from other duties data
   const platformDuties = extractPlatformDuties(otherDutiesData);
-  
+
   // Calculate averages
   // Formula: [(Mon-Sat Total × 6) + Sunday Total] ÷ 7
   const driverMonSat = grandTotals?.duties_driver_ms || 0;
   const driverSunday = grandTotals?.duties_driver_sun || 0;
   const conductorMonSat = grandTotals?.duties_cond_ms || 0;
   const conductorSunday = grandTotals?.duties_cond_sun || 0;
-  
+
   summary.driver.average = ((driverMonSat * 6) + driverSunday) / 7;
   summary.conductor.average = ((conductorMonSat * 6) + conductorSunday) / 7;
-  
+
   // Set non-platform duties
   summary.driver.nonPlatform = platformDuties.nonPlatformDriver;
   summary.conductor.nonPlatform = platformDuties.nonPlatformConductor;
-  
+
   // Set others
   summary.driver.others = platformDuties.otherDutiesDriver;
   summary.conductor.others = platformDuties.otherDutiesConductor;
-  
+
   // Calculate leave reserve
-  // Formula: [(Average + Non Platform) × 36%]
-  summary.driver.leaveReserve = (summary.driver.average + summary.driver.nonPlatform) * 0.36;
-  summary.conductor.leaveReserve = (summary.conductor.average + summary.conductor.nonPlatform) * 0.36;
-  
+  // Formula: [(Average + Non Platform) × 38%]
+  summary.driver.leaveReserve = (summary.driver.average + summary.driver.nonPlatform) * 0.38;
+  summary.conductor.leaveReserve = (summary.conductor.average + summary.conductor.nonPlatform) * 0.38;
+
   // Calculate grand totals
-  summary.driver.grandTotal = 
-    summary.driver.average + 
-    summary.driver.nonPlatform + 
-    summary.driver.leaveReserve + 
+  summary.driver.grandTotal =
+    summary.driver.average +
+    summary.driver.nonPlatform +
+    summary.driver.leaveReserve +
     summary.driver.others;
-    
-  summary.conductor.grandTotal = 
-    summary.conductor.average + 
-    summary.conductor.nonPlatform + 
-    summary.conductor.leaveReserve + 
+
+  summary.conductor.grandTotal =
+    summary.conductor.average +
+    summary.conductor.nonPlatform +
+    summary.conductor.leaveReserve +
     summary.conductor.others;
-  
+
   return summary;
 }
 
@@ -169,7 +169,7 @@ export function formatSummaryStatistics(summary, precision = 0) {
     }
     return Number(num.toFixed(precision));
   };
-  
+
   return {
     driver: {
       average: round(summary.driver.average),
