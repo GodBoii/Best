@@ -5,6 +5,7 @@ import storageManager from '../lib/storage/storageManager';
 import RequirementReportDisplay from './RequirementReportDisplay';
 import { calculateRequirementStats, formatRequirementStats, extractDutiesForType } from '../utils/requirementCalculations';
 import { fetchOtherDutiesForReport } from '../lib/otherDutiesHelper';
+import { mergeTemporalEntries, calculateDutyTotalsFromEntries } from '../lib/reportHelpers/depotScheduleHelper';
 
 export default function RequirementReportSection() {
   const getCurrentDate = () => {
@@ -57,15 +58,23 @@ export default function RequirementReportSection() {
         return;
       }
 
-      // Get the latest schedule for each depot
+      // Get the latest schedule for each depot and collect all schedule IDs per depot
       const schedulesByDepot = new Map();
+      const scheduleIdsByDepot = new Map();
+
       allSchedules.forEach(schedule => {
-        if (!schedulesByDepot.has(schedule.depot_id)) {
-          schedulesByDepot.set(schedule.depot_id, schedule);
+        const depotId = schedule.depot_id;
+        const existingIds = scheduleIdsByDepot.get(depotId) || [];
+        existingIds.push(schedule.id);
+        scheduleIdsByDepot.set(depotId, existingIds);
+
+        if (!schedulesByDepot.has(depotId)) {
+          schedulesByDepot.set(depotId, schedule);
         }
       });
 
       const schedules = Array.from(schedulesByDepot.values());
+      const allScheduleIds = Array.from(new Set(Array.from(scheduleIdsByDepot.values()).flat()));
       console.log('📅 Latest schedules per depot:', schedules.length);
 
       // 3. Fetch all schedule entries for these schedules
@@ -76,9 +85,9 @@ export default function RequirementReportSection() {
 
       if (entriesError) throw new Error('Error fetching schedule entries: ' + entriesError.message);
 
-      // Filter entries by schedule IDs and exclude deleted entries
+      // Filter entries by schedule IDs
       const filteredEntries = allEntries.filter(e =>
-        scheduleIds.includes(e.schedule_id) && !e.is_deleted
+        allScheduleIds.includes(e.schedule_id)
       );
       console.log('📋 Filtered entries:', filteredEntries.length);
 
@@ -88,6 +97,7 @@ export default function RequirementReportSection() {
 
       for (const depot of depots) {
         const depotSchedule = schedules.find(s => s.depot_id === depot.id);
+        const depotScheduleIds = scheduleIdsByDepot.get(depot.id) || [];
 
         if (!depotSchedule) {
           console.log(`⚠️ No schedule for depot: ${depot.name}`);
@@ -113,26 +123,15 @@ export default function RequirementReportSection() {
           continue;
         }
 
-        // Get entries for this depot
-        const depotEntries = filteredEntries.filter(e => e.schedule_id === depotSchedule.id);
+        // Collect entries across all schedules for this depot (temporal view)
+        const depotEntries = filteredEntries.filter(e => depotScheduleIds.includes(e.schedule_id));
+        const resolvedEntries = mergeTemporalEntries(depotEntries, reportDate);
+        const dutyTotals = calculateDutyTotalsFromEntries(resolvedEntries);
 
-        // Aggregate duty allocations
-        let driverMonSat = 0;
-        let driverSun = 0;
-        let conductorMonSat = 0;
-        let conductorSun = 0;
-
-        depotEntries.forEach(entry => {
-          const parseValue = (val) => {
-            if (val === '-' || val === null || val === undefined || val === '') return 0;
-            return parseInt(val) || 0;
-          };
-
-          driverMonSat += parseValue(entry.duties_driver_ms);
-          driverSun += parseValue(entry.duties_driver_sun);
-          conductorMonSat += parseValue(entry.duties_cond_ms);
-          conductorSun += parseValue(entry.duties_cond_sun);
-        });
+        const driverMonSat = dutyTotals.duties_driver_ms;
+        const driverSun = dutyTotals.duties_driver_sun;
+        const conductorMonSat = dutyTotals.duties_cond_ms;
+        const conductorSun = dutyTotals.duties_cond_sun;
 
         // Fetch other duties for this depot
         const otherDutiesData = await fetchOtherDutiesForReport(depot.id, reportDate);
@@ -169,7 +168,8 @@ export default function RequirementReportSection() {
 
         console.log(`✅ Processed ${depot.name}:`, {
           driver: { monSat: driverMonSat, sun: driverSun },
-          conductor: { monSat: conductorMonSat, sun: conductorSun }
+          conductor: { monSat: conductorMonSat, sun: conductorSun },
+          mergedEntries: resolvedEntries.length
         });
       }
 
