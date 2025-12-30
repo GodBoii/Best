@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import DepotReportSection from './DepotReportSection';
 import SummaryReportSection from './SummaryReportSection';
 import RequirementReportSection from './RequirementReportSection';
+import OperatorReportSection from './OperatorReportSection';
 
 export default function ReportsContent() {
   const searchParams = useSearchParams();
@@ -17,6 +18,8 @@ export default function ReportsContent() {
       setActiveTab('summary');
     } else if (tab === 'requirement') {
       setActiveTab('requirement');
+    } else if (tab === 'operator') {
+      setActiveTab('operator');
     }
   }, [searchParams]);
 
@@ -41,12 +44,19 @@ export default function ReportsContent() {
         >
           Requirement Report
         </button>
+        <button
+          className={`tab-button ${activeTab === 'operator' ? 'active' : ''}`}
+          onClick={() => setActiveTab('operator')}
+        >
+          Operator Report
+        </button>
       </div>
 
       <div className="reports-content">
         {activeTab === 'depot' && <DepotReportSection />}
         {activeTab === 'summary' && <SummaryReportSection />}
         {activeTab === 'requirement' && <RequirementReportSection />}
+        {activeTab === 'operator' && <OperatorReportSection />}
       </div>
     </div>
   );

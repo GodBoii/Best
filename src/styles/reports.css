@@ -319,3 +319,145 @@
     border-left: 2px solid #000;
   }
 }
+
+/* ============================================
+   FORMAT REPORT STYLES (Excel-Style Report)
+   ============================================ */
+
+.format-report-preview-container {
+  background: var(--white);
+  padding: 2rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 8px var(--shadow);
+  border: 1px solid var(--border);
+  margin-top: 1.5rem;
+}
+
+.format-report-preview-content {
+  overflow-x: auto;
+}
+
+.format-report-preview-content .report-header-info {
+  margin-bottom: 1.5rem;
+}
+
+.format-report-preview-content .report-header-info h3 {
+  font-size: 1.1rem;
+  color: var(--dark);
+  margin: 0 0 0.5rem 0;
+}
+
+.format-report-preview-content .report-info {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.report-description {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--light-alt);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--info);
+}
+
+/* Format Report Table */
+.format-report-table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 8px var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.format-report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  min-width: 1200px;
+}
+
+.format-report-table th,
+.format-report-table td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.35rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.format-report-table thead {
+  background: var(--dark);
+  color: var(--white);
+  font-weight: 600;
+}
+
+.format-report-table thead th {
+  padding: 0.6rem 0.35rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.format-report-table tbody tr {
+  transition: all var(--transition-fast);
+}
+
+.format-report-table tbody tr:nth-child(even) {
+  background: var(--light);
+}
+
+.format-report-table tbody tr:hover {
+  background: var(--light-alt);
+}
+
+.format-report-table td.center {
+  text-align: center;
+}
+
+.format-report-table td.empty-cell {
+  background: #fafafa;
+  color: #999;
+}
+
+/* Print styles for Format Report */
+@media print {
+  .format-report-preview-container {
+    box-shadow: none;
+    padding: 0;
+    border: none;
+  }
+
+  .format-report-table {
+    font-size: 8pt;
+  }
+
+  .format-report-table th,
+  .format-report-table td {
+    padding: 2px 4px;
+  }
+}
+
+/* Responsive adjustments for Format Report */
+@media (max-width: 1024px) {
+  .format-report-table {
+    font-size: 0.7rem;
+  }
+  
+  .format-report-table th,
+  .format-report-table td {
+    padding: 0.4rem 0.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .format-report-preview-container {
+    padding: 1rem;
+  }
+  
+  .format-report-table-wrapper {
+    margin: 0 -1rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+}
