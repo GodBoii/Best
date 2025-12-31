@@ -98,12 +98,12 @@ export const generateOperatorReportExcel = async (reportData, preview = false) =
 
     // Row 2: Header Row 1
     wsData.push([
-      'Sr.', 'Route', 'Code', 'Depot', 'Operator', 'Destination', '', 'Route', 'Mon To Sat', '', '', 'Sunday', '', '', 'Line', 'Date', 'Remark'
+      'Sr.', 'Route', 'Code', 'Depot', 'Operator', 'Mon To Sat', '', '', 'Sunday', '', ''
     ]);
 
     // Row 3: Header Row 2
     wsData.push([
-      'No.', '', '', '', '', 'From', 'To', 'Span', 'AM', 'NOON', 'PM', 'AM', 'NOON', 'PM', 'Notice', '', ''
+      'No.', '', '', '', '', 'AM', 'NOON', 'PM', 'AM', 'NOON', 'PM'
     ]);
 
     // Data rows
@@ -119,18 +119,12 @@ export const generateOperatorReportExcel = async (reportData, preview = false) =
         routeCode,                          // Code
         depotShort,                         // Depot
         operatorName,                       // Operator
-        '',                                 // Destination From (empty)
-        '',                                 // Destination To (empty)
-        '',                                 // Route Span (empty)
         formatValue(entry.mon_sat_am),      // Mon-Sat AM
         formatValue(entry.mon_sat_noon),    // Mon-Sat NOON
         formatValue(entry.mon_sat_pm),      // Mon-Sat PM
         formatValue(entry.sun_am),          // Sunday AM
         formatValue(entry.sun_noon),        // Sunday NOON
-        formatValue(entry.sun_pm),          // Sunday PM
-        '',                                 // Line Notice (empty)
-        '',                                 // Date (empty)
-        ''                                  // Remark (empty)
+        formatValue(entry.sun_pm)           // Sunday PM
       ]);
     });
 
@@ -139,8 +133,8 @@ export const generateOperatorReportExcel = async (reportData, preview = false) =
 
     // --- APPLY MERGES ---
     ws['!merges'] = [
-      // Row 1: Title spans all columns (A1:Q1)
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 16 } },
+      // Row 1: Title spans all columns (A1:K1)
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 10 } },
 
       // Header Merges
       { s: { r: 1, c: 0 }, e: { r: 2, c: 0 } },   // Sr. No. (A2:A3)
@@ -148,13 +142,8 @@ export const generateOperatorReportExcel = async (reportData, preview = false) =
       { s: { r: 1, c: 2 }, e: { r: 2, c: 2 } },   // Code (C2:C3)
       { s: { r: 1, c: 3 }, e: { r: 2, c: 3 } },   // Depot (D2:D3)
       { s: { r: 1, c: 4 }, e: { r: 2, c: 4 } },   // Operator (E2:E3)
-      { s: { r: 1, c: 5 }, e: { r: 1, c: 6 } },   // Destination (F2:G2)
-      { s: { r: 1, c: 7 }, e: { r: 2, c: 7 } },   // Route Span (H2:H3)
-      { s: { r: 1, c: 8 }, e: { r: 1, c: 10 } },  // Mon To Sat (I2:K2)
-      { s: { r: 1, c: 11 }, e: { r: 1, c: 13 } }, // Sunday (L2:N2)
-      { s: { r: 1, c: 14 }, e: { r: 2, c: 14 } }, // Line Notice (O2:O3)
-      { s: { r: 1, c: 15 }, e: { r: 2, c: 15 } }, // Date (P2:P3)
-      { s: { r: 1, c: 16 }, e: { r: 2, c: 16 } }  // Remark (Q2:Q3)
+      { s: { r: 1, c: 5 }, e: { r: 1, c: 7 } },   // Mon To Sat (F2:H2)
+      { s: { r: 1, c: 8 }, e: { r: 1, c: 10 } }   // Sunday (I2:K2)
     ];
 
     // --- APPLY COLUMN WIDTHS ---
@@ -164,18 +153,12 @@ export const generateOperatorReportExcel = async (reportData, preview = false) =
       { wch: 8 },   // Code
       { wch: 8 },   // Depot
       { wch: 12 },  // Operator
-      { wch: 25 },  // Destination From
-      { wch: 25 },  // Destination To
-      { wch: 10 },  // Route Span
       { wch: 5 },   // Mon-Sat AM
       { wch: 5 },   // Mon-Sat NOON
       { wch: 5 },   // Mon-Sat PM
       { wch: 5 },   // Sunday AM
       { wch: 5 },   // Sunday NOON
-      { wch: 5 },   // Sunday PM
-      { wch: 12 },  // Line Notice
-      { wch: 12 },  // Date
-      { wch: 30 }   // Remark
+      { wch: 5 }    // Sunday PM
     ];
 
     // --- APPLY STYLES TO CELLS ---

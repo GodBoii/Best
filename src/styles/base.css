@@ -44,6 +44,12 @@ body {
   letter-spacing: -0.5px;
 }
 
+.app-header .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 /* Navigation */
 .app-nav {
   background: var(--white);

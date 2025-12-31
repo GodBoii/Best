@@ -7,60 +7,67 @@ import PlatformMasterManager from '../../components/PlatformMasterManager';
 import PlatformDutyMasterManager from '../../components/PlatformDutyMasterManager';
 import SummaryRemarkManager from '../../components/SummaryRemarkManager';
 import StorageToggle from '../../components/StorageToggle';
+import AuthGuard from '../../components/AuthGuard';
+import UserMenu from '../../components/UserMenu';
 import '../../styles/globals.css';
 import '../../styles/other-duties.css';
 
 export default function OtherDutiesPage() {
   return (
-    <div className="app-container">
-      <header className="app-header">
-        <h1>Other Duties Management</h1>
-        <StorageToggle />
-      </header>
-
-      <nav className="app-nav">
-        <Link href="/">
-          <button>Schedule Entry</button>
-        </Link>
-        <Link href="/modifications">
-          <button>Schedule Modifications</button>
-        </Link>
-        <Link href="/reports">
-          <button>Reports</button>
-        </Link>
-        <Link href="/fleet">
-          <button>FLEET Schedule</button>
-        </Link>
-        <Link href="/other-duties">
-          <button className="active">Other Duties</button>
-        </Link>
-        <Link href="/settings">
-          <button>⚙️ Settings</button>
-        </Link>
-      </nav>
-
-      <main className="app-main">
-        {/* Master Data Management Section */}
-        <div className="master-data-section" style={{ marginBottom: '30px' }}>
-          <h2 style={{ marginBottom: '20px', color: '#2c3e50' }}>Master Data Configuration</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px' }}>
-            <PlatformMasterManager />
-            <PlatformDutyMasterManager />
+    <AuthGuard>
+      <div className="app-container">
+        <header className="app-header">
+          <h1>Other Duties Management</h1>
+          <div className="header-actions">
+            <StorageToggle />
+            <UserMenu />
           </div>
-        </div>
+        </header>
 
-        {/* Other Duties Entry Section */}
-        <OtherDutiesManager />
+        <nav className="app-nav">
+          <Link href="/">
+            <button>Schedule Entry</button>
+          </Link>
+          <Link href="/modifications">
+            <button>Schedule Modifications</button>
+          </Link>
+          <Link href="/reports">
+            <button>Reports</button>
+          </Link>
+          <Link href="/fleet">
+            <button>FLEET Schedule</button>
+          </Link>
+          <Link href="/other-duties">
+            <button className="active">Other Duties</button>
+          </Link>
+          <Link href="/settings">
+            <button>⚙️ Settings</button>
+          </Link>
+        </nav>
 
-        {/* Summary Report Remarks Section */}
-        <div style={{ marginTop: '40px', borderTop: '2px solid #e0e0e0', paddingTop: '30px' }}>
-          <SummaryRemarkManager />
-        </div>
-      </main>
+        <main className="app-main">
+          {/* Master Data Management Section */}
+          <div className="master-data-section" style={{ marginBottom: '30px' }}>
+            <h2 style={{ marginBottom: '20px', color: '#2c3e50' }}>Master Data Configuration</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px' }}>
+              <PlatformMasterManager />
+              <PlatformDutyMasterManager />
+            </div>
+          </div>
 
-      <footer className="app-footer">
-        <p>Bus Schedule Management System © 2025</p>
-      </footer>
-    </div>
+          {/* Other Duties Entry Section */}
+          <OtherDutiesManager />
+
+          {/* Summary Report Remarks Section */}
+          <div style={{ marginTop: '40px', borderTop: '2px solid #e0e0e0', paddingTop: '30px' }}>
+            <SummaryRemarkManager />
+          </div>
+        </main>
+
+        <footer className="app-footer">
+          <p>Bus Schedule Management System © 2025</p>
+        </footer>
+      </div>
+    </AuthGuard>
   );
 }

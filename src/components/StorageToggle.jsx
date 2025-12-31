@@ -4,31 +4,12 @@ import { useState, useEffect } from 'react';
 import storageManager from '../lib/storage/storageManager';
 
 export default function StorageToggle() {
-  const [storageMode, setStorageMode] = useState('online');
   const [storageInfo, setStorageInfo] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isBusy, setIsBusy] = useState(false);
 
   useEffect(() => {
-    // Get initial storage mode
-    const mode = storageManager.getMode();
-    setStorageMode(mode);
-
-    // Get storage info if in local mode
-    if (mode === 'local') {
-      loadStorageInfo();
-    }
-
-    // Listen for storage mode changes
-    const handleStorageModeChange = (event) => {
-      setStorageMode(event.detail.mode);
-      if (event.detail.mode === 'local') {
-        loadStorageInfo();
-      }
-    };
-
-    window.addEventListener('storageModeChanged', handleStorageModeChange);
-    return () => window.removeEventListener('storageModeChanged', handleStorageModeChange);
+    loadStorageInfo();
   }, []);
 
   const loadStorageInfo = async () => {
@@ -40,41 +21,8 @@ export default function StorageToggle() {
     }
   };
 
-  const handleToggleMode = async () => {
-    const newMode = storageMode === 'online' ? 'local' : 'online';
-    
-    const confirmMessage = newMode === 'local'
-      ? 'Switch to Local Storage? Data will be saved in your browser instead of the cloud.'
-      : 'Switch to Online Storage? Data will be saved to Supabase cloud database.';
-
-    if (confirm(confirmMessage)) {
-      setIsLoading(true);
-      try {
-        await storageManager.switchMode(newMode);
-        setStorageMode(newMode);
-        
-        if (newMode === 'local') {
-          await loadStorageInfo();
-        }
-        
-        // Reload the page to refresh data
-        window.location.reload();
-      } catch (error) {
-        console.error('Error switching storage mode:', error);
-        alert('Error switching storage mode: ' + error.message);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
-
   const handleExportData = async () => {
-    if (storageMode !== 'local') {
-      alert('Export is only available in Local Storage mode');
-      return;
-    }
-
-    setIsLoading(true);
+    setIsBusy(true);
     try {
       await storageManager.exportLocalData();
       alert('Data exported successfully!');
@@ -82,16 +30,11 @@ export default function StorageToggle() {
       console.error('Error exporting data:', error);
       alert('Error exporting data: ' + error.message);
     } finally {
-      setIsLoading(false);
+      setIsBusy(false);
     }
   };
 
   const handleImportData = async () => {
-    if (storageMode !== 'local') {
-      alert('Import is only available in Local Storage mode');
-      return;
-    }
-
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
@@ -101,7 +44,7 @@ export default function StorageToggle() {
       if (!file) return;
 
       if (confirm('Import data? This will replace all existing local data.')) {
-        setIsLoading(true);
+        setIsBusy(true);
         try {
           await storageManager.importLocalData(file);
           alert('Data imported successfully!');
@@ -110,7 +53,7 @@ export default function StorageToggle() {
           console.error('Error importing data:', error);
           alert('Error importing data: ' + error.message);
         } finally {
-          setIsLoading(false);
+          setIsBusy(false);
         }
       }
     };
@@ -118,45 +61,21 @@ export default function StorageToggle() {
     input.click();
   };
 
-  const handleMigrateToLocal = async () => {
-    if (storageMode !== 'online') {
-      alert('Must be in Online mode to migrate from Supabase');
+  const handleClearData = async () => {
+    if (!confirm('Clear all local data? This action cannot be undone.')) {
       return;
     }
 
-    if (confirm('Migrate all data from Supabase to Local Storage? This will switch to local mode.')) {
-      setIsLoading(true);
-      try {
-        const result = await storageManager.migrateFromSupabaseToLocal();
-        alert(`Migration successful! ${result.recordCount} records migrated.`);
-        window.location.reload();
-      } catch (error) {
-        console.error('Error migrating data:', error);
-        alert('Error migrating data: ' + error.message);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
-
-  const handleMigrateToSupabase = async () => {
-    if (storageMode !== 'local') {
-      alert('Must be in Local mode to migrate to Supabase');
-      return;
-    }
-
-    if (confirm('Migrate all data from Local Storage to Supabase? This will switch to online mode.')) {
-      setIsLoading(true);
-      try {
-        const result = await storageManager.migrateFromLocalToSupabase();
-        alert(`Migration successful! ${result.recordCount} records migrated.`);
-        window.location.reload();
-      } catch (error) {
-        console.error('Error migrating data:', error);
-        alert('Error migrating data: ' + error.message);
-      } finally {
-        setIsLoading(false);
-      }
+    setIsBusy(true);
+    try {
+      await storageManager.clearLocalData();
+      alert('All local data cleared.');
+      window.location.reload();
+    } catch (error) {
+      console.error('Error clearing data:', error);
+      alert('Error clearing data: ' + error.message);
+    } finally {
+      setIsBusy(false);
     }
   };
 
@@ -165,19 +84,8 @@ export default function StorageToggle() {
       <div className="storage-toggle-main">
         <div className="storage-status">
           <span className="storage-label">Storage:</span>
-          <span className={`storage-mode ${storageMode}`}>
-            {storageMode === 'online' ? '☁️ Online' : '💾 Local'}
-          </span>
+          <span className="storage-mode local">💾 Local (IndexedDB)</span>
         </div>
-
-        <button
-          onClick={handleToggleMode}
-          disabled={isLoading}
-          className="btn-toggle-storage"
-          title={`Switch to ${storageMode === 'online' ? 'Local' : 'Online'} Storage`}
-        >
-          {isLoading ? '⏳' : '🔄'}
-        </button>
 
         <button
           onClick={() => setShowMenu(!showMenu)}
@@ -195,42 +103,29 @@ export default function StorageToggle() {
             <button onClick={() => setShowMenu(false)} className="btn-close">✕</button>
           </div>
 
-          {storageInfo && storageMode === 'local' && (
+          {storageInfo && (
             <div className="storage-info">
               <p><strong>Storage Used:</strong> {storageInfo.usageMB} MB</p>
               <p><strong>Storage Quota:</strong> {storageInfo.quotaMB} MB</p>
               <p><strong>Usage:</strong> {storageInfo.percentUsed}%</p>
-              <p><strong>Persistent:</strong> {storageInfo.isPersisted ? '✅ Yes' : '⚠️ No'}</p>
             </div>
           )}
 
           <div className="storage-actions">
-            {storageMode === 'local' && (
-              <>
-                <button onClick={handleExportData} disabled={isLoading} className="btn-action">
-                  📥 Export Data
-                </button>
-                <button onClick={handleImportData} disabled={isLoading} className="btn-action">
-                  📤 Import Data
-                </button>
-                <button onClick={handleMigrateToSupabase} disabled={isLoading} className="btn-action">
-                  ☁️ Migrate to Supabase
-                </button>
-              </>
-            )}
-
-            {storageMode === 'online' && (
-              <button onClick={handleMigrateToLocal} disabled={isLoading} className="btn-action">
-                💾 Migrate to Local
-              </button>
-            )}
+            <button onClick={handleExportData} disabled={isBusy} className="btn-action">
+              📥 Export Data
+            </button>
+            <button onClick={handleImportData} disabled={isBusy} className="btn-action">
+              📤 Import Data
+            </button>
+            <button onClick={handleClearData} disabled={isBusy} className="btn-action danger">
+              🧹 Clear Local Data
+            </button>
           </div>
 
           <div className="storage-help">
             <p className="help-text">
-              {storageMode === 'online' 
-                ? '📡 Data is saved to Supabase cloud database'
-                : '💾 Data is saved locally in your browser'}
+              💾 All application data is stored locally in your browser.
             </p>
           </div>
         </div>
@@ -270,17 +165,11 @@ export default function StorageToggle() {
           border-radius: 4px;
         }
 
-        .storage-mode.online {
-          background: #e3f2fd;
-          color: #1976d2;
-        }
-
         .storage-mode.local {
           background: #f3e5f5;
           color: #7b1fa2;
         }
 
-        .btn-toggle-storage,
         .btn-menu {
           background: white;
           border: 1px solid #ddd;
@@ -291,15 +180,9 @@ export default function StorageToggle() {
           transition: all 0.2s;
         }
 
-        .btn-toggle-storage:hover,
         .btn-menu:hover {
           background: #f0f0f0;
           transform: scale(1.05);
-        }
-
-        .btn-toggle-storage:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
         }
 
         .storage-menu {
@@ -385,6 +268,16 @@ export default function StorageToggle() {
         .btn-action:disabled {
           opacity: 0.5;
           cursor: not-allowed;
+        }
+
+        .btn-action.danger {
+          border-color: #f5c6cb;
+          color: #c82333;
+        }
+
+        .btn-action.danger:hover {
+          background: #f8d7da;
+          border-color: #c82333;
         }
 
         .storage-help {

@@ -1,96 +1,61 @@
 /**
- * Storage Manager - Unified interface for online (Supabase) and local (IndexedDB) storage
- * Automatically routes operations based on user's storage preference
+ * Storage Manager - Unified interface for the browser-based IndexedDB storage.
+ * Provides a Supabase-like API surface so the rest of the app can remain unchanged.
  */
 
-import { supabase } from '../supabase';
 import IndexedDBAdapter from './indexedDBAdapter';
 
 class StorageManager {
   constructor() {
-    this.mode = null;
     this.indexedDBAdapter = null;
-    this.initializeMode();
+    this.initialize();
   }
 
   /**
-   * Initialize storage mode from localStorage
+   * Initialize the IndexedDB adapter when running in the browser.
    */
-  initializeMode() {
-    // Check if running in browser
-    if (typeof window !== 'undefined') {
-      const savedMode = localStorage.getItem('storageMode');
-      this.mode = savedMode || 'online'; // Default to online
-      
-      // Initialize IndexedDB adapter if in local mode
-      if (this.mode === 'local') {
-        this.indexedDBAdapter = new IndexedDBAdapter();
-      }
-    } else {
-      this.mode = 'online'; // Server-side rendering defaults to online
+  initialize() {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (!this.indexedDBAdapter) {
+      this.indexedDBAdapter = new IndexedDBAdapter();
     }
   }
 
   /**
-   * Get current storage mode
+   * Get current storage mode (always local)
    */
   getMode() {
-    return this.mode;
+    return 'local';
   }
 
   /**
-   * Switch storage mode
-   */
-  async switchMode(newMode) {
-    if (newMode !== 'online' && newMode !== 'local') {
-      throw new Error('Invalid storage mode. Use "online" or "local"');
-    }
-
-    this.mode = newMode;
-    localStorage.setItem('storageMode', newMode);
-
-    // Initialize IndexedDB adapter if switching to local
-    if (newMode === 'local' && !this.indexedDBAdapter) {
-      this.indexedDBAdapter = new IndexedDBAdapter();
-      await this.indexedDBAdapter.initPromise; // Wait for initialization
-    }
-
-    // Trigger a page reload to refresh data
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('storageModeChanged', { detail: { mode: newMode } }));
-    }
-
-    return newMode;
-  }
-
-  /**
-   * Get the appropriate client based on current mode
+   * Get the IndexedDB adapter client
    */
   getClient() {
-    if (this.mode === 'local') {
-      if (!this.indexedDBAdapter) {
-        this.indexedDBAdapter = new IndexedDBAdapter();
-      }
-      return this.indexedDBAdapter;
+    if (!this.indexedDBAdapter && typeof window !== 'undefined') {
+      this.indexedDBAdapter = new IndexedDBAdapter();
     }
-    return supabase;
+    return this.indexedDBAdapter;
   }
 
   /**
    * Supabase-compatible API: from() method
    */
   from(table) {
-    return this.getClient().from(table);
+    const client = this.getClient();
+    if (!client) {
+      throw new Error('IndexedDB is not available in the current environment');
+    }
+    return client.from(table);
   }
 
   /**
    * Export local data to JSON file
    */
   async exportLocalData() {
-    if (this.mode !== 'local') {
-      throw new Error('Can only export data in local storage mode');
-    }
-
     if (!this.indexedDBAdapter) {
       this.indexedDBAdapter = new IndexedDBAdapter();
       await this.indexedDBAdapter.initPromise;
@@ -118,10 +83,6 @@ class StorageManager {
    * Import data from JSON file to local storage
    */
   async importLocalData(file) {
-    if (this.mode !== 'local') {
-      throw new Error('Can only import data in local storage mode');
-    }
-
     if (!this.indexedDBAdapter) {
       this.indexedDBAdapter = new IndexedDBAdapter();
       await this.indexedDBAdapter.initPromise;
@@ -149,10 +110,6 @@ class StorageManager {
    * Get storage statistics (only for local mode)
    */
   async getStorageInfo() {
-    if (this.mode !== 'local') {
-      return { mode: 'online', message: 'Storage info only available in local mode' };
-    }
-
     if (!this.indexedDBAdapter) {
       this.indexedDBAdapter = new IndexedDBAdapter();
       await this.indexedDBAdapter.initPromise;
@@ -166,10 +123,6 @@ class StorageManager {
    * Clear all local data (use with caution!)
    */
   async clearLocalData() {
-    if (this.mode !== 'local') {
-      throw new Error('Can only clear data in local storage mode');
-    }
-
     if (!this.indexedDBAdapter) {
       this.indexedDBAdapter = new IndexedDBAdapter();
       await this.indexedDBAdapter.initPromise;
@@ -185,67 +138,9 @@ class StorageManager {
   }
 
   /**
-   * Migrate data from Supabase to Local storage
+   * Migrate data helpers have been removed because Supabase is no longer used for persistence.
+   * Keeping a placeholder to avoid accidental reintroduction of remote migrations.
    */
-  async migrateFromSupabaseToLocal() {
-    if (this.mode !== 'online') {
-      throw new Error('Must be in online mode to migrate from Supabase');
-    }
-
-    // Fetch all data from Supabase
-    const tables = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'summary_settings', 'platform_master', 'platform_duty_master', 'other_duties_entries', 'other_duties_items', 'summary_report_remarks'];
-    const exportData = {};
-
-    for (const table of tables) {
-      const { data, error } = await supabase.from(table).select('*');
-      if (error) {
-        throw new Error(`Error fetching ${table}: ${error.message}`);
-      }
-      exportData[table] = data || [];
-    }
-
-    // Switch to local mode
-    await this.switchMode('local');
-
-    // Import data to IndexedDB
-    await this.indexedDBAdapter.importData(exportData);
-
-    return { success: true, message: 'Data migrated to local storage', recordCount: Object.values(exportData).flat().length };
-  }
-
-  /**
-   * Migrate data from Local storage to Supabase
-   */
-  async migrateFromLocalToSupabase() {
-    if (this.mode !== 'local') {
-      throw new Error('Must be in local mode to migrate from local storage');
-    }
-
-    // Export data from IndexedDB
-    const exportData = await this.indexedDBAdapter.exportData();
-
-    // Switch to online mode
-    await this.switchMode('online');
-
-    // Import data to Supabase
-    const tables = ['depots', 'operators', 'bus_types', 'routes', 'schedules', 'schedule_entries', 'summary_settings', 'platform_master', 'platform_duty_master', 'other_duties_entries', 'other_duties_items', 'summary_report_remarks'];
-    
-    for (const table of tables) {
-      if (exportData[table] && exportData[table].length > 0) {
-        // Clear existing data (optional - comment out if you want to merge)
-        // await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
-        
-        // Insert new data
-        const { error } = await supabase.from(table).insert(exportData[table]);
-        if (error) {
-          console.error(`Error inserting ${table}:`, error);
-          throw new Error(`Error migrating ${table}: ${error.message}`);
-        }
-      }
-    }
-
-    return { success: true, message: 'Data migrated to Supabase', recordCount: Object.values(exportData).flat().length };
-  }
 }
 
 // Create singleton instance

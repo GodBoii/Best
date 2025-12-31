@@ -86,17 +86,10 @@ export default function OperatorReportPreview({ reportData }) {
                                 <th rowSpan="2">Code</th>
                                 <th rowSpan="2">Depot</th>
                                 <th rowSpan="2">Operator</th>
-                                <th colSpan="2">Destination</th>
-                                <th rowSpan="2">Route<br />Span</th>
                                 <th colSpan="3">Mon To Sat</th>
                                 <th colSpan="3">Sunday</th>
-                                <th rowSpan="2">Line<br />Notice</th>
-                                <th rowSpan="2">Date</th>
-                                <th rowSpan="2">Remark</th>
                             </tr>
                             <tr>
-                                <th>From</th>
-                                <th>To</th>
                                 <th>AM</th>
                                 <th>NOON</th>
                                 <th>PM</th>
@@ -119,18 +112,12 @@ export default function OperatorReportPreview({ reportData }) {
                                         <td className="center">{routeCode}</td>
                                         <td className="center">{depotShort}</td>
                                         <td className="center">{operatorName}</td>
-                                        <td className="empty-cell"></td>
-                                        <td className="empty-cell"></td>
-                                        <td className="empty-cell"></td>
                                         <td className="center">{formatValue(entry.mon_sat_am)}</td>
                                         <td className="center">{formatValue(entry.mon_sat_noon)}</td>
                                         <td className="center">{formatValue(entry.mon_sat_pm)}</td>
                                         <td className="center">{formatValue(entry.sun_am)}</td>
                                         <td className="center">{formatValue(entry.sun_noon)}</td>
                                         <td className="center">{formatValue(entry.sun_pm)}</td>
-                                        <td className="empty-cell"></td>
-                                        <td className="empty-cell"></td>
-                                        <td className="empty-cell"></td>
                                     </tr>
                                 );
                             })}

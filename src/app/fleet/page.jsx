@@ -3,44 +3,51 @@
 import Link from 'next/link';
 import FleetSchedule from '../../components/FleetSchedule';
 import StorageToggle from '../../components/StorageToggle';
+import AuthGuard from '../../components/AuthGuard';
+import UserMenu from '../../components/UserMenu';
 import '../../styles/globals.css';
 
 export default function FleetPage() {
   return (
-    <div className="app-container">
-      <header className="app-header">
-        <h1>Bus Schedule Management System</h1>
-        <StorageToggle />
-      </header>
+    <AuthGuard>
+      <div className="app-container">
+        <header className="app-header">
+          <h1>Bus Schedule Management System</h1>
+          <div className="header-actions">
+            <StorageToggle />
+            <UserMenu />
+          </div>
+        </header>
 
-      <nav className="app-nav">
-        <Link href="/">
-          <button>Schedule Entry</button>
-        </Link>
-        <Link href="/modifications">
-          <button>Schedule Modifications</button>
-        </Link>
-        <Link href="/reports">
-          <button>Reports</button>
-        </Link>
-        <Link href="/fleet">
-          <button className="active">FLEET Schedule</button>
-        </Link>
-        <Link href="/other-duties">
-          <button>Other Duties</button>
-        </Link>
-        <Link href="/settings">
-          <button>⚙️ Settings</button>
-        </Link>
-      </nav>
+        <nav className="app-nav">
+          <Link href="/">
+            <button>Schedule Entry</button>
+          </Link>
+          <Link href="/modifications">
+            <button>Schedule Modifications</button>
+          </Link>
+          <Link href="/reports">
+            <button>Reports</button>
+          </Link>
+          <Link href="/fleet">
+            <button className="active">FLEET Schedule</button>
+          </Link>
+          <Link href="/other-duties">
+            <button>Other Duties</button>
+          </Link>
+          <Link href="/settings">
+            <button>⚙️ Settings</button>
+          </Link>
+        </nav>
 
-      <main className="app-main">
-        <FleetSchedule />
-      </main>
+        <main className="app-main">
+          <FleetSchedule />
+        </main>
 
-      <footer className="app-footer">
-        <p>Bus Schedule Management System © 2025</p>
-      </footer>
-    </div>
+        <footer className="app-footer">
+          <p>Bus Schedule Management System © 2025</p>
+        </footer>
+      </div>
+    </AuthGuard>
   );
 }

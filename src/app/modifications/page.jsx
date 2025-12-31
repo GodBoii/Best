@@ -6,45 +6,52 @@ import StorageToggle from '../../components/StorageToggle';
 import BackupReminder from '../../components/BackupReminder';
 import '../../styles/globals.css';
 import '../../styles/modifications.css';
+import AuthGuard from '../../components/AuthGuard';
+import UserMenu from '../../components/UserMenu';
 
 export default function ModificationsPage() {
     return (
-        <div className="app-container">
-            <BackupReminder />
+        <AuthGuard>
+            <div className="app-container">
+                <BackupReminder />
 
-            <header className="app-header">
-                <h1>Bus Schedule Management System</h1>
-                <StorageToggle />
-            </header>
+                <header className="app-header">
+                    <h1>Bus Schedule Management System</h1>
+                    <div className="header-actions">
+                        <StorageToggle />
+                        <UserMenu />
+                    </div>
+                </header>
 
-            <nav className="app-nav">
-                <Link href="/">
-                    <button>Schedule Entry</button>
-                </Link>
-                <Link href="/modifications">
-                    <button className="active">Schedule Modifications</button>
-                </Link>
-                <Link href="/reports">
-                    <button>Reports</button>
-                </Link>
-                <Link href="/fleet">
-                    <button>FLEET Schedule</button>
-                </Link>
-                <Link href="/other-duties">
-                    <button>Other Duties</button>
-                </Link>
-                <Link href="/settings">
-                    <button>⚙️ Settings</button>
-                </Link>
-            </nav>
+                <nav className="app-nav">
+                    <Link href="/">
+                        <button>Schedule Entry</button>
+                    </Link>
+                    <Link href="/modifications">
+                        <button className="active">Schedule Modifications</button>
+                    </Link>
+                    <Link href="/reports">
+                        <button>Reports</button>
+                    </Link>
+                    <Link href="/fleet">
+                        <button>FLEET Schedule</button>
+                    </Link>
+                    <Link href="/other-duties">
+                        <button>Other Duties</button>
+                    </Link>
+                    <Link href="/settings">
+                        <button>⚙️ Settings</button>
+                    </Link>
+                </nav>
 
-            <main className="app-main">
-                <DepotScheduleModifications />
-            </main>
+                <main className="app-main">
+                    <DepotScheduleModifications />
+                </main>
 
-            <footer className="app-footer">
-                <p>Bus Schedule Management System © 2025</p>
-            </footer>
-        </div>
+                <footer className="app-footer">
+                    <p>Bus Schedule Management System © 2025</p>
+                </footer>
+            </div>
+        </AuthGuard>
     );
 }

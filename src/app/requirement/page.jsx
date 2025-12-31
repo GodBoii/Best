@@ -2,11 +2,14 @@
 
 import RequirementReportSection from '../../components/RequirementReportSection';
 import '../../styles/requirement.css';
+import AuthGuard from '../../components/AuthGuard';
 
 export default function RequirementPage() {
     return (
-        <div className="page-container">
-            <RequirementReportSection />
-        </div>
+        <AuthGuard>
+            <div className="page-container">
+                <RequirementReportSection />
+            </div>
+        </AuthGuard>
     );
 }
